@@ -1,0 +1,13 @@
+{
+    "app_title": "Rojnivis",
+    "welcome_message": "Welcome!",
+    "create_entry": "New Entry",
+    "categories": "Categories",
+    "search_hint": "Search...",
+    "mood_label": "Mood",
+    "tags_label": "Tags",
+    "quick_question": "Quick Question",
+    "select_date": "Select Date",
+    "save": "Save",
+    "settings": "Settings"
+}
