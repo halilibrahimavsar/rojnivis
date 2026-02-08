@@ -1,37 +1,49 @@
 part of 'journal_bloc.dart';
 
-abstract class JournalEvent extends Equatable {
+/// Base class for all journal events.
+sealed class JournalEvent extends Equatable {
   const JournalEvent();
 
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
-class LoadJournalEntries extends JournalEvent {}
+/// Event to load all journal entries.
+class LoadJournalEntries extends JournalEvent {
+  const LoadJournalEntries();
+}
 
-class AddJournalEntryEvent extends JournalEvent {
-  final JournalEntry entry;
+/// Event to add or update a journal entry.
+class UpsertEntryRequested extends JournalEvent {
+  final JournalEntryModel entry;
 
-  const AddJournalEntryEvent(this.entry);
+  const UpsertEntryRequested({required this.entry});
 
   @override
-  List<Object> get props => [entry];
+  List<Object?> get props => [entry];
 }
 
-class SearchJournalEntries extends JournalEvent {
-  final String query;
-
-  const SearchJournalEntries(this.query);
-
-  @override
-  List<Object> get props => [query];
-}
-
-class DeleteJournalEntryEvent extends JournalEvent {
+/// Event to delete a journal entry.
+class DeleteEntryRequested extends JournalEvent {
   final String entryId;
 
-  const DeleteJournalEntryEvent(this.entryId);
+  const DeleteEntryRequested({required this.entryId});
 
   @override
-  List<Object> get props => [entryId];
+  List<Object?> get props => [entryId];
+}
+
+/// Event to search journal entries.
+class SearchRequested extends JournalEvent {
+  final JournalFilter filter;
+
+  const SearchRequested({required this.filter});
+
+  @override
+  List<Object?> get props => [filter];
+}
+
+/// Event to clear the search query.
+class ClearSearch extends JournalEvent {
+  const ClearSearch();
 }

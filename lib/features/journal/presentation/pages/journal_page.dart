@@ -1,330 +1,371 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../domain/entities/journal_entry.dart';
-import '../bloc/journal_bloc.dart';
+import '../../../../core/widgets/app_card.dart';
 import '../../../quick_questions/presentation/quick_question_card.dart';
+import '../../domain/models/filter_model.dart';
+import '../bloc/journal_bloc.dart';
+import '../widgets/filter_dialog.dart';
 
-class JournalPage extends StatelessWidget {
+class JournalPage extends StatefulWidget {
   const JournalPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return const JournalView();
-  }
+  State<JournalPage> createState() => _JournalPageState();
 }
 
-class JournalView extends StatefulWidget {
-  const JournalView({super.key});
+class _JournalPageState extends State<JournalPage> {
+  final TextEditingController _searchController = TextEditingController();
+  JournalFilter _currentFilter = const JournalFilter();
 
   @override
-  State<JournalView> createState() => _JournalViewState();
-}
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
 
-class _JournalViewState extends State<JournalView> {
-  final _searchController = TextEditingController();
+  void _onSearchChanged(String value) {
+    _currentFilter = _currentFilter.copyWith(query: value);
+    context.read<JournalBloc>().add(SearchRequested(filter: _currentFilter));
+    setState(() {});
+  }
+
+  Future<void> _showFilterDialog() async {
+    final result = await showDialog<JournalFilter>(
+      context: context,
+      builder: (context) => FilterDialog(initialFilter: _currentFilter),
+    );
+
+    if (result != null) {
+      if (!context.mounted) return;
+      _currentFilter = result.copyWith(query: _searchController.text);
+      context.read<JournalBloc>().add(SearchRequested(filter: _currentFilter));
+      setState(() {});
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [const Color(0xFF6C5CE7), const Color(0xFF00CEC9)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
-        title: Text('app_title'.tr()),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () => context.push('/settings'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.category),
-            onPressed: () => context.push('/categories'),
-          ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(60),
-          child: Padding(
-            padding: const EdgeInsets.all(12.0),
-            child: TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'search_hint'.tr(),
-                prefixIcon: const Icon(Icons.search),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-                filled: true,
-                fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 16,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar.large(
+            title: Text('app_title'.tr()),
+            actions: [
+              IconButton(
+                onPressed: () => context.push('/categories'),
+                icon: const Icon(Icons.category_outlined),
+                tooltip: 'categories'.tr(),
+              ),
+              IconButton(
+                onPressed: () => context.push('/settings'),
+                icon: const Icon(Icons.settings_outlined),
+                tooltip: 'settings'.tr(),
+              ),
+              const SizedBox(width: 4),
+            ],
+            bottom: PreferredSize(
+              preferredSize: const Size.fromHeight(72),
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: SearchBar(
+                  controller: _searchController,
+                  hintText: 'search_hint'.tr(),
+                  leading: const Icon(Icons.search),
+                  trailing: [
+
+                    IconButton(
+                      onPressed: _showFilterDialog,
+                      icon: Icon(
+                        Icons.filter_list,
+                        color:
+                            _currentFilter.isEmpty ||
+                                    (_currentFilter.query.isNotEmpty &&
+                                        _currentFilter.startDate == null &&
+                                        _currentFilter.endDate == null &&
+                                        (_currentFilter.categoryIds == null ||
+                                            _currentFilter.categoryIds!
+                                                .isEmpty) &&
+                                        (_currentFilter.tags == null ||
+                                            _currentFilter.tags!.isEmpty))
+                                ? null
+                                : Theme.of(context).colorScheme.primary,
+                      ),
+                      tooltip: 'filter'.tr(),
+                    ),
+                    if (_searchController.text.isNotEmpty)
+                      IconButton(
+                        onPressed: () {
+                          _searchController.clear();
+                          _onSearchChanged('');
+                        },
+                        icon: const Icon(Icons.close),
+                        tooltip: 'clear'.tr(),
+                      ),
+                  ],
+                  onChanged: _onSearchChanged,
                 ),
               ),
-              onChanged: (value) {
-                context.read<JournalBloc>().add(SearchJournalEntries(value));
-              },
             ),
           ),
-        ),
-      ),
-      body: BlocBuilder<JournalBloc, JournalState>(
-        builder: (context, state) {
-          if (state is JournalLoading) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (state is JournalLoaded) {
-            final entries = state.entries;
-            return CustomScrollView(
-              slivers: [
-                const SliverToBoxAdapter(child: QuickQuestionCard()),
-                if (entries.isEmpty)
-                  SliverFillRemaining(
-                    child: Center(
-                      child: Text('No entries yet. Start writing!'),
+          const SliverToBoxAdapter(child: QuickQuestionCard()),
+          BlocBuilder<JournalBloc, JournalState>(
+            builder: (context, state) {
+              if (state is JournalLoading || state is JournalInitial) {
+                return const SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
+
+              if (state is JournalError) {
+                return SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Text(state.message, textAlign: TextAlign.center),
                     ),
-                  )
-                else
-                  SliverList(
-                    delegate: SliverChildBuilderDelegate((context, index) {
-                      final entry = entries[index];
-                      return Container(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors:
-                                Theme.of(context).brightness == Brightness.light
-                                    ? [Colors.white, Colors.grey.shade50]
-                                    : [
-                                      const Color(0xFF1F293A),
-                                      const Color(0xFF2A2F4A),
-                                    ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                  ),
+                );
+              }
+
+              final entries = (state as JournalLoaded).entries;
+              if (entries.isEmpty) {
+                return SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.auto_awesome_outlined,
+                            size: 48,
+                            color: Theme.of(context).colorScheme.primary,
                           ),
+                          const SizedBox(height: 12),
+                          Text(
+                            'empty_journal'.tr(),
+                            style: Theme.of(context).textTheme.titleMedium,
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          FilledButton.icon(
+                            onPressed: () => context.push('/add-entry'),
+                            icon: const Icon(Icons.edit_outlined),
+                            label: Text('create_entry'.tr()),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              return SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                sliver: SliverList.separated(
+                  itemCount: entries.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final entry = entries[index];
+                    return Dismissible(
+                      key: ValueKey(entry.id),
+                      direction: DismissDirection.endToStart,
+                      background: Container(
+                        alignment: Alignment.centerRight,
+                        padding: const EdgeInsets.only(right: 20),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.error,
                           borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(
-                                Theme.of(context).brightness == Brightness.light
-                                    ? 0.05
-                                    : 0.2,
-                              ),
-                              blurRadius: 15,
-                              offset: const Offset(0, 5),
-                            ),
-                          ],
                         ),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () {
-                              context.push('/entry/${entry.id}');
-                            },
-                            borderRadius: BorderRadius.circular(20),
-                            child: Padding(
-                              padding: const EdgeInsets.all(20.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 12,
-                                          vertical: 6,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          gradient: LinearGradient(
-                                            colors: [
-                                              Theme.of(context)
-                                                  .colorScheme
-                                                  .primary
-                                                  .withOpacity(0.2),
-                                              Theme.of(context)
-                                                  .colorScheme
-                                                  .secondary
-                                                  .withOpacity(0.2),
-                                            ],
-                                          ),
-                                          borderRadius: BorderRadius.circular(
-                                            20,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          DateFormat.yMMMd().format(entry.date),
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.labelSmall?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
+                        child: Icon(
+                          Icons.delete_outline,
+                          color: Theme.of(context).colorScheme.onError,
+                        ),
+                      ),
+                      confirmDismiss: (_) async {
+                        return await showDialog<bool>(
+                              context: context,
+                              builder:
+                                  (context) => AlertDialog(
+                                    title: Text('delete_entry'.tr()),
+                                    content: Text('delete_entry_confirm'.tr()),
+                                    actions: [
+                                      TextButton(
+                                        onPressed:
+                                            () => Navigator.of(
+                                              context,
+                                            ).pop(false),
+                                        child: Text('cancel'.tr()),
                                       ),
-                                      Container(
-                                        padding: const EdgeInsets.all(8),
-                                        decoration: BoxDecoration(
-                                          color:
-                                              Theme.of(
-                                                context,
-                                              ).colorScheme.surface,
-                                          shape: BoxShape.circle,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withOpacity(
-                                                0.1,
-                                              ),
-                                              blurRadius: 5,
-                                            ),
-                                          ],
-                                        ),
-                                        child: Icon(
-                                          _getMoodIcon(entry.mood),
-                                          size: 20,
-                                          color:
-                                              Theme.of(
-                                                context,
-                                              ).colorScheme.primary,
-                                        ),
+                                      FilledButton(
+                                        onPressed:
+                                            () =>
+                                                Navigator.of(context).pop(true),
+                                        child: Text('delete'.tr()),
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    entry.title,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.titleLarge?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: -0.3,
+                            ) ??
+                            false;
+                      },
+                      onDismissed: (_) {
+                        context.read<JournalBloc>().add(
+                          DeleteEntryRequested(entryId: entry.id),
+                        );
+                        ScaffoldMessenger.of(
+                          context,
+                        ).showSnackBar(SnackBar(content: Text('deleted'.tr())));
+                      },
+                      child: _EntryCard(
+                        title: entry.title,
+                        subtitle: entry.content,
+                        date: entry.date,
+                        onTap: () => context.push('/entry/${entry.id}'),
+                        onEdit:
+                            () =>
+                                context.push('/add-entry?entryId=${entry.id}'),
+                        onDelete: () {
+                          final journalBloc = context.read<JournalBloc>();
+                          final messenger = ScaffoldMessenger.of(context);
+                          final deletedMessage = 'deleted'.tr();
+                          final deleteTitle = 'delete_entry'.tr();
+                          final deleteContent = 'delete_entry_confirm'.tr();
+                          final cancelText = 'cancel'.tr();
+                          final deleteText = 'delete'.tr();
+
+                          showDialog<bool>(
+                            context: context,
+                            builder:
+                                (context) => AlertDialog(
+                                  title: Text(deleteTitle),
+                                  content: Text(deleteContent),
+                                  actions: [
+                                    TextButton(
+                                      onPressed:
+                                          () =>
+                                              Navigator.of(context).pop(false),
+                                      child: Text(cancelText),
                                     ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 6),
-                                  Text(
-                                    entry.content,
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: Theme.of(
-                                      context,
-                                    ).textTheme.bodyMedium?.copyWith(
-                                      height: 1.5,
-                                      color: Theme.of(context)
-                                          .textTheme
-                                          .bodyMedium
-                                          ?.color
-                                          ?.withOpacity(0.8),
-                                    ),
-                                  ),
-                                  if (entry.tags.isNotEmpty) ...[
-                                    const SizedBox(height: 12),
-                                    Wrap(
-                                      spacing: 8,
-                                      runSpacing: 8,
-                                      children:
-                                          entry.tags
-                                              .map(
-                                                (tag) => Container(
-                                                  padding:
-                                                      const EdgeInsets.symmetric(
-                                                        horizontal: 12,
-                                                        vertical: 6,
-                                                      ),
-                                                  decoration: BoxDecoration(
-                                                    gradient: LinearGradient(
-                                                      colors: [
-                                                        Theme.of(context)
-                                                            .colorScheme
-                                                            .primary
-                                                            .withOpacity(0.1),
-                                                        Theme.of(context)
-                                                            .colorScheme
-                                                            .secondary
-                                                            .withOpacity(0.1),
-                                                      ],
-                                                    ),
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          16,
-                                                        ),
-                                                    border: Border.all(
-                                                      color: Theme.of(context)
-                                                          .colorScheme
-                                                          .primary
-                                                          .withOpacity(0.3),
-                                                      width: 1,
-                                                    ),
-                                                  ),
-                                                  child: Text(
-                                                    '#$tag',
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .labelSmall
-                                                        ?.copyWith(
-                                                          fontWeight:
-                                                              FontWeight.w500,
-                                                          color:
-                                                              Theme.of(context)
-                                                                  .colorScheme
-                                                                  .primary,
-                                                        ),
-                                                  ),
-                                                ),
-                                              )
-                                              .toList(),
+                                    FilledButton(
+                                      onPressed:
+                                          () => Navigator.of(context).pop(true),
+                                      child: Text(deleteText),
                                     ),
                                   ],
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    }, childCount: entries.length),
-                  ),
-              ],
-            );
-          } else if (state is JournalError) {
-            return Center(child: Text(state.message));
-          }
-          return const SizedBox.shrink();
-        },
+                                ),
+                          ).then((shouldDelete) {
+                            if (shouldDelete != true) return;
+                            journalBloc.add(
+                              DeleteEntryRequested(entryId: entry.id),
+                            );
+                            messenger.showSnackBar(
+                              SnackBar(content: Text(deletedMessage)),
+                            );
+                          });
+                        },
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
+        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          context.push('/add-entry');
-        },
-        label: Text('create_entry'.tr()),
+        onPressed: () => context.push('/add-entry'),
         icon: const Icon(Icons.add),
+        label: Text('create_entry'.tr()),
       ),
     );
   }
+}
 
-  IconData _getMoodIcon(Mood mood) {
-    switch (mood) {
-      case Mood.happy:
-        return Icons.sentiment_very_satisfied;
-      case Mood.sad:
-        return Icons.sentiment_very_dissatisfied;
-      case Mood.neutral:
-        return Icons.sentiment_neutral;
-      case Mood.excited:
-        return Icons.sentiment_satisfied_alt;
-      case Mood.angry:
-        return Icons.mood_bad;
-    }
+class _EntryCard extends StatelessWidget {
+  const _EntryCard({
+    required this.title,
+    required this.subtitle,
+    required this.date,
+    required this.onTap,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  final String title;
+  final String subtitle;
+  final DateTime date;
+  final VoidCallback onTap;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final locale = context.locale.toString();
+    final formattedDate = DateFormat.yMMMMd(locale).add_Hm().format(date);
+
+    return AppCard(
+      onTap: onTap,
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  title.trim().isEmpty ? 'untitled'.tr() : title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              PopupMenuButton<String>(
+                onSelected: (value) {
+                  switch (value) {
+                    case 'edit':
+                      onEdit();
+                      break;
+                    case 'delete':
+                      onDelete();
+                      break;
+                  }
+                },
+                itemBuilder:
+                    (context) => [
+                      PopupMenuItem(value: 'edit', child: Text('edit'.tr())),
+                      PopupMenuItem(
+                        value: 'delete',
+                        child: Text('delete'.tr()),
+                      ),
+                    ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            formattedDate,
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: Theme.of(context).colorScheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            subtitle,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ],
+      ),
+    );
   }
 }

@@ -1,19 +1,30 @@
 part of 'category_bloc.dart';
 
-abstract class CategoryEvent extends Equatable {
+sealed class CategoryEvent extends Equatable {
   const CategoryEvent();
 
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
-class LoadCategories extends CategoryEvent {}
+class LoadCategories extends CategoryEvent {
+  const LoadCategories();
+}
 
-class AddCategoryEvent extends CategoryEvent {
-  final Category category;
+class UpsertCategoryRequested extends CategoryEvent {
+  final CategoryModel category;
 
-  const AddCategoryEvent(this.category);
+  const UpsertCategoryRequested({required this.category});
 
   @override
-  List<Object> get props => [category];
+  List<Object?> get props => [category];
+}
+
+class DeleteCategoryRequested extends CategoryEvent {
+  final String categoryId;
+
+  const DeleteCategoryRequested({required this.categoryId});
+
+  @override
+  List<Object?> get props => [categoryId];
 }

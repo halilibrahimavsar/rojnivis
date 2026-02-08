@@ -1,9 +1,10 @@
-import '../entities/journal_entry.dart';
+import '../../data/models/journal_entry_model.dart';
+import '../models/filter_model.dart';
 
 abstract class JournalRepository {
-  Future<List<JournalEntry>> getEntries();
-  Future<void> addEntry(JournalEntry entry);
-  Future<void> deleteEntry(String id);
-  Future<void> updateEntry(JournalEntry entry);
-  Future<List<JournalEntry>> searchEntries(String query);
+  Future<List<JournalEntryModel>> getEntries();
+  Future<JournalEntryModel?> getEntry(String entryId);
+  Future<void> upsertEntry(JournalEntryModel entry);
+  Future<void> deleteEntry(String entryId);
+  Future<List<JournalEntryModel>> searchEntries(JournalFilter filter);
 }

@@ -16,7 +16,10 @@ class AppRouter {
         routes: [
           GoRoute(
             path: 'add-entry',
-            builder: (context, state) => const AddEntryPage(),
+            builder: (context, state) {
+              final entryId = state.uri.queryParameters['entryId'];
+              return AddEntryPage(entryId: entryId);
+            },
           ),
           GoRoute(
             path: 'entry/:entryId',

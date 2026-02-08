@@ -1,12 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-enum Mood {
-  happy,
-  sad,
-  neutral,
-  excited,
-  angry,
-}
+enum Mood { happy, sad, neutral, excited, angry }
 
 class JournalEntry extends Equatable {
   final String id;
@@ -30,5 +24,14 @@ class JournalEntry extends Equatable {
   });
 
   @override
-  List<Object?> get props => [id, title, content, date, mood, tags, categoryId, attachmentPaths];
+  List<Object?> get props => [
+    id,
+    title,
+    content,
+    date,
+    mood,
+    tags,
+    categoryId,
+    attachmentPaths,
+  ];
 }

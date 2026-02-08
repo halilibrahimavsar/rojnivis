@@ -1,5 +1,7 @@
 import 'package:injectable/injectable.dart';
-import '../entities/journal_entry.dart';
+
+import '../../data/models/journal_entry_model.dart';
+import '../models/filter_model.dart';
 import '../repositories/journal_repository.dart';
 
 @lazySingleton
@@ -8,7 +10,6 @@ class SearchEntries {
 
   SearchEntries(this._repository);
 
-  Future<List<JournalEntry>> call(String query) async {
-    return await _repository.searchEntries(query);
-  }
+  Future<List<JournalEntryModel>> call(JournalFilter filter) =>
+      _repository.searchEntries(filter);
 }

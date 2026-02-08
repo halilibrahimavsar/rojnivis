@@ -1,10 +1,11 @@
 import 'package:hive/hive.dart';
-import '../../domain/entities/journal_entry.dart';
 
 part 'journal_entry_model.g.dart';
 
 @HiveType(typeId: 1)
-class JournalEntryModel extends HiveObject {
+class JournalEntryModel {
+  static const String boxName = 'journal_entries';
+
   @HiveField(0)
   final String id;
 
@@ -17,6 +18,7 @@ class JournalEntryModel extends HiveObject {
   @HiveField(3)
   final DateTime date;
 
+  /// Stores `Mood.index` from the domain layer.
   @HiveField(4)
   final int moodIndex;
 
@@ -29,40 +31,36 @@ class JournalEntryModel extends HiveObject {
   @HiveField(7)
   final List<String> attachmentPaths;
 
-  JournalEntryModel({
+  const JournalEntryModel({
     required this.id,
     required this.title,
     required this.content,
     required this.date,
     required this.moodIndex,
-    required this.tags,
+    this.tags = const [],
     this.categoryId,
-    required this.attachmentPaths,
+    this.attachmentPaths = const [],
   });
 
-  factory JournalEntryModel.fromEntity(JournalEntry entry) {
+  JournalEntryModel copyWith({
+    String? id,
+    String? title,
+    String? content,
+    DateTime? date,
+    int? moodIndex,
+    List<String>? tags,
+    String? categoryId,
+    List<String>? attachmentPaths,
+  }) {
     return JournalEntryModel(
-      id: entry.id,
-      title: entry.title,
-      content: entry.content,
-      date: entry.date,
-      moodIndex: entry.mood.index,
-      tags: entry.tags,
-      categoryId: entry.categoryId,
-      attachmentPaths: entry.attachmentPaths,
-    );
-  }
-
-  JournalEntry toEntity() {
-    return JournalEntry(
-      id: id,
-      title: title,
-      content: content,
-      date: date,
-      mood: Mood.values[moodIndex],
-      tags: tags,
-      categoryId: categoryId,
-      attachmentPaths: attachmentPaths,
+      id: id ?? this.id,
+      title: title ?? this.title,
+      content: content ?? this.content,
+      date: date ?? this.date,
+      moodIndex: moodIndex ?? this.moodIndex,
+      tags: tags ?? this.tags,
+      categoryId: categoryId ?? this.categoryId,
+      attachmentPaths: attachmentPaths ?? this.attachmentPaths,
     );
   }
 }

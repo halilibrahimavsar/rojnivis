@@ -20,6 +20,7 @@ import '../features/categories/data/repositories/category_repository_impl.dart'
 import '../features/categories/domain/repositories/category_repository.dart'
     as _i745;
 import '../features/categories/domain/usecases/add_category.dart' as _i153;
+import '../features/categories/domain/usecases/delete_category.dart' as _i932;
 import '../features/categories/domain/usecases/get_categories.dart' as _i197;
 import '../features/categories/presentation/bloc/category_bloc.dart' as _i393;
 import '../features/journal/data/datasources/journal_local_datasource.dart'
@@ -57,31 +58,34 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i409.CategoryLocalDataSourceImpl());
     gh.lazySingleton<_i417.JournalLocalDataSource>(
         () => _i417.JournalLocalDataSourceImpl());
-    gh.lazySingleton<_i303.JournalRepository>(
-        () => _i531.JournalRepositoryImpl(gh<_i417.JournalLocalDataSource>()));
     gh.lazySingleton<_i745.CategoryRepository>(() =>
         _i346.CategoryRepositoryImpl(gh<_i409.CategoryLocalDataSource>()));
-    gh.factory<_i165.DeleteEntry>(
-        () => _i165.DeleteEntry(gh<_i303.JournalRepository>()));
+    gh.lazySingleton<_i303.JournalRepository>(
+        () => _i531.JournalRepositoryImpl(gh<_i417.JournalLocalDataSource>()));
+    gh.factory<_i932.DeleteCategory>(
+        () => _i932.DeleteCategory(gh<_i745.CategoryRepository>()));
+    gh.lazySingleton<_i197.GetCategories>(
+        () => _i197.GetCategories(gh<_i745.CategoryRepository>()));
+    gh.lazySingleton<_i153.AddCategory>(
+        () => _i153.AddCategory(gh<_i745.CategoryRepository>()));
     gh.lazySingleton<_i423.GetEntries>(
         () => _i423.GetEntries(gh<_i303.JournalRepository>()));
     gh.lazySingleton<_i187.AddEntry>(
         () => _i187.AddEntry(gh<_i303.JournalRepository>()));
     gh.lazySingleton<_i112.SearchEntries>(
         () => _i112.SearchEntries(gh<_i303.JournalRepository>()));
+    gh.factory<_i165.DeleteEntry>(
+        () => _i165.DeleteEntry(gh<_i303.JournalRepository>()));
+    gh.factory<_i393.CategoryBloc>(() => _i393.CategoryBloc(
+          gh<_i197.GetCategories>(),
+          gh<_i153.AddCategory>(),
+          gh<_i932.DeleteCategory>(),
+        ));
     gh.factory<_i379.JournalBloc>(() => _i379.JournalBloc(
           gh<_i423.GetEntries>(),
           gh<_i187.AddEntry>(),
           gh<_i112.SearchEntries>(),
           gh<_i165.DeleteEntry>(),
-        ));
-    gh.lazySingleton<_i197.GetCategories>(
-        () => _i197.GetCategories(gh<_i745.CategoryRepository>()));
-    gh.lazySingleton<_i153.AddCategory>(
-        () => _i153.AddCategory(gh<_i745.CategoryRepository>()));
-    gh.factory<_i393.CategoryBloc>(() => _i393.CategoryBloc(
-          gh<_i197.GetCategories>(),
-          gh<_i153.AddCategory>(),
         ));
     return this;
   }

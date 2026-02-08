@@ -1,37 +1,57 @@
 part of 'settings_bloc.dart';
 
-abstract class SettingsEvent extends Equatable {
+sealed class SettingsEvent extends Equatable {
   const SettingsEvent();
 
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
-class LoadSettings extends SettingsEvent {}
+class LoadSettings extends SettingsEvent {
+  const LoadSettings();
+}
 
-class ChangeTheme extends SettingsEvent {
+class UpdateThemeMode extends SettingsEvent {
   final ThemeMode themeMode;
 
-  const ChangeTheme(this.themeMode);
+  const UpdateThemeMode(this.themeMode);
 
   @override
-  List<Object> get props => [themeMode];
+  List<Object?> get props => [themeMode];
 }
 
-class ChangeLanguage extends SettingsEvent {
+class UpdateLocale extends SettingsEvent {
   final Locale locale;
 
-  const ChangeLanguage(this.locale);
+  const UpdateLocale(this.locale);
 
   @override
-  List<Object> get props => [locale];
+  List<Object?> get props => [locale];
 }
 
-class ChangeFont extends SettingsEvent {
+class UpdateFontFamily extends SettingsEvent {
   final String fontFamily;
 
-  const ChangeFont(this.fontFamily);
+  const UpdateFontFamily(this.fontFamily);
 
   @override
-  List<Object> get props => [fontFamily];
+  List<Object?> get props => [fontFamily];
+}
+
+class UpdateThemePreset extends SettingsEvent {
+  final String themePreset;
+
+  const UpdateThemePreset(this.themePreset);
+
+  @override
+  List<Object?> get props => [themePreset];
+}
+
+class UpdateAttachmentBackdrop extends SettingsEvent {
+  final bool enabled;
+
+  const UpdateAttachmentBackdrop(this.enabled);
+
+  @override
+  List<Object?> get props => [enabled];
 }

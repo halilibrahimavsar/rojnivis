@@ -1,19 +1,28 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-
-import 'package:uuid/uuid.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:file_picker/file_picker.dart';
-import '../../domain/entities/journal_entry.dart';
-import '../bloc/journal_bloc.dart';
+import 'package:uuid/uuid.dart';
+
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/widgets/attachment_backdrop.dart';
+import '../../../../core/widgets/attachment_preview.dart';
+import '../../../../core/widgets/themed_paper.dart';
 import '../../../categories/presentation/bloc/category_bloc.dart';
-import '../../../categories/domain/entities/category.dart';
+import '../../../quick_questions/presentation/quick_question_card.dart';
+import '../../data/models/journal_entry_model.dart';
+import '../bloc/journal_bloc.dart';
 import '../widgets/audio_recorder_widget.dart';
+import '../../../settings/presentation/bloc/settings_bloc.dart';
+
+const _compactDensity = VisualDensity(horizontal: -2, vertical: -2);
 
 class AddEntryPage extends StatefulWidget {
-  const AddEntryPage({super.key});
+  const AddEntryPage({super.key, this.entryId});
+
+  final String? entryId;
 
   @override
   State<AddEntryPage> createState() => _AddEntryPageState();
@@ -22,312 +31,532 @@ class AddEntryPage extends StatefulWidget {
 class _AddEntryPageState extends State<AddEntryPage> {
   final _titleController = TextEditingController();
   final _contentController = TextEditingController();
+  final _tagsController = TextEditingController();
+
   DateTime _selectedDate = DateTime.now();
-  Mood _selectedMood = Mood.neutral;
   String? _selectedCategoryId;
-  final List<String> _tags = [];
-  final TextEditingController _tagController = TextEditingController();
+  int _selectedMoodIndex = 2;
   final List<String> _attachmentPaths = [];
 
-  final ImagePicker _picker = ImagePicker();
+  JournalEntryModel? _editingEntry;
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [const Color(0xFF6C5CE7), const Color(0xFF00CEC9)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
-        title: Text('create_entry'.tr()),
-        actions: [
-          IconButton(icon: const Icon(Icons.check), onPressed: _saveEntry),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Date Picker
-            InkWell(
-              onTap: _pickDate,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  border: Border.all(color: Colors.grey.shade300),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.calendar_today, size: 20),
-                    const SizedBox(width: 8),
-                    Text(DateFormat.yMMMd().format(_selectedDate)),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
+  void initState() {
+    super.initState();
+    _hydrateIfEditing();
+  }
 
-            // Mood Selector
-            Text(
-              'mood_label'.tr(),
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-            const SizedBox(height: 8),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                children:
-                    Mood.values.map((mood) {
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 8.0),
-                        child: ChoiceChip(
-                          label: Icon(_getMoodIcon(mood)),
-                          selected: _selectedMood == mood,
-                          onSelected: (selected) {
-                            if (selected) setState(() => _selectedMood = mood);
-                          },
-                        ),
-                      );
-                    }).toList(),
-              ),
-            ),
-            const SizedBox(height: 16),
+  void _hydrateIfEditing() {
+    final entryId = widget.entryId;
+    if (entryId == null) return;
 
-            // Category Selector
-            Text(
-              'categories'.tr(),
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-            BlocBuilder<CategoryBloc, CategoryState>(
-              builder: (context, state) {
-                if (state is CategoryLoaded) {
-                  return DropdownButtonFormField<String>(
-                    value: _selectedCategoryId,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      contentPadding: EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                    ),
-                    hint: const Text('Select Category'),
-                    items:
-                        state.categories.map((Category category) {
-                          return DropdownMenuItem<String>(
-                            value: category.id,
-                            child: Text(category.name),
-                          );
-                        }).toList(),
-                    onChanged: (value) {
-                      setState(() => _selectedCategoryId = value);
-                    },
-                  );
-                }
-                return const SizedBox.shrink();
-              },
-            ),
-            const SizedBox(height: 16),
+    final state = context.read<JournalBloc>().state;
+    if (state is! JournalLoaded) return;
 
-            // Title
-            TextField(
-              controller: _titleController,
-              decoration: const InputDecoration(
-                labelText: 'Title',
-                border: OutlineInputBorder(),
-                filled: true,
-              ),
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
+    JournalEntryModel? entry;
+    for (final e in state.entries) {
+      if (e.id == entryId) {
+        entry = e;
+        break;
+      }
+    }
+    if (entry == null) return;
 
-            // Content
-            TextField(
-              controller: _contentController,
-              decoration: const InputDecoration(
-                labelText: 'Content',
-                border: OutlineInputBorder(),
-                filled: true,
-                alignLabelWithHint: true,
-              ),
-              maxLines: 10,
-              minLines: 5,
-            ),
-            const SizedBox(height: 16),
+    _editingEntry = entry;
+    _titleController.text = entry.title;
+    _contentController.text = entry.content;
+    _tagsController.text = entry.tags.join(', ');
+    _selectedDate = entry.date;
+    _selectedCategoryId = entry.categoryId;
+    _selectedMoodIndex = entry.moodIndex;
+    _attachmentPaths
+      ..clear()
+      ..addAll(entry.attachmentPaths);
+  }
 
-            // Attachments
-            Text('Attachments', style: Theme.of(context).textTheme.titleSmall),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                ..._attachmentPaths.map(
-                  (path) => Chip(
-                    avatar: Icon(_getAttachmentIcon(path), size: 16),
-                    label: Text(
-                      path.split('/').last,
-                      style: const TextStyle(fontSize: 12),
-                    ),
-                    onDeleted:
-                        () => setState(() => _attachmentPaths.remove(path)),
-                  ),
-                ),
-                ActionChip(
-                  avatar: const Icon(Icons.image, size: 16),
-                  label: const Text('Image'),
-                  onPressed: _pickImage,
-                ),
-                ActionChip(
-                  avatar: const Icon(Icons.attach_file, size: 16),
-                  label: const Text('File'),
-                  onPressed: _pickFile,
-                ),
-                AudioRecorderWidget(
-                  onRecordingComplete: (path) {
-                    setState(() => _attachmentPaths.add(path));
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _contentController.dispose();
+    _tagsController.dispose();
+    super.dispose();
+  }
 
-            // Tags
-            Text(
-              'tags_label'.tr(),
-              style: Theme.of(context).textTheme.titleSmall,
-            ),
-            Wrap(
-              spacing: 8,
-              children:
-                  _tags
-                      .map(
-                        (tag) => Chip(
-                          label: Text(tag),
-                          onDeleted: () => setState(() => _tags.remove(tag)),
-                        ),
-                      )
-                      .toList(),
-            ),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _tagController,
-                    decoration: const InputDecoration(hintText: 'Add Tag'),
-                    onSubmitted: (value) {
-                      if (value.isNotEmpty) {
-                        setState(() {
-                          _tags.add(value);
-                          _tagController.clear();
-                        });
-                      }
-                    },
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.add),
-                  onPressed: () {
-                    if (_tagController.text.isNotEmpty) {
-                      setState(() {
-                        _tags.add(_tagController.text);
-                        _tagController.clear();
-                      });
-                    }
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 32),
-          ],
-        ),
-      ),
+  Future<void> _pickDateTime() async {
+    final initialDate = DateTime(
+      _selectedDate.year,
+      _selectedDate.month,
+      _selectedDate.day,
+    );
+    final pickedDate = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (pickedDate == null) return;
+    if (!mounted) return;
+
+    final pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(_selectedDate),
+    );
+
+    if (!mounted) return;
+    setState(() {
+      _selectedDate = DateTime(
+        pickedDate.year,
+        pickedDate.month,
+        pickedDate.day,
+        pickedTime?.hour ?? _selectedDate.hour,
+        pickedTime?.minute ?? _selectedDate.minute,
+      );
+    });
+  }
+
+  void _insertQuickQuestion(String question) {
+    final text = _contentController.text;
+    final prefix = text.trim().isEmpty ? '' : '\n\n';
+    _contentController.text = '$text$prefix$question\n';
+    _contentController.selection = TextSelection.fromPosition(
+      TextPosition(offset: _contentController.text.length),
     );
   }
 
-  IconData _getAttachmentIcon(String path) {
-    if (path.endsWith('.jpg') ||
-        path.endsWith('.png') ||
-        path.endsWith('.jpeg')) {
-      return Icons.image;
-    } else if (path.endsWith('.m4a') || path.endsWith('.mp3')) {
-      return Icons.audiotrack;
-    } else {
-      return Icons.insert_drive_file;
-    }
+  List<String> _parseTags(String raw) {
+    return raw
+        .split(',')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toSet()
+        .toList(growable: false);
   }
 
   Future<void> _pickImage() async {
-    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
-    if (image != null) {
-      setState(() => _attachmentPaths.add(image.path));
-    }
+    final picker = ImagePicker();
+    final image = await picker.pickImage(source: ImageSource.gallery);
+    if (image == null) return;
+    setState(() {
+      if (!_attachmentPaths.contains(image.path)) {
+        _attachmentPaths.add(image.path);
+      }
+    });
   }
 
   Future<void> _pickFile() async {
-    final FilePickerResult? result = await FilePicker.platform.pickFiles();
-    if (result != null) {
-      setState(() => _attachmentPaths.add(result.files.single.path!));
-    }
+    final result = await FilePicker.platform.pickFiles();
+    final path = result?.files.single.path;
+    if (path == null) return;
+    setState(() {
+      if (!_attachmentPaths.contains(path)) {
+        _attachmentPaths.add(path);
+      }
+    });
   }
 
-  IconData _getMoodIcon(Mood mood) {
-    switch (mood) {
-      case Mood.happy:
-        return Icons.sentiment_very_satisfied;
-      case Mood.sad:
-        return Icons.sentiment_very_dissatisfied;
-      case Mood.neutral:
-        return Icons.sentiment_neutral;
-      case Mood.excited:
-        return Icons.sentiment_satisfied_alt;
-      case Mood.angry:
-        return Icons.mood_bad;
+  IconData _attachmentIcon(String path) {
+    final lower = path.toLowerCase();
+    if (lower.endsWith('.m4a') ||
+        lower.endsWith('.aac') ||
+        lower.endsWith('.mp3')) {
+      return Icons.mic_none_outlined;
     }
+    if (lower.endsWith('.png') ||
+        lower.endsWith('.jpg') ||
+        lower.endsWith('.jpeg')) {
+      return Icons.image_outlined;
+    }
+    return Icons.attach_file_outlined;
   }
 
-  Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _selectedDate,
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now(),
-    );
-    if (picked != null) {
-      setState(() => _selectedDate = picked);
-    }
+  String _fileName(String path) {
+    final normalized = path.replaceAll('\\', '/');
+    return normalized.split('/').last;
   }
 
-  void _saveEntry() {
-    if (_titleController.text.isEmpty) {
+  Future<void> _save() async {
+    final content = _contentController.text.trim();
+    if (content.isEmpty) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Title cannot be empty')));
+      ).showSnackBar(SnackBar(content: Text('content_required'.tr())));
       return;
     }
 
-    final entry = JournalEntry(
-      id: const Uuid().v4(),
-      title: _titleController.text,
-      content: _contentController.text,
+    final entry = JournalEntryModel(
+      id: _editingEntry?.id ?? const Uuid().v4(),
+      title: _titleController.text.trim(),
+      content: content,
       date: _selectedDate,
-      mood: _selectedMood,
-      tags: _tags,
+      moodIndex: _selectedMoodIndex,
       categoryId: _selectedCategoryId,
-      attachmentPaths: _attachmentPaths,
+      tags: _parseTags(_tagsController.text),
+      attachmentPaths: List.of(_attachmentPaths),
     );
 
-    context.read<JournalBloc>().add(AddJournalEntryEvent(entry));
-    context.pop();
+    context.read<JournalBloc>().add(UpsertEntryRequested(entry: entry));
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/');
+    }
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('saved'.tr())));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final showAttachmentBackdrop = context.select<SettingsBloc, bool>((bloc) {
+      final state = bloc.state;
+      if (state is SettingsLoaded) return state.showAttachmentBackdrop;
+      return AppDefaults.defaultAttachmentBackdrop;
+    });
+
+    final isEditing = _editingEntry != null;
+    final locale = context.locale.toString();
+    final formattedDate = DateFormat.yMMMMEEEEd(
+      locale,
+    ).add_Hm().format(_selectedDate);
+    final labelStyle = Theme.of(context).textTheme.labelLarge?.copyWith(
+      color: Theme.of(context).colorScheme.onSurfaceVariant,
+      fontWeight: FontWeight.w600,
+    );
+    final miniButtonPadding = const EdgeInsets.symmetric(
+      horizontal: 12,
+      vertical: 8,
+    );
+
+    ButtonStyle miniButtonStyle({Color? background, Color? foreground}) {
+      return ButtonStyle(
+        visualDensity: _compactDensity,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        minimumSize: const MaterialStatePropertyAll(Size(0, 0)),
+        padding: MaterialStatePropertyAll(miniButtonPadding),
+        backgroundColor:
+            background == null ? null : MaterialStatePropertyAll(background),
+        foregroundColor:
+            foreground == null ? null : MaterialStatePropertyAll(foreground),
+      );
+    }
+
+    String? backdropPath;
+    if (showAttachmentBackdrop) {
+      for (final path in _attachmentPaths) {
+        if (isImagePath(path)) {
+          backdropPath = path;
+          break;
+        }
+      }
+    }
+
+    return Scaffold(
+      extendBodyBehindAppBar: true,
+      extendBody: true,
+      appBar: AppBar(
+        title: Text(isEditing ? 'edit_entry'.tr() : 'create_entry'.tr()),
+      ),
+      body: Stack(
+        children: [
+          const Positioned.fill(
+            child: ThemedBackdrop(blurSigma: 6, opacity: 0.95),
+          ),
+          if (backdropPath != null) AttachmentBackdrop(path: backdropPath),
+          SafeArea(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
+              children: [
+                QuickQuestionCard(onUseQuestion: _insertQuickQuestion),
+                const SizedBox(height: 12),
+                ThemedPaper(
+                  lined: true,
+                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('title'.tr(), style: labelStyle),
+                      TextField(
+                        controller: _titleController,
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          isDense: true,
+                          filled: false,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                        textInputAction: TextInputAction.next,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text('content'.tr(), style: labelStyle),
+                      TextField(
+                        controller: _contentController,
+                        minLines: 6,
+                        maxLines: 16,
+                        decoration: const InputDecoration(
+                          border: InputBorder.none,
+                          isDense: true,
+                          filled: false,
+                          contentPadding: EdgeInsets.zero,
+                        ),
+                        style: Theme.of(context).textTheme.bodyLarge,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: _pickDateTime,
+                        icon: const Icon(Icons.calendar_month_outlined),
+                        label: Text(formattedDate),
+                        style: OutlinedButton.styleFrom(
+                          padding: miniButtonPadding,
+                          visualDensity: _compactDensity,
+                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                          minimumSize: const Size(0, 0),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                BlocBuilder<CategoryBloc, CategoryState>(
+                  builder: (context, state) {
+                    final items = <DropdownMenuItem<String?>>[
+                      DropdownMenuItem(
+                        value: null,
+                        child: Text('no_category'.tr()),
+                      ),
+                    ];
+
+                    if (state is CategoryLoaded) {
+                      items.addAll(
+                        state.categories.map(
+                          (c) =>
+                              DropdownMenuItem(value: c.id, child: Text(c.name)),
+                        ),
+                      );
+                    }
+
+                    return DropdownButtonFormField<String?>(
+                      value: _selectedCategoryId,
+                      items: items,
+                      onChanged:
+                          (value) => setState(() {
+                            _selectedCategoryId = value;
+                          }),
+                      decoration: InputDecoration(
+                        labelText: 'category'.tr(),
+                        prefixIcon: const Icon(Icons.category_outlined),
+                      ),
+                    );
+                  },
+                ),
+                const SizedBox(height: 12),
+                _MoodPicker(
+                  value: _selectedMoodIndex,
+                  onChanged:
+                      (value) => setState(() => _selectedMoodIndex = value),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: _tagsController,
+                  decoration: InputDecoration(
+                    labelText: 'tags_label'.tr(),
+                    hintText: 'tags_hint'.tr(),
+                    prefixIcon: const Icon(Icons.tag_outlined),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                InputDecorator(
+                  decoration: InputDecoration(
+                    labelText: 'attachments'.tr(),
+                    prefixIcon: const Icon(Icons.attach_file_outlined),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (_attachmentPaths.isEmpty)
+                        Text(
+                          'no_attachments'.tr(),
+                          style: Theme.of(
+                            context,
+                          ).textTheme.bodyMedium?.copyWith(
+                            color:
+                                Theme.of(context).colorScheme.onSurfaceVariant,
+                          ),
+                        )
+                      else
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final maxLabelWidth = (constraints.maxWidth - 110)
+                                .clamp(120.0, constraints.maxWidth);
+                            return Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                for (final path in _attachmentPaths)
+                                  Tooltip(
+                                    message: _fileName(path),
+                                    child: InputChip(
+                                      label: ConstrainedBox(
+                                        constraints: BoxConstraints(
+                                          maxWidth: maxLabelWidth,
+                                        ),
+                                        child: Text(
+                                          _fileName(path),
+                                          softWrap: false,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      avatar: Icon(
+                                        _attachmentIcon(path),
+                                        size: 18,
+                                      ),
+                                      onDeleted:
+                                          () => setState(
+                                            () => _attachmentPaths.remove(path),
+                                          ),
+                                      onPressed:
+                                          () => openAttachment(context, path),
+                                      visualDensity: _compactDensity,
+                                      materialTapTargetSize:
+                                          MaterialTapTargetSize.shrinkWrap,
+                                      labelPadding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 4,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            );
+                          },
+                        ),
+                      const SizedBox(height: 12),
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        children: [
+                          FilledButton.icon(
+                            onPressed: _pickImage,
+                            icon: const Icon(Icons.image_outlined),
+                            label: Text('add_photo'.tr()),
+                            style: miniButtonStyle(
+                              background:
+                                  Theme.of(
+                                    context,
+                                  ).colorScheme.secondaryContainer,
+                              foreground:
+                                  Theme.of(
+                                    context,
+                                  ).colorScheme.onSecondaryContainer,
+                            ),
+                          ),
+                          FilledButton.icon(
+                            onPressed: _pickFile,
+                            icon: const Icon(Icons.attach_file_outlined),
+                            label: Text('add_file'.tr()),
+                            style: miniButtonStyle(
+                              background:
+                                  Theme.of(
+                                    context,
+                                  ).colorScheme.secondaryContainer,
+                              foreground:
+                                  Theme.of(
+                                    context,
+                                  ).colorScheme.onSecondaryContainer,
+                            ),
+                          ),
+                          AudioRecorderWidget(
+                            onRecordingComplete: (path) {
+                              setState(() {
+                                if (!_attachmentPaths.contains(path)) {
+                                  _attachmentPaths.add(path);
+                                }
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+          child: FilledButton.icon(
+            onPressed: _save,
+            icon: const Icon(Icons.check),
+            label: Text('save'.tr()),
+            style: miniButtonStyle(),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MoodPicker extends StatelessWidget {
+  const _MoodPicker({required this.value, required this.onChanged});
+
+  final int value;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final moods = <({int index, String key, IconData icon})>[
+      (index: 0, key: 'happy', icon: Icons.sentiment_very_satisfied_outlined),
+      (index: 2, key: 'neutral', icon: Icons.sentiment_neutral_outlined),
+      (index: 1, key: 'sad', icon: Icons.sentiment_dissatisfied_outlined),
+      (
+        index: 4,
+        key: 'angry',
+        icon: Icons.sentiment_very_dissatisfied_outlined,
+      ),
+      (index: 3, key: 'excited', icon: Icons.celebration_outlined),
+    ];
+
+    return InputDecorator(
+      decoration: InputDecoration(
+        labelText: 'mood_label'.tr(),
+        prefixIcon: const Icon(Icons.mood_outlined),
+      ),
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          for (final mood in moods)
+            ChoiceChip(
+              label: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(mood.icon, size: 16),
+                  const SizedBox(width: 6),
+                  Text('mood_${mood.key}'.tr()),
+                ],
+              ),
+              selected: value == mood.index,
+              visualDensity: _compactDensity,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              labelPadding: const EdgeInsets.symmetric(horizontal: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+              onSelected: (_) => onChanged(mood.index),
+            ),
+        ],
+      ),
+    );
   }
 }

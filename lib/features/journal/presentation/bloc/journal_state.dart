@@ -1,30 +1,60 @@
 part of 'journal_bloc.dart';
 
-abstract class JournalState extends Equatable {
+/// Base class for all journal states.
+sealed class JournalState extends Equatable {
   const JournalState();
 
   @override
-  List<Object> get props => [];
+  List<Object?> get props => [];
 }
 
-class JournalInitial extends JournalState {}
+/// Initial state before any operation.
+class JournalInitial extends JournalState {
+  const JournalInitial();
+}
 
-class JournalLoading extends JournalState {}
+/// State when loading journal entries.
+class JournalLoading extends JournalState {
+  const JournalLoading();
+}
 
+/// State when journal entries are successfully loaded.
 class JournalLoaded extends JournalState {
-  final List<JournalEntry> entries;
+  final JournalFilter filter;
+  final List<JournalEntryModel> entries;
 
-  const JournalLoaded(this.entries);
+  const JournalLoaded({
+    required this.entries,
+    this.filter = const JournalFilter(),
+  });
 
   @override
-  List<Object> get props => [entries];
+  List<Object?> get props => [entries, filter];
 }
 
+/// State when an error occurs during loading.
 class JournalError extends JournalState {
   final String message;
+  final Object? error;
 
-  const JournalError(this.message);
+  const JournalError({required this.message, this.error});
 
   @override
-  List<Object> get props => [message];
+  List<Object?> get props => [message, error];
+}
+
+/// State when an action (add/update/delete) is in progress.
+class JournalActionInProgress extends JournalState {
+  const JournalActionInProgress();
+}
+
+/// State when an action (add/update/delete) fails.
+class JournalActionError extends JournalState {
+  final String message;
+  final Object? error;
+
+  const JournalActionError({required this.message, this.error});
+
+  @override
+  List<Object?> get props => [message, error];
 }

@@ -91,13 +91,18 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
           icon: Icon(_isRecording ? Icons.stop : Icons.mic),
           color: _isRecording ? Colors.red : Theme.of(context).primaryColor,
           onPressed: _isRecording ? _stopRecording : _startRecording,
+          visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+          constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
         ),
         if (_isRecording)
           Padding(
             padding: const EdgeInsets.only(left: 8.0),
             child: Text(
               _formatDuration(_recordDuration),
-              style: const TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                color: Colors.red,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
       ],

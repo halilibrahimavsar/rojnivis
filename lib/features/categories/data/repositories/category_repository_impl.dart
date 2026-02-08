@@ -1,33 +1,23 @@
 import 'package:injectable/injectable.dart';
-import '../../domain/entities/category.dart';
+
 import '../../domain/repositories/category_repository.dart';
 import '../datasources/category_local_datasource.dart';
 import '../models/category_model.dart';
 
 @LazySingleton(as: CategoryRepository)
 class CategoryRepositoryImpl implements CategoryRepository {
-  final CategoryLocalDataSource _localDataSource;
+  final CategoryLocalDataSource _local;
 
-  CategoryRepositoryImpl(this._localDataSource);
-
-  @override
-  Future<List<Category>> getCategories() async {
-    final models = await _localDataSource.getCategories();
-    return models.map((e) => e.toEntity()).toList();
-  }
+  CategoryRepositoryImpl(this._local);
 
   @override
-  Future<void> addCategory(Category category) async {
-    await _localDataSource.addCategory(CategoryModel.fromEntity(category));
-  }
+  Future<List<CategoryModel>> getCategories() async => _local.getCategories();
 
   @override
-  Future<void> deleteCategory(String id) async {
-    await _localDataSource.deleteCategory(id);
-  }
+  Future<void> upsertCategory(CategoryModel category) =>
+      _local.upsertCategory(category);
 
   @override
-  Future<void> updateCategory(Category category) async {
-    await _localDataSource.updateCategory(CategoryModel.fromEntity(category));
-  }
+  Future<void> deleteCategory(String categoryId) =>
+      _local.deleteCategory(categoryId);
 }

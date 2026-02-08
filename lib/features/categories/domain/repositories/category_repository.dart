@@ -1,8 +1,7 @@
-import '../entities/category.dart';
+import '../../data/models/category_model.dart';
 
 abstract class CategoryRepository {
-  Future<List<Category>> getCategories();
-  Future<void> addCategory(Category category);
-  Future<void> deleteCategory(String id);
-  Future<void> updateCategory(Category category);
+  Future<List<CategoryModel>> getCategories();
+  Future<void> upsertCategory(CategoryModel category);
+  Future<void> deleteCategory(String categoryId);
 }
