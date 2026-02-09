@@ -606,7 +606,7 @@ class _FullScreenSheet extends StatelessWidget {
         return ThemedPaper(
           lined: lined,
           minHeight: constraints.maxHeight,
-          padding: padding,
+          padding: resolved,
           child: SingleChildScrollView(
             child: ConstrainedBox(
               constraints: BoxConstraints(minHeight: minInnerHeight),

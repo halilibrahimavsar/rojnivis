@@ -12,7 +12,11 @@ import 'features/categories/data/models/category_model.dart';
 import 'features/categories/presentation/bloc/category_bloc.dart';
 import 'features/journal/data/models/journal_entry_model.dart';
 import 'features/journal/presentation/bloc/journal_bloc.dart';
+import 'features/mindmap/domain/models/mind_map_node.dart';
+import 'features/mindmap/presentation/bloc/mind_map_bloc.dart';
 import 'features/settings/presentation/bloc/settings_bloc.dart';
+
+const String mindMapsBoxName = 'mind_maps';
 
 /// Application entry point.
 ///
@@ -57,12 +61,14 @@ Future<void> _initializeApp() async {
 void _registerHiveAdapters() {
   Hive.registerAdapter(CategoryModelAdapter());
   Hive.registerAdapter(JournalEntryModelAdapter());
+  Hive.registerAdapter(MindMapNodeAdapter());
 }
 
 /// Opens all required Hive boxes.
 Future<void> _openHiveBoxes() async {
   await Hive.openBox<CategoryModel>(CategoryModel.boxName);
   await Hive.openBox<JournalEntryModel>(JournalEntryModel.boxName);
+  await Hive.openBox<MindMapNode>(mindMapsBoxName);
 }
 
 /// Seeds default categories if the categories box is empty.
@@ -127,6 +133,9 @@ class _AppProviders extends StatelessWidget {
         ),
         BlocProvider(
           create: (_) => getIt<CategoryBloc>()..add(const LoadCategories()),
+        ),
+        BlocProvider(
+          create: (_) => getIt<MindMapBloc>()..add(const LoadMindMaps()),
         ),
       ],
       child: child,

@@ -5,6 +5,7 @@ import '../../features/journal/presentation/pages/add_entry_page.dart';
 import '../../features/journal/presentation/pages/entry_detail_page.dart';
 import '../../features/categories/presentation/pages/categories_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
+import '../../features/mindmap/presentation/pages/mind_map_page.dart';
 
 class AppRouter {
   static final router = GoRouter(
@@ -38,6 +39,10 @@ class AppRouter {
           GoRoute(
             path: 'settings',
             builder: (context, state) => const SettingsPage(),
+          ),
+          GoRoute(
+            path: 'mindmap',
+            builder: (context, state) => const MindMapPage(),
           ),
         ],
       ),

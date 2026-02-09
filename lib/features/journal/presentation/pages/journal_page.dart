@@ -55,6 +55,11 @@ class _JournalPageState extends State<JournalPage> {
             title: Text('app_title'.tr()),
             actions: [
               IconButton(
+                onPressed: () => context.push('/mindmap'),
+                icon: const Icon(Icons.account_tree_outlined),
+                tooltip: 'mind_maps'.tr(),
+              ),
+              IconButton(
                 onPressed: () => context.push('/categories'),
                 icon: const Icon(Icons.category_outlined),
                 tooltip: 'categories'.tr(),
@@ -75,7 +80,6 @@ class _JournalPageState extends State<JournalPage> {
                   hintText: 'search_hint'.tr(),
                   leading: const Icon(Icons.search),
                   trailing: [
-
                     IconButton(
                       onPressed: _showFilterDialog,
                       icon: Icon(
@@ -86,7 +90,8 @@ class _JournalPageState extends State<JournalPage> {
                                         _currentFilter.startDate == null &&
                                         _currentFilter.endDate == null &&
                                         (_currentFilter.categoryIds == null ||
-                                            _currentFilter.categoryIds!
+                                            _currentFilter
+                                                .categoryIds!
                                                 .isEmpty) &&
                                         (_currentFilter.tags == null ||
                                             _currentFilter.tags!.isEmpty))

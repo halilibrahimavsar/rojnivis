@@ -34,6 +34,13 @@ import '../features/journal/domain/usecases/delete_entry.dart' as _i165;
 import '../features/journal/domain/usecases/get_entries.dart' as _i423;
 import '../features/journal/domain/usecases/search_entries.dart' as _i112;
 import '../features/journal/presentation/bloc/journal_bloc.dart' as _i379;
+import '../features/mindmap/data/datasources/mind_map_local_datasource.dart'
+    as _i762;
+import '../features/mindmap/data/repositories/mind_map_repository_impl.dart'
+    as _i372;
+import '../features/mindmap/domain/repositories/mind_map_repository.dart'
+    as _i744;
+import '../features/mindmap/presentation/bloc/mind_map_bloc.dart' as _i587;
 import '../features/settings/presentation/bloc/settings_bloc.dart' as _i419;
 
 extension GetItInjectableX on _i174.GetIt {
@@ -52,14 +59,20 @@ extension GetItInjectableX on _i174.GetIt {
       () => registerModule.prefs,
       preResolve: true,
     );
+    gh.lazySingleton<_i762.MindMapLocalDataSource>(
+        () => _i762.MindMapLocalDataSourceImpl());
     gh.factory<_i419.SettingsBloc>(
         () => _i419.SettingsBloc(gh<_i460.SharedPreferences>()));
     gh.lazySingleton<_i409.CategoryLocalDataSource>(
         () => _i409.CategoryLocalDataSourceImpl());
     gh.lazySingleton<_i417.JournalLocalDataSource>(
         () => _i417.JournalLocalDataSourceImpl());
+    gh.lazySingleton<_i744.MindMapRepository>(
+        () => _i372.MindMapRepositoryImpl(gh<_i762.MindMapLocalDataSource>()));
     gh.lazySingleton<_i745.CategoryRepository>(() =>
         _i346.CategoryRepositoryImpl(gh<_i409.CategoryLocalDataSource>()));
+    gh.factory<_i587.MindMapBloc>(
+        () => _i587.MindMapBloc(gh<_i744.MindMapRepository>()));
     gh.lazySingleton<_i303.JournalRepository>(
         () => _i531.JournalRepositoryImpl(gh<_i417.JournalLocalDataSource>()));
     gh.factory<_i932.DeleteCategory>(
