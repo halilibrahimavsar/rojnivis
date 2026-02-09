@@ -10,9 +10,11 @@
 // ignore_for_file: no_leading_underscores_for_library_prefixes
 import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
+import 'package:local_auth/local_auth.dart' as _i152;
 import 'package:shared_preferences/shared_preferences.dart' as _i460;
 
 import '../core/di/register_module.dart' as _i796;
+import '../core/services/sound_service.dart' as _i173;
 import '../features/categories/data/datasources/category_local_datasource.dart'
     as _i409;
 import '../features/categories/data/repositories/category_repository_impl.dart'
@@ -34,6 +36,9 @@ import '../features/journal/domain/usecases/delete_entry.dart' as _i165;
 import '../features/journal/domain/usecases/get_entries.dart' as _i423;
 import '../features/journal/domain/usecases/search_entries.dart' as _i112;
 import '../features/journal/presentation/bloc/journal_bloc.dart' as _i379;
+import '../features/local_auth/data/local_auth_repository.dart' as _i525;
+import '../features/local_auth/data/shared_prefs_local_auth_repository.dart'
+    as _i21;
 import '../features/mindmap/data/datasources/mind_map_local_datasource.dart'
     as _i762;
 import '../features/mindmap/data/repositories/mind_map_repository_impl.dart'
@@ -59,12 +64,19 @@ extension GetItInjectableX on _i174.GetIt {
       () => registerModule.prefs,
       preResolve: true,
     );
+    gh.lazySingleton<_i152.LocalAuthentication>(() => registerModule.localAuth);
+    gh.lazySingleton<_i173.SoundService>(() => _i173.SoundService());
     gh.lazySingleton<_i762.MindMapLocalDataSource>(
         () => _i762.MindMapLocalDataSourceImpl());
     gh.factory<_i419.SettingsBloc>(
         () => _i419.SettingsBloc(gh<_i460.SharedPreferences>()));
     gh.lazySingleton<_i409.CategoryLocalDataSource>(
         () => _i409.CategoryLocalDataSourceImpl());
+    gh.lazySingleton<_i525.LocalAuthRepository>(
+        () => _i21.SharedPrefsLocalAuthRepository(
+              prefs: gh<_i460.SharedPreferences>(),
+              auth: gh<_i152.LocalAuthentication>(),
+            ));
     gh.lazySingleton<_i417.JournalLocalDataSource>(
         () => _i417.JournalLocalDataSourceImpl());
     gh.lazySingleton<_i744.MindMapRepository>(

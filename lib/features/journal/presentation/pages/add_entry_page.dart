@@ -16,6 +16,10 @@ import '../../data/models/journal_entry_model.dart';
 import '../bloc/journal_bloc.dart';
 import '../widgets/audio_recorder_widget.dart';
 import '../../../settings/presentation/bloc/settings_bloc.dart';
+import '../widgets/sketch_canvas.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'dart:ui' as ui;
 
 const _compactDensity = VisualDensity(horizontal: -2, vertical: -2);
 
@@ -169,6 +173,37 @@ class _AddEntryPageState extends State<AddEntryPage> {
     return Icons.attach_file_outlined;
   }
 
+  Future<void> _openSketchCanvas() async {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder:
+            (context) => SketchCanvas(
+              onCancel: () => Navigator.pop(context),
+              onSave: (ui.Image image) async {
+                final bytes = await image.toByteData(
+                  format: ui.ImageByteFormat.png,
+                );
+                if (bytes == null) return;
+
+                final directory = await getApplicationDocumentsDirectory();
+                final fileName = 'sketch_${DateTime.now().millisecondsSinceEpoch}.png';
+                final file = File('${directory.path}/$fileName');
+                await file.writeAsBytes(bytes.buffer.asUint8List());
+
+                if (mounted) {
+                  setState(() {
+                    _attachmentPaths.add(file.path);
+                  });
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                  }
+                }
+              },
+            ),
+      ),
+    );
+  }
+
   String _fileName(String path) {
     final normalized = path.replaceAll('\\', '/');
     return normalized.split('/').last;
@@ -231,12 +266,12 @@ class _AddEntryPageState extends State<AddEntryPage> {
       return ButtonStyle(
         visualDensity: _compactDensity,
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        minimumSize: const MaterialStatePropertyAll(Size(0, 0)),
-        padding: MaterialStatePropertyAll(miniButtonPadding),
+        minimumSize: const WidgetStatePropertyAll(Size(0, 0)),
+        padding: WidgetStatePropertyAll(miniButtonPadding),
         backgroundColor:
-            background == null ? null : MaterialStatePropertyAll(background),
+            background == null ? null : WidgetStatePropertyAll(background),
         foregroundColor:
-            foreground == null ? null : MaterialStatePropertyAll(foreground),
+            foreground == null ? null : WidgetStatePropertyAll(foreground),
       );
     }
 
@@ -483,6 +518,22 @@ class _AddEntryPageState extends State<AddEntryPage> {
                                 }
                               });
                             },
+                          ),
+                          const SizedBox(width: 8),
+                          FilledButton.icon(
+                            onPressed: _openSketchCanvas,
+                            icon: const Icon(Icons.gesture_outlined),
+                            label: const Text('Sketch'),
+                            style: miniButtonStyle(
+                              background:
+                                  Theme.of(
+                                    context,
+                                  ).colorScheme.secondaryContainer,
+                              foreground:
+                                  Theme.of(
+                                    context,
+                                  ).colorScheme.onSecondaryContainer,
+                            ),
                           ),
                         ],
                       ),

@@ -139,10 +139,10 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
                               style: ButtonStyle(
                                 visualDensity: _compactDensity,
                                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                minimumSize: const MaterialStatePropertyAll(
+                                minimumSize: const WidgetStatePropertyAll(
                                   Size(0, 0),
                                 ),
-                                padding: const MaterialStatePropertyAll(
+                                padding: const WidgetStatePropertyAll(
                                   EdgeInsets.symmetric(
                                     horizontal: 10,
                                     vertical: 6,
@@ -588,25 +588,22 @@ class _FullScreenSheet extends StatelessWidget {
   const _FullScreenSheet({
     required this.child,
     this.lined = false,
-    this.padding = const EdgeInsets.fromLTRB(18, 18, 18, 20),
   });
 
   final Widget child;
   final bool lined;
-  final EdgeInsetsGeometry padding;
 
   @override
   Widget build(BuildContext context) {
-    final resolved =
-        padding is EdgeInsets ? padding as EdgeInsets : const EdgeInsets.all(0);
+    const padding = EdgeInsets.fromLTRB(18, 18, 18, 20);
     return LayoutBuilder(
       builder: (context, constraints) {
-        final minInnerHeight = (constraints.maxHeight - resolved.vertical)
+        final minInnerHeight = (constraints.maxHeight - padding.vertical)
             .clamp(0.0, double.infinity);
         return ThemedPaper(
           lined: lined,
           minHeight: constraints.maxHeight,
-          padding: resolved,
+          padding: padding,
           child: SingleChildScrollView(
             child: ConstrainedBox(
               constraints: BoxConstraints(minHeight: minInnerHeight),

@@ -17,6 +17,8 @@ class SettingsLoaded extends SettingsState {
   final String fontFamily;
   final String themePreset;
   final bool showAttachmentBackdrop;
+  final int notebookCoverColor;
+  final String notebookCoverTexture;
 
   const SettingsLoaded({
     required this.themeMode,
@@ -24,6 +26,8 @@ class SettingsLoaded extends SettingsState {
     required this.fontFamily,
     required this.themePreset,
     required this.showAttachmentBackdrop,
+    required this.notebookCoverColor,
+    required this.notebookCoverTexture,
   });
 
   SettingsLoaded copyWith({
@@ -32,6 +36,8 @@ class SettingsLoaded extends SettingsState {
     String? fontFamily,
     String? themePreset,
     bool? showAttachmentBackdrop,
+    int? notebookCoverColor,
+    String? notebookCoverTexture,
   }) {
     return SettingsLoaded(
       themeMode: themeMode ?? this.themeMode,
@@ -40,6 +46,8 @@ class SettingsLoaded extends SettingsState {
       themePreset: themePreset ?? this.themePreset,
       showAttachmentBackdrop:
           showAttachmentBackdrop ?? this.showAttachmentBackdrop,
+      notebookCoverColor: notebookCoverColor ?? this.notebookCoverColor,
+      notebookCoverTexture: notebookCoverTexture ?? this.notebookCoverTexture,
     );
   }
 
@@ -50,5 +58,7 @@ class SettingsLoaded extends SettingsState {
     fontFamily,
     themePreset,
     showAttachmentBackdrop,
+    notebookCoverColor,
+    notebookCoverTexture,
   ];
 }

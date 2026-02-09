@@ -120,6 +120,8 @@ class AppDefaults {
   static const String defaultLocale = 'tr';
   static const String defaultCountryCode = 'TR';
   static const bool defaultAttachmentBackdrop = true;
+  static const int defaultNotebookCoverColor = 0xFF2C3E50;
+  static const String defaultNotebookCoverTexture = 'leather';
 
   /// Categories
   static const List<Map<String, dynamic>> defaultCategories = [
@@ -145,6 +147,8 @@ class StorageKeys {
   static const String fontFamily = 'font_family';
   static const String locale = 'locale';
   static const String attachmentBackdrop = 'attachment_backdrop';
+  static const String notebookCoverColor = 'notebook_cover_color';
+  static const String notebookCoverTexture = 'notebook_cover_texture';
 }
 
 /// Route paths

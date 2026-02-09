@@ -18,6 +18,8 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<UpdateFontFamily>(_onUpdateFontFamily);
     on<UpdateThemePreset>(_onUpdateThemePreset);
     on<UpdateAttachmentBackdrop>(_onUpdateAttachmentBackdrop);
+    on<UpdateNotebookCoverColor>(_onUpdateNotebookCoverColor);
+    on<UpdateNotebookCoverTexture>(_onUpdateNotebookCoverTexture);
   }
 
   final SharedPreferences _prefs;
@@ -27,6 +29,8 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   static const _fontKey = StorageKeys.fontFamily;
   static const _themePresetKey = StorageKeys.themePreset;
   static const _attachmentBackdropKey = StorageKeys.attachmentBackdrop;
+  static const _coverColorKey = StorageKeys.notebookCoverColor;
+  static const _coverTextureKey = StorageKeys.notebookCoverTexture;
 
   Future<void> _onLoad(LoadSettings event, Emitter<SettingsState> emit) async {
     try {
@@ -40,6 +44,10 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       final showAttachmentBackdrop =
           _readBool(_attachmentBackdropKey) ??
           AppDefaults.defaultAttachmentBackdrop;
+      final notebookCoverColor =
+          _prefs.getInt(_coverColorKey) ?? AppDefaults.defaultNotebookCoverColor;
+      final notebookCoverTexture =
+          _readString(_coverTextureKey) ?? AppDefaults.defaultNotebookCoverTexture;
 
       final localeRaw =
           _readString(_localeKey) ??
@@ -54,6 +62,8 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           fontFamily: fontFamily,
           themePreset: themePreset,
           showAttachmentBackdrop: showAttachmentBackdrop,
+          notebookCoverColor: notebookCoverColor,
+          notebookCoverTexture: notebookCoverTexture,
         ),
       );
 
@@ -73,6 +83,8 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           fontFamily: AppDefaults.defaultFontFamily,
           themePreset: AppDefaults.defaultThemePreset,
           showAttachmentBackdrop: AppDefaults.defaultAttachmentBackdrop,
+          notebookCoverColor: AppDefaults.defaultNotebookCoverColor,
+          notebookCoverTexture: AppDefaults.defaultNotebookCoverTexture,
         ),
       );
     }
@@ -125,6 +137,24 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     emit(current.copyWith(showAttachmentBackdrop: event.enabled));
   }
 
+  Future<void> _onUpdateNotebookCoverColor(
+    UpdateNotebookCoverColor event,
+    Emitter<SettingsState> emit,
+  ) async {
+    final current = _requireLoaded();
+    await _prefs.setInt(_coverColorKey, event.color);
+    emit(current.copyWith(notebookCoverColor: event.color));
+  }
+
+  Future<void> _onUpdateNotebookCoverTexture(
+    UpdateNotebookCoverTexture event,
+    Emitter<SettingsState> emit,
+  ) async {
+    final current = _requireLoaded();
+    await _prefs.setString(_coverTextureKey, event.texture);
+    emit(current.copyWith(notebookCoverTexture: event.texture));
+  }
+
   SettingsLoaded _requireLoaded() {
     final state = this.state;
     if (state is SettingsLoaded) return state;
@@ -134,6 +164,8 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       fontFamily: AppDefaults.defaultFontFamily,
       themePreset: AppDefaults.defaultThemePreset,
       showAttachmentBackdrop: AppDefaults.defaultAttachmentBackdrop,
+      notebookCoverColor: AppDefaults.defaultNotebookCoverColor,
+      notebookCoverTexture: AppDefaults.defaultNotebookCoverTexture,
     );
   }
 

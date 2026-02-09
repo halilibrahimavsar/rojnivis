@@ -120,7 +120,7 @@ class _FilterDialogState extends State<FilterDialog> {
                           });
                         },
                         checkmarkColor: isSelected ? Colors.white : null,
-                        backgroundColor: color.withOpacity(0.1),
+                        backgroundColor: color.withValues(alpha: 0.1),
                         selectedColor: color,
                         labelStyle: TextStyle(
                           color: isSelected ? Colors.white : Colors.black87,

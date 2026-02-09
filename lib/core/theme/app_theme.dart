@@ -90,6 +90,8 @@ class AppTheme {
     'Lora': GoogleFonts.loraTextTheme(),
     'Nunito': GoogleFonts.nunitoTextTheme(),
     'Roboto': GoogleFonts.robotoTextTheme(),
+    'Caveat': GoogleFonts.caveatTextTheme(),
+    'Patrick Hand': GoogleFonts.patrickHandTextTheme(),
   };
 
   static final List<String> supportedFonts = List.unmodifiable(
@@ -222,13 +224,21 @@ class AppTheme {
             : colorScheme.surface;
 
     final cardTheme = CardTheme(
-      elevation: isNeomorphic ? 0 : 8,
+      elevation: isNeomorphic ? 0 : 2,
       shadowColor:
           brightness == Brightness.light
-              ? Colors.black.withValues(alpha: 0.10)
-              : Colors.black.withValues(alpha: 0.35),
-      color: cardColor,
-      shape: RoundedRectangleBorder(borderRadius: radius),
+              ? Colors.black.withValues(alpha: 0.05)
+              : Colors.black.withValues(alpha: 0.2),
+      color: cardColor.withValues(alpha: 0.94), // Slightly translucent to see texture
+      shape: RoundedRectangleBorder(
+        borderRadius: radius,
+        side: BorderSide(
+          color: brightness == Brightness.light 
+              ? Colors.black.withValues(alpha: 0.03)
+              : Colors.white.withValues(alpha: 0.03),
+          width: 0.5,
+        ),
+      ),
       clipBehavior: Clip.antiAlias,
     );
 

@@ -25,8 +25,6 @@ class _MindMapCanvasViewState extends State<MindMapCanvasView> {
 
   MindMapNode? _selectedNode;
   MindMapNode? _draggingNode;
-  Offset _dragStartOffset = Offset.zero;
-  Offset _nodeStartPosition = Offset.zero;
 
   double _currentScale = 1.0;
 
@@ -129,7 +127,7 @@ class _MindMapCanvasViewState extends State<MindMapCanvasView> {
                       _transformController.value.getMaxScaleOnAxis(),
             );
           },
-          child: Container(
+          child: SizedBox(
             width: 10000,
             height: 10000,
             child: GestureDetector(
@@ -159,103 +157,242 @@ class _MindMapCanvasViewState extends State<MindMapCanvasView> {
 
   Widget _buildNode(MindMapNode node, ColorScheme colorScheme) {
     final isSelected = _selectedNode?.id == node.id;
-    final isRoot = node.id == widget.mindMap.id;
 
     return Positioned(
       left: node.x,
       top: node.y,
-      child: GestureDetector(
-        onTap: () => setState(() => _selectedNode = isSelected ? null : node),
-        onPanStart: (d) {
-          setState(() {
-            _draggingNode = node;
-            _dragStartOffset = d.localPosition;
-            _nodeStartPosition = Offset(node.x, node.y);
-          });
+      child: DragTarget<MindMapNode>(
+        onWillAcceptWithDetails: (details) {
+          final dragged = details.data;
+          // Cannot drop on itself or onto its own descendants
+          if (dragged.id == node.id) return false;
+          return !_isDescendantOf(node, dragged.id);
         },
-        onPanUpdate: (d) {
-          if (_draggingNode == null) return;
-          final delta = (d.localPosition - _dragStartOffset) / _currentScale;
-          final updated = widget.mindMap.updateNode(
-            node.id,
-            (n) => n.copyWith(
-              x: _nodeStartPosition.dx + delta.dx,
-              y: _nodeStartPosition.dy + delta.dy,
+        onAcceptWithDetails: (details) {
+          final dragged = details.data;
+          _reorganizeNode(dragged, node);
+        },
+        builder: (context, candidateData, rejectedData) {
+          final isTarget = candidateData.isNotEmpty;
+          return GestureDetector(
+            onTap:
+                () => setState(() => _selectedNode = isSelected ? null : node),
+            onPanUpdate: (d) {
+              if (_draggingNode != node) return;
+              final delta = d.delta;
+              final updated = widget.mindMap.updateNode(
+                node.id,
+                (n) => n.copyWith(x: n.x + delta.dx, y: n.y + delta.dy),
+              );
+              widget.onNodeUpdated(updated);
+            },
+            child: Draggable<MindMapNode>(
+              data: node,
+              feedback: Material(
+                color: Colors.transparent,
+                child: _buildNodeContent(
+                  node,
+                  colorScheme,
+                  isSelected: true,
+                  isDragging: true,
+                ),
+              ),
+              childWhenDragging: Opacity(
+                opacity: 0.3,
+                child: _buildNodeContent(
+                  node,
+                  colorScheme,
+                  isSelected: isSelected,
+                ),
+              ),
+              onDragStarted: () => setState(() => _draggingNode = node),
+              onDragEnd: (details) {
+                setState(() => _draggingNode = null);
+                if (details.wasAccepted) {
+                  return; // Reorganized, position handled by reorganization
+                }
+
+                final RenderBox renderBox =
+                    context.findRenderObject() as RenderBox;
+                final localPos = renderBox.globalToLocal(details.offset);
+
+                // Adjust for transformation
+                final matrix = _transformController.value.clone()..invert();
+                final transformedOffset = MatrixUtils.transformPoint(
+                  matrix,
+                  localPos,
+                );
+
+                final updated = widget.mindMap.updateNode(
+                  node.id,
+                  (n) => n.copyWith(
+                    x: transformedOffset.dx,
+                    y: transformedOffset.dy,
+                  ),
+                );
+                widget.onNodeUpdated(updated);
+              },
+              child: _buildNodeContent(
+                node,
+                colorScheme,
+                isSelected: isSelected,
+                isTarget: isTarget,
+              ),
             ),
           );
-          widget.onNodeUpdated(updated);
         },
-        onPanEnd: (_) => setState(() => _draggingNode = null),
-        child: Container(
-          width: _nodeWidth,
-          height: _nodeHeight,
-          decoration: BoxDecoration(
-            color: isRoot ? Colors.blue.shade100 : Colors.white,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-              color: isSelected ? Colors.blue : Colors.grey.shade300,
-              width: isSelected ? 3 : 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 4,
-                offset: const Offset(0, 2),
+      ),
+    );
+  }
+
+  bool _isDescendantOf(MindMapNode parent, String targetId) {
+    for (final child in parent.children) {
+      if (child.id == targetId) return true;
+      if (_isDescendantOf(child, targetId)) return true;
+    }
+    return false;
+  }
+
+  void _reorganizeNode(MindMapNode dragged, MindMapNode newParent) {
+    // 1. Remove from current parent
+    var updatedRoot = widget.mindMap.removeChild(dragged.id);
+    // 2. Add to new parent
+    updatedRoot = updatedRoot.addChild(newParent.id, dragged);
+
+    widget.onNodeUpdated(updatedRoot);
+  }
+
+  Widget _buildNodeContent(
+    MindMapNode node,
+    ColorScheme colorScheme, {
+    bool isSelected = false,
+    bool isDragging = false,
+    bool isTarget = false,
+  }) {
+    final isRoot = node.id == widget.mindMap.id;
+
+    // Shape decoration
+    final decoration =
+        node.effectiveUseGradient
+            ? BoxDecoration(
+              gradient: LinearGradient(
+                colors: [node.color, node.color.withValues(alpha: 0.7)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-            ],
-          ),
-          child: Material(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(8),
-            child: InkWell(
-              onTap:
-                  () =>
-                      setState(() => _selectedNode = isSelected ? null : node),
-              borderRadius: BorderRadius.circular(8),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: node.color,
-                        shape: BoxShape.circle,
+              borderRadius: _getBorderRadius(node.effectiveShape),
+              boxShadow: _getShadows(isSelected || isTarget),
+              border:
+                  (isSelected || isTarget)
+                      ? Border.all(
+                        color:
+                            isTarget
+                                ? Colors.greenAccent
+                                : Colors.white.withValues(alpha: 0.5),
+                        width: isTarget ? 3 : 2,
+                      )
+                      : null,
+            )
+            : BoxDecoration(
+              color: isRoot ? node.color.withValues(alpha: 0.15) : Colors.white,
+              borderRadius: _getBorderRadius(node.effectiveShape),
+              border: Border.all(
+                color:
+                    isTarget
+                        ? Colors.greenAccent
+                        : (isSelected ? node.color : Colors.grey.shade300),
+                width: (isSelected || isTarget) ? (isTarget ? 3.5 : 2.5) : 1,
+              ),
+              boxShadow: _getShadows(isSelected || isTarget),
+            );
+
+    return AnimatedScale(
+      scale: isSelected ? 1.05 : 1.0,
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOutBack,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        width: _nodeWidth,
+        height: _nodeHeight,
+        decoration: decoration,
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: _getBorderRadius(node.effectiveShape),
+          child: InkWell(
+            onTap:
+                () => setState(() => _selectedNode = isSelected ? null : node),
+            borderRadius: _getBorderRadius(node.effectiveShape),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              child: Row(
+                children: [
+                  _buildShapeIcon(node),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      node.label,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: isRoot ? FontWeight.bold : FontWeight.w500,
+                        fontFamily: 'Caveat', // Use handwriting font
                       ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        node.label,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                  ),
+                  if (isSelected)
+                    IconButton(
+                      icon: Icon(Icons.add_circle, size: 20, color: node.color),
+                      onPressed: () => _addNode(node.id),
+                      padding: EdgeInsets.zero,
+                      constraints: const BoxConstraints(),
                     ),
-                    if (isSelected)
-                      IconButton(
-                        icon: const Icon(
-                          Icons.add_circle,
-                          size: 20,
-                          color: Colors.blue,
-                        ),
-                        onPressed: () => _addNode(node.id),
-                        tooltip: 'add_child'.tr(),
-                      ),
-                  ],
-                ),
+                ],
               ),
             ),
           ),
         ),
       ),
     );
+  }
+
+  BorderRadius _getBorderRadius(String shape) {
+    switch (shape) {
+      case 'circle':
+        return BorderRadius.circular(_nodeWidth / 2);
+      case 'cloud':
+        return BorderRadius.circular(20);
+      case 'star':
+        return BorderRadius.circular(15);
+      default:
+        return BorderRadius.circular(12);
+    }
+  }
+
+  List<BoxShadow> _getShadows(bool isSelected) {
+    return [
+      BoxShadow(
+        color: Colors.black.withValues(alpha: isSelected ? 0.15 : 0.08),
+        blurRadius: isSelected ? 12 : 6,
+        offset: Offset(0, isSelected ? 4 : 2),
+      ),
+    ];
+  }
+
+  Widget _buildShapeIcon(MindMapNode node) {
+    IconData icon;
+    switch (node.effectiveShape) {
+      case 'circle':
+        return Icon(Icons.circle, color: node.color, size: 20);
+      case 'cloud':
+        icon = Icons.cloud;
+        break;
+      case 'star':
+        icon = Icons.star;
+        break;
+      default:
+        icon = Icons.rectangle_rounded;
+    }
+    return Icon(icon, color: node.color, size: 14);
   }
 
   Widget _buildControls(ColorScheme colorScheme) {
@@ -313,17 +450,52 @@ class _MindMapCanvasViewState extends State<MindMapCanvasView> {
                 ],
               ),
             ),
+            const SizedBox(width: 12),
+            _buildLayoutToggle(colorScheme),
           ],
         ),
       ),
     );
   }
 
+  Widget _buildLayoutToggle(ColorScheme colorScheme) {
+    final isVertical = widget.mindMap.effectiveLayoutType == 'vertical';
+    return _buildToolbarButton(
+      icon:
+          isVertical
+              ? Icons.vertical_align_bottom
+              : Icons.horizontal_distribute,
+      onPressed: () {
+        final newLayout = isVertical ? 'horizontal' : 'vertical';
+        final updated = _applyAutoLayout(widget.mindMap, newLayout);
+        widget.onNodeUpdated(updated.copyWith(layoutType: newLayout));
+      },
+      colorScheme: colorScheme,
+      isActive: true,
+      tooltip: 'toggle_layout'.tr(),
+    );
+  }
+
+  MindMapNode _applyAutoLayout(MindMapNode root, String type) {
+    // Simple recursive layout algorithm placeholder
+    // For now, let's just rotate the existing coordinates as a simple toggle effect
+    return _rotateNodes(root);
+  }
+
+  MindMapNode _rotateNodes(MindMapNode node) {
+    final List<MindMapNode> newChildren =
+        node.children.map((c) => _rotateNodes(c)).toList();
+    // Swap x and y relative to parent (very simple pivot)
+    return node.copyWith(x: node.y, y: node.x, children: newChildren);
+  }
+
+
   Widget _buildToolbarButton({
     required IconData icon,
     required VoidCallback onPressed,
     required ColorScheme colorScheme,
     bool isActive = false,
+    String? tooltip,
   }) {
     return Material(
       color:
@@ -347,11 +519,14 @@ class _MindMapCanvasViewState extends State<MindMapCanvasView> {
             ),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(
-            icon,
-            size: 22,
-            color:
-                isActive ? colorScheme.primary : colorScheme.onSurfaceVariant,
+          child: Tooltip(
+            message: tooltip ?? '',
+            child: Icon(
+              icon,
+              size: 22,
+              color:
+                  isActive ? colorScheme.primary : colorScheme.onSurfaceVariant,
+            ),
           ),
         ),
       ),
@@ -445,6 +620,20 @@ class _MindMapCanvasViewState extends State<MindMapCanvasView> {
                       onTap: () => _editNode(_selectedNode!),
                       colorScheme: colorScheme,
                     ),
+                    const SizedBox(width: 8),
+                    _buildActionChip(
+                      icon: Icons.category,
+                      label: 'shape',
+                      onTap: () => _cycleShape(_selectedNode!),
+                      colorScheme: colorScheme,
+                    ),
+                    const SizedBox(width: 8),
+                    _buildActionChip(
+                      icon: Icons.gradient,
+                      label: 'gradient',
+                      onTap: () => _toggleGradient(_selectedNode!),
+                      colorScheme: colorScheme,
+                    ),
                     if (_selectedNode!.id != widget.mindMap.id) ...[
                       const SizedBox(width: 8),
                       _buildActionChip(
@@ -463,6 +652,36 @@ class _MindMapCanvasViewState extends State<MindMapCanvasView> {
         ),
       ),
     );
+  }
+
+  void _cycleShape(MindMapNode node) {
+    final shapes = ['rectangle', 'circle', 'cloud', 'star'];
+    final currentIndex = shapes.indexOf(node.effectiveShape);
+    final nextIndex = (currentIndex + 1) % shapes.length;
+    widget.onNodeUpdated(
+      widget.mindMap.updateNode(
+        node.id,
+        (n) => n.copyWith(shape: shapes[nextIndex]),
+      ),
+    );
+    setState(() {
+      _selectedNode = _selectedNode?.copyWith(shape: shapes[nextIndex]);
+    });
+  }
+
+  void _toggleGradient(MindMapNode node) {
+    final nextValue = !node.effectiveUseGradient;
+    widget.onNodeUpdated(
+      widget.mindMap.updateNode(
+        node.id,
+        (n) => n.copyWith(useGradient: nextValue),
+      ),
+    );
+    setState(() {
+      if (_selectedNode?.id == node.id) {
+        _selectedNode = _selectedNode?.copyWith(useGradient: nextValue);
+      }
+    });
   }
 
   Widget _buildActionChip({
@@ -607,45 +826,71 @@ class ConnectionsPainter extends CustomPainter {
   }
 
   void _drawConnections(Canvas canvas, MindMapNode parent) {
+    final isVertical = root.effectiveLayoutType == 'vertical';
+
+    final paint =
+        Paint()
+          ..color = parent.color.withValues(alpha: 0.6)
+          ..strokeWidth = 2.5
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round;
+
     for (final child in parent.children) {
-      final paint =
+      // Calculate start and end points based on layout
+      final Offset start;
+      final Offset end;
+
+      if (isVertical) {
+        start = Offset(parent.x + 90, parent.y + 60);
+        end = Offset(child.x + 90, child.y);
+      } else {
+        start = Offset(parent.x + 180, parent.y + 30);
+        end = Offset(child.x, child.y + 30);
+      }
+
+      final path = Path()..moveTo(start.dx, start.dy);
+
+      // Create a more "organic" line using multiple cubic segments with random jitter
+      final random = math.Random(child.id.hashCode);
+      final jitterX = (random.nextDouble() - 0.5) * 15;
+      final jitterY = (random.nextDouble() - 0.5) * 15;
+
+      if (isVertical) {
+        path.cubicTo(
+          start.dx,
+          start.dy + (end.dy - start.dy) * 0.4 + jitterY,
+          end.dx,
+          start.dy + (end.dy - start.dy) * 0.6 + jitterY,
+          end.dx,
+          end.dy,
+        );
+      } else {
+        path.cubicTo(
+          start.dx + (end.dx - start.dx) * 0.4 + jitterX,
+          start.dy,
+          start.dx + (end.dx - start.dx) * 0.6 + jitterX,
+          end.dy,
+          end.dx,
+          end.dy,
+        );
+      }
+
+      // Draw the main organic path
+      canvas.drawPath(path, paint);
+
+      // Add a second, thinner, slightly offset line for "sketched" look
+      final sketchPaint =
           Paint()
-            ..color = parent.color.withValues(alpha: 0.5)
-            ..strokeWidth = 2.5
+            ..color = parent.color.withValues(alpha: 0.2)
+            ..strokeWidth = 1.0
             ..style = PaintingStyle.stroke
             ..strokeCap = StrokeCap.round;
 
-      final start = Offset(parent.x + 180, parent.y + 30);
-      final end = Offset(child.x, child.y + 30);
+      canvas.save();
+      canvas.translate(1.5, 0.5);
+      canvas.drawPath(path, sketchPaint);
+      canvas.restore();
 
-      final path =
-          Path()
-            ..moveTo(start.dx, start.dy)
-            ..cubicTo(
-              start.dx + (end.dx - start.dx) * 0.5,
-              start.dy,
-              start.dx + (end.dx - start.dx) * 0.5,
-              end.dy,
-              end.dx,
-              end.dy,
-            );
-
-      canvas.drawPath(path, paint);
-
-      // Arrow
-      final arrowPaint =
-          Paint()
-            ..color = child.color
-            ..style = PaintingStyle.fill;
-
-      final arrowPath =
-          Path()
-            ..moveTo(end.dx, end.dy)
-            ..lineTo(end.dx - 6, end.dy - 4)
-            ..lineTo(end.dx - 6, end.dy + 4)
-            ..close();
-
-      canvas.drawPath(arrowPath, arrowPaint);
       _drawConnections(canvas, child);
     }
   }

@@ -1,10 +1,14 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:rojnivis/features/local_auth/data/local_auth_repository.dart';
+import 'package:rojnivis/features/local_auth/presentation/widgets/local_auth_settings_widget.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_card.dart';
+import '../../../../di/injection.dart';
 import '../bloc/settings_bloc.dart';
+import '../../../../core/widgets/notebook_cover.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -106,6 +110,104 @@ class SettingsPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               _Section(
+                title: 'notebook_customization'.tr(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: SizedBox(
+                        width: 140,
+                        height: 180,
+                        child: NotebookCover(
+                          color: Color(state.notebookCoverColor),
+                          texture: state.notebookCoverTexture,
+                          child: Center(
+                            child: Text(
+                              'Rojnivis',
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.7),
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Caveat',
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'cover_color'.tr(),
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 10,
+                      runSpacing: 10,
+                      children: [
+                        for (final color in [
+                          0xFF2C3E50,
+                          0xFFC0392B,
+                          0xFF27AE60,
+                          0xFF8E44AD,
+                          0xFFD35400,
+                        ])
+                          GestureDetector(
+                            onTap:
+                                () => context.read<SettingsBloc>().add(
+                                  UpdateNotebookCoverColor(color),
+                                ),
+                            child: Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: Color(color),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color:
+                                      state.notebookCoverColor == color
+                                          ? Theme.of(context).colorScheme.primary
+                                          : Colors.transparent,
+                                  width: 2,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 18),
+                    Text(
+                      'cover_texture'.tr(),
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                    const SizedBox(height: 10),
+                    SegmentedButton<String>(
+                      segments: [
+                        ButtonSegment(
+                          value: 'classic',
+                          label: Text('texture_classic'.tr()),
+                        ),
+                        ButtonSegment(
+                          value: 'leather',
+                          label: Text('texture_leather'.tr()),
+                        ),
+                        ButtonSegment(
+                          value: 'fabric',
+                          label: Text('texture_fabric'.tr()),
+                        ),
+                      ],
+                      selected: {state.notebookCoverTexture},
+                      onSelectionChanged: (selection) {
+                        context.read<SettingsBloc>().add(
+                          UpdateNotebookCoverTexture(selection.first),
+                        );
+                      },
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              _Section(
                 title: 'language'.tr(),
                 child: SegmentedButton<Locale>(
                   segments: [
@@ -145,6 +247,14 @@ class SettingsPage extends StatelessWidget {
                     labelText: 'font'.tr(),
                     prefixIcon: const Icon(Icons.text_fields_outlined),
                   ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              _Section(
+                title: 'security'.tr(),
+                child: LocalAuthSettingsWidget(
+                  repository: getIt<LocalAuthRepository>(),
+                  showHeader: false, // We have our own section header
                 ),
               ),
             ],

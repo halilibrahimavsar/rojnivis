@@ -55,3 +55,21 @@ class UpdateAttachmentBackdrop extends SettingsEvent {
   @override
   List<Object?> get props => [enabled];
 }
+
+class UpdateNotebookCoverColor extends SettingsEvent {
+  final int color;
+
+  const UpdateNotebookCoverColor(this.color);
+
+  @override
+  List<Object?> get props => [color];
+}
+
+class UpdateNotebookCoverTexture extends SettingsEvent {
+  final String texture;
+
+  const UpdateNotebookCoverTexture(this.texture);
+
+  @override
+  List<Object?> get props => [texture];
+}

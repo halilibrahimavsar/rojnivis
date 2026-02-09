@@ -25,7 +25,21 @@ class MindMapNode extends Equatable {
   @HiveField(5)
   final int colorValue;
 
+  @HiveField(6)
+  final String? layoutType; // 'horizontal' or 'vertical'
+
+  @HiveField(7)
+  final String? shape; // 'rectangle', 'circle', 'cloud', 'star'
+
+  @HiveField(8)
+  final bool? useGradient;
+
   Color get color => Color(colorValue);
+  
+  // Non-nullable getters for internal app use
+  String get effectiveLayoutType => layoutType ?? 'horizontal';
+  String get effectiveShape => shape ?? 'rectangle';
+  bool get effectiveUseGradient => useGradient ?? false;
 
   const MindMapNode({
     required this.id,
@@ -34,6 +48,9 @@ class MindMapNode extends Equatable {
     this.x = 0,
     this.y = 0,
     this.colorValue = 0xFF2196F3, // Default blue
+    this.layoutType = 'horizontal',
+    this.shape = 'rectangle',
+    this.useGradient = false,
   });
 
   factory MindMapNode.create({
@@ -43,6 +60,9 @@ class MindMapNode extends Equatable {
     double x = 100,
     double y = 100,
     int colorValue = 0xFF2196F3,
+    String layoutType = 'horizontal',
+    String shape = 'rectangle',
+    bool useGradient = false,
   }) {
     return MindMapNode(
       id: const Uuid().v4(),
@@ -51,6 +71,9 @@ class MindMapNode extends Equatable {
       x: x,
       y: y,
       colorValue: colorValue,
+      layoutType: layoutType,
+      shape: shape,
+      useGradient: useGradient,
     );
   }
 
@@ -61,6 +84,9 @@ class MindMapNode extends Equatable {
     double? x,
     double? y,
     int? colorValue,
+    String? layoutType,
+    String? shape,
+    bool? useGradient,
   }) {
     return MindMapNode(
       id: id ?? this.id,
@@ -69,6 +95,9 @@ class MindMapNode extends Equatable {
       x: x ?? this.x,
       y: y ?? this.y,
       colorValue: colorValue ?? this.colorValue,
+      layoutType: layoutType ?? this.layoutType,
+      shape: shape ?? this.shape,
+      useGradient: useGradient ?? this.useGradient,
     );
   }
 

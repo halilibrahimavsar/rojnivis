@@ -15,6 +15,7 @@ import 'features/journal/presentation/bloc/journal_bloc.dart';
 import 'features/mindmap/domain/models/mind_map_node.dart';
 import 'features/mindmap/presentation/bloc/mind_map_bloc.dart';
 import 'features/settings/presentation/bloc/settings_bloc.dart';
+import 'features/local_auth/local_auth.dart';
 
 const String mindMapsBoxName = 'mind_maps';
 
@@ -173,6 +174,12 @@ class _AppConfiguration extends StatelessWidget {
           ),
           themeMode: settings.themeMode,
           routerConfig: AppRouter.router,
+          builder: (context, child) {
+            return LocalAuthSecurityLayer(
+              repository: getIt<LocalAuthRepository>(),
+              child: child ?? const SizedBox.shrink(),
+            );
+          },
         );
       },
     );
