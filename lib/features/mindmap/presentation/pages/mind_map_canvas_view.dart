@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../domain/models/mind_map_node.dart';
 import '../widgets/widgets.dart';
+import '../../../../core/constants/app_constants.dart';
 
 class MindMapCanvasView extends StatefulWidget {
   final MindMapNode mindMap;
@@ -27,11 +28,12 @@ class _MindMapCanvasViewState extends State<MindMapCanvasView> {
   MindMapNode? _draggingNode;
 
   double _currentScale = 1.0;
+  bool _isQuickEditMode = false;
 
-  static const double _nodeWidth = 180.0;
-  static const double _nodeHeight = 60.0;
-  static const double _levelSpacing = 200.0;
-  static const double _siblingSpacing = 80.0;
+  static const double _nodeWidth = AppMindMap.nodeWidth;
+  static const double _nodeHeight = AppMindMap.nodeHeight;
+  static const double _levelSpacing = AppMindMap.levelSpacing;
+  static const double _siblingSpacing = AppMindMap.siblingSpacing;
 
   @override
   void initState() {
@@ -319,8 +321,12 @@ class _MindMapCanvasViewState extends State<MindMapCanvasView> {
           color: Colors.transparent,
           borderRadius: _getBorderRadius(node.effectiveShape),
           child: InkWell(
-            onTap:
-                () => setState(() => _selectedNode = isSelected ? null : node),
+            onTap: () {
+              setState(() => _selectedNode = isSelected ? null : node);
+              if (_isQuickEditMode && !isSelected) {
+                _editNodeDirectly(node);
+              }
+            },
             borderRadius: _getBorderRadius(node.effectiveShape),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -452,6 +458,8 @@ class _MindMapCanvasViewState extends State<MindMapCanvasView> {
             ),
             const SizedBox(width: 12),
             _buildLayoutToggle(colorScheme),
+            const SizedBox(width: 8),
+            _buildQuickEditModeToggle(colorScheme),
           ],
         ),
       ),
@@ -476,6 +484,21 @@ class _MindMapCanvasViewState extends State<MindMapCanvasView> {
     );
   }
 
+  Widget _buildQuickEditModeToggle(ColorScheme colorScheme) {
+    return _buildToolbarButton(
+      icon: _isQuickEditMode ? Icons.edit_off : Icons.edit,
+      onPressed: () {
+        setState(() => _isQuickEditMode = !_isQuickEditMode);
+      },
+      colorScheme: colorScheme,
+      isActive: _isQuickEditMode,
+      tooltip:
+          _isQuickEditMode
+              ? 'disable_quick_edit'.tr()
+              : 'enable_quick_edit'.tr(),
+    );
+  }
+
   MindMapNode _applyAutoLayout(MindMapNode root, String type) {
     // Simple recursive layout algorithm placeholder
     // For now, let's just rotate the existing coordinates as a simple toggle effect
@@ -488,7 +511,6 @@ class _MindMapCanvasViewState extends State<MindMapCanvasView> {
     // Swap x and y relative to parent (very simple pivot)
     return node.copyWith(x: node.y, y: node.x, children: newChildren);
   }
-
 
   Widget _buildToolbarButton({
     required IconData icon,
@@ -667,6 +689,23 @@ class _MindMapCanvasViewState extends State<MindMapCanvasView> {
     setState(() {
       _selectedNode = _selectedNode?.copyWith(shape: shapes[nextIndex]);
     });
+  }
+
+  void _editNodeDirectly(MindMapNode node) {
+    showDialog(
+      context: context,
+      builder:
+          (ctx) => _MindMapQuickEditDialog(
+            node: node,
+            onSave: (newLabel) {
+              final updated = widget.mindMap.updateNode(
+                node.id,
+                (n) => n.copyWith(label: newLabel),
+              );
+              widget.onNodeUpdated(updated);
+            },
+          ),
+    );
   }
 
   void _toggleGradient(MindMapNode node) {
@@ -897,4 +936,62 @@ class ConnectionsPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
+// Quick Edit Dialog for MindMap nodes
+class _MindMapQuickEditDialog extends StatefulWidget {
+  final MindMapNode node;
+  final Function(String) onSave;
+
+  const _MindMapQuickEditDialog({required this.node, required this.onSave});
+
+  @override
+  State<_MindMapQuickEditDialog> createState() =>
+      _MindMapQuickEditDialogState();
+}
+
+class _MindMapQuickEditDialogState extends State<_MindMapQuickEditDialog> {
+  late TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.node.label);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text('quick_edit_node'.tr()),
+      content: TextField(
+        controller: _controller,
+        autofocus: true,
+        decoration: InputDecoration(
+          labelText: 'node_label'.tr(),
+          border: OutlineInputBorder(),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text('cancel'.tr()),
+        ),
+        FilledButton(
+          onPressed: () {
+            if (_controller.text.trim().isNotEmpty) {
+              widget.onSave(_controller.text.trim());
+              Navigator.pop(context);
+            }
+          },
+          child: Text('save'.tr()),
+        ),
+      ],
+    );
+  }
 }

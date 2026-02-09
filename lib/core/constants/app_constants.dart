@@ -88,6 +88,16 @@ class AppAlpha {
   static const double fullyOpaque = 1.0;
 }
 
+/// MindMap constants
+class AppMindMap {
+  const AppMindMap._();
+
+  static const double nodeWidth = 180.0;
+  static const double nodeHeight = 60.0;
+  static const double levelSpacing = 200.0;
+  static const double siblingSpacing = 80.0;
+}
+
 /// Max line and length constants
 class AppLimits {
   const AppLimits._();

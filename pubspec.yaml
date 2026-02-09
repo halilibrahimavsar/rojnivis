@@ -50,6 +50,9 @@ dependencies:
   # Security (New)
   local_auth: ^2.3.0
   crypto: ^3.0.6
+
+  unified_flutter_features:
+    path: /home/garuda/Masaüstü/unified_flutter_features
   
 dev_dependencies:
   flutter_test:

@@ -1,9 +1,8 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:rojnivis/features/local_auth/data/local_auth_repository.dart';
-import 'package:rojnivis/features/local_auth/presentation/widgets/local_auth_settings_widget.dart';
-
+import 'package:unified_flutter_features/features/local_auth/data/local_auth_repository.dart';
+import 'package:unified_flutter_features/features/local_auth/presentation/widgets/local_auth_settings_widget.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../di/injection.dart';
@@ -166,7 +165,9 @@ class SettingsPage extends StatelessWidget {
                                 border: Border.all(
                                   color:
                                       state.notebookCoverColor == color
-                                          ? Theme.of(context).colorScheme.primary
+                                          ? Theme.of(
+                                            context,
+                                          ).colorScheme.primary
                                           : Colors.transparent,
                                   width: 2,
                                 ),
