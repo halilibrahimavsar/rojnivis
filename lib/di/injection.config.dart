@@ -12,8 +12,15 @@ import 'package:get_it/get_it.dart' as _i174;
 import 'package:injectable/injectable.dart' as _i526;
 import 'package:local_auth/local_auth.dart' as _i152;
 import 'package:shared_preferences/shared_preferences.dart' as _i460;
+import 'package:unified_flutter_features/features/local_auth/data/local_auth_repository.dart'
+    as _i314;
+import 'package:unified_flutter_features/features/local_auth/presentation/bloc/login/local_auth_login_bloc.dart'
+    as _i197;
+import 'package:unified_flutter_features/features/local_auth/presentation/bloc/settings/local_auth_settings_bloc.dart'
+    as _i1022;
 
 import '../core/di/register_module.dart' as _i796;
+import '../core/services/ai_service.dart' as _i805;
 import '../core/services/sound_service.dart' as _i173;
 import '../features/categories/data/datasources/category_local_datasource.dart'
     as _i409;
@@ -44,6 +51,7 @@ import '../features/mindmap/domain/repositories/mind_map_repository.dart'
     as _i744;
 import '../features/mindmap/presentation/bloc/mind_map_bloc.dart' as _i587;
 import '../features/settings/presentation/bloc/settings_bloc.dart' as _i419;
+import 'app_module.dart' as _i460;
 
 extension GetItInjectableX on _i174.GetIt {
 // initializes the registration of main-scope dependencies inside of GetIt
@@ -57,16 +65,21 @@ extension GetItInjectableX on _i174.GetIt {
       environmentFilter,
     );
     final registerModule = _$RegisterModule();
+    final externalDependenciesModule = _$ExternalDependenciesModule();
     await gh.factoryAsync<_i460.SharedPreferences>(
       () => registerModule.prefs,
       preResolve: true,
     );
     gh.lazySingleton<_i152.LocalAuthentication>(() => registerModule.localAuth);
     gh.lazySingleton<_i173.SoundService>(() => _i173.SoundService());
+    gh.lazySingleton<_i314.LocalAuthRepository>(() => externalDependenciesModule
+        .localAuthRepository(gh<_i460.SharedPreferences>()));
     gh.lazySingleton<_i762.MindMapLocalDataSource>(
         () => _i762.MindMapLocalDataSourceImpl());
     gh.factory<_i419.SettingsBloc>(
         () => _i419.SettingsBloc(gh<_i460.SharedPreferences>()));
+    gh.lazySingleton<_i805.AiService>(
+        () => _i805.GeminiAiService(gh<_i460.SharedPreferences>()));
     gh.lazySingleton<_i409.CategoryLocalDataSource>(
         () => _i409.CategoryLocalDataSourceImpl());
     gh.lazySingleton<_i417.JournalLocalDataSource>(
@@ -75,6 +88,10 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i372.MindMapRepositoryImpl(gh<_i762.MindMapLocalDataSource>()));
     gh.lazySingleton<_i745.CategoryRepository>(() =>
         _i346.CategoryRepositoryImpl(gh<_i409.CategoryLocalDataSource>()));
+    gh.factory<_i197.LocalAuthLoginBloc>(() => externalDependenciesModule
+        .localAuthLoginBloc(gh<_i314.LocalAuthRepository>()));
+    gh.factory<_i1022.LocalAuthSettingsBloc>(() => externalDependenciesModule
+        .localAuthSettingsBloc(gh<_i314.LocalAuthRepository>()));
     gh.factory<_i587.MindMapBloc>(
         () => _i587.MindMapBloc(gh<_i744.MindMapRepository>()));
     gh.lazySingleton<_i303.JournalRepository>(
@@ -109,3 +126,5 @@ extension GetItInjectableX on _i174.GetIt {
 }
 
 class _$RegisterModule extends _i796.RegisterModule {}
+
+class _$ExternalDependenciesModule extends _i460.ExternalDependenciesModule {}

@@ -1,7 +1,84 @@
+import 'dart:math' as math;
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
-import '../../../../di/injection.dart';
+
 import '../../../../core/services/sound_service.dart';
+import '../../../../core/theme/old_page_theme.dart';
+import '../../../../di/injection.dart';
+
+// ─────────────────────────────────────────────────────────────────
+// Pen Types
+// ─────────────────────────────────────────────────────────────────
+
+enum PenType {
+  fountain('Fountain Pen', Icons.edit),
+  pencil('Pencil', Icons.create),
+  highlighter('Highlighter', Icons.highlight),
+  eraser('Eraser', Icons.auto_fix_normal);
+
+  final String label;
+  final IconData icon;
+  const PenType(this.label, this.icon);
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Ink-themed color palette
+// ─────────────────────────────────────────────────────────────────
+
+class InkPalette {
+  static const List<Color> colors = [
+    Color(0xFF1A1A2E), // midnight
+    Color(0xFF2C2416), // sepia
+    Color(0xFF5C3624), // burnt umber
+    Color(0xFF6B1D1D), // mahogany
+    Color(0xFF1B4332), // forest ink
+    Color(0xFF1A3A5C), // navy ink
+    Color(0xFF4A1942), // plum
+    Color(0xFF6C5CE7), // violet
+    Color(0xFFC0392B), // vermillion
+    Color(0xFF2D6A4F), // emerald
+  ];
+
+  static const List<String> names = [
+    'Midnight',
+    'Sepia',
+    'Burnt Umber',
+    'Mahogany',
+    'Forest',
+    'Navy',
+    'Plum',
+    'Violet',
+    'Vermillion',
+    'Emerald',
+  ];
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Stroke data model
+// ─────────────────────────────────────────────────────────────────
+
+class SketchStroke {
+  final PenType penType;
+  final Color color;
+  final double baseWidth;
+  final double opacity;
+  final List<Offset> points;
+  final List<double> velocities;
+
+  SketchStroke({
+    required this.penType,
+    required this.color,
+    required this.baseWidth,
+    this.opacity = 1.0,
+    List<Offset>? points,
+    List<double>? velocities,
+  })  : points = points ?? [],
+        velocities = velocities ?? [];
+}
+
+// ─────────────────────────────────────────────────────────────────
+// Main Widget
+// ─────────────────────────────────────────────────────────────────
 
 class SketchCanvas extends StatefulWidget {
   final Function(ui.Image) onSave;
@@ -13,41 +90,105 @@ class SketchCanvas extends StatefulWidget {
   State<SketchCanvas> createState() => _SketchCanvasState();
 }
 
-class _SketchCanvasState extends State<SketchCanvas> {
-  final List<SketchPath> _paths = [];
-  SketchPath? _currentPath;
-  Color _currentColor = Colors.black87;
+class _SketchCanvasState extends State<SketchCanvas>
+    with TickerProviderStateMixin {
+  // Stroke history
+  final List<SketchStroke> _strokes = [];
+  final List<SketchStroke> _redoStack = [];
+  SketchStroke? _currentStroke;
+
+  // Tool settings
+  PenType _penType = PenType.fountain;
+  Color _color = InkPalette.colors[0];
+  double _strokeWidth = 3.0;
+  double _opacity = 1.0;
+
+  // UI state
+  bool _isToolbarExpanded = false;
+  late final AnimationController _toolbarController;
+  late final Animation<double> _toolbarAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _toolbarController = AnimationController(
+      duration: const Duration(milliseconds: 300),
+      vsync: this,
+    );
+    _toolbarAnimation = CurvedAnimation(
+      parent: _toolbarController,
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  @override
+  void dispose() {
+    _toolbarController.dispose();
+    super.dispose();
+  }
+
+  // ── Drawing Handlers ─────────────────────────────────────────
 
   void _onPanStart(DragStartDetails details) {
-    getIt<SoundService>().playPencilWrite();
+    if (_penType != PenType.eraser) {
+      getIt<SoundService>().playPencilWrite();
+    }
+
+    _redoStack.clear();
+
     setState(() {
-      _currentPath = SketchPath(
-        color: _currentColor,
+      _currentStroke = SketchStroke(
+        penType: _penType,
+        color: _penType == PenType.eraser ? Colors.white : _color,
+        baseWidth: _strokeWidth,
+        opacity: _penType == PenType.highlighter ? 0.35 : _opacity,
         points: [details.localPosition],
         velocities: [0.0],
       );
-      _paths.add(_currentPath!);
+      _strokes.add(_currentStroke!);
     });
   }
 
   void _onPanUpdate(DragUpdateDetails details) {
-    if (_currentPath == null) return;
+    if (_currentStroke == null) return;
 
-    final lastPoint = _currentPath!.points.last;
+    final lastPoint = _currentStroke!.points.last;
     final newPoint = details.localPosition;
     final distance = (newPoint - lastPoint).distance;
 
-    // Simple velocity estimation
-    final velocity = distance;
+    // Don't add points too close together
+    if (distance < 1.5) return;
 
     setState(() {
-      _currentPath!.points.add(newPoint);
-      _currentPath!.velocities.add(velocity);
+      _currentStroke!.points.add(newPoint);
+      _currentStroke!.velocities.add(distance);
     });
   }
 
   void _onPanEnd(DragEndDetails details) {
-    _currentPath = null;
+    _currentStroke = null;
+  }
+
+  void _undo() {
+    if (_strokes.isEmpty) return;
+    setState(() {
+      _redoStack.add(_strokes.removeLast());
+    });
+  }
+
+  void _redo() {
+    if (_redoStack.isEmpty) return;
+    setState(() {
+      _strokes.add(_redoStack.removeLast());
+    });
+  }
+
+  void _clear() {
+    if (_strokes.isEmpty) return;
+    setState(() {
+      _redoStack.addAll(_strokes.reversed);
+      _strokes.clear();
+    });
   }
 
   Future<void> _exportImage() async {
@@ -57,14 +198,14 @@ class _SketchCanvasState extends State<SketchCanvas> {
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
 
-    // Draw white background
+    // Draw paper background
     canvas.drawRect(
       Rect.fromLTWH(0, 0, size.width, size.height),
-      Paint()..color = Colors.white,
+      Paint()..color = const Color(0xFFF5F0E1),
     );
 
-    // Draw paths
-    final painter = SketchPainter(paths: _paths);
+    // Draw strokes
+    final painter = _PremiumStrokePainter(strokes: _strokes);
     painter.paint(canvas, size);
 
     final picture = recorder.endRecording();
@@ -72,149 +213,446 @@ class _SketchCanvasState extends State<SketchCanvas> {
     widget.onSave(img);
   }
 
+  void _toggleToolbar() {
+    setState(() => _isToolbarExpanded = !_isToolbarExpanded);
+    if (_isToolbarExpanded) {
+      _toolbarController.forward();
+    } else {
+      _toolbarController.reverse();
+    }
+  }
+
+  // ── Build ────────────────────────────────────────────────────
+
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(0xFFF5F0E1),
       appBar: AppBar(
-        title: const Text('Sketch'),
+        backgroundColor: Colors.transparent,
+        title: Text(
+          'Sketch',
+          style: TextStyle(
+            fontFamily: 'Caveat',
+            fontSize: 24,
+            color: colorScheme.onSurface,
+          ),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: widget.onCancel,
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.delete_sweep_outlined),
-            onPressed: () => setState(() => _paths.clear()),
+            icon: const Icon(Icons.undo),
+            onPressed: _strokes.isNotEmpty ? _undo : null,
+            tooltip: 'Undo',
           ),
-          IconButton(icon: const Icon(Icons.check), onPressed: _exportImage),
+          IconButton(
+            icon: const Icon(Icons.redo),
+            onPressed: _redoStack.isNotEmpty ? _redo : null,
+            tooltip: 'Redo',
+          ),
+          IconButton(
+            icon: const Icon(Icons.delete_sweep_outlined),
+            onPressed: _strokes.isNotEmpty ? _clear : null,
+            tooltip: 'Clear',
+          ),
+          IconButton(
+            icon: const Icon(Icons.check),
+            onPressed: _exportImage,
+            tooltip: 'Save',
+          ),
         ],
       ),
-      body: GestureDetector(
-        onPanStart: _onPanStart,
-        onPanUpdate: _onPanUpdate,
-        onPanEnd: _onPanEnd,
-        child: CustomPaint(
-          painter: SketchPainter(paths: _paths),
-          size: Size.infinite,
-        ),
+      body: Stack(
+        children: [
+          // Paper background
+          const OldPageBackground(
+            showRuledLines: true,
+            showMarginLine: true,
+          ),
+
+          // Drawing canvas
+          GestureDetector(
+            onPanStart: _onPanStart,
+            onPanUpdate: _onPanUpdate,
+            onPanEnd: _onPanEnd,
+            child: CustomPaint(
+              painter: _PremiumStrokePainter(strokes: _strokes),
+              size: Size.infinite,
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _ColorBtn(
-                Colors.black87,
-                _currentColor,
-                (c) => setState(() => _currentColor = c),
-              ),
-              _ColorBtn(
-                Colors.blueGrey,
-                _currentColor,
-                (c) => setState(() => _currentColor = c),
-              ),
-              _ColorBtn(
-                Colors.brown,
-                _currentColor,
-                (c) => setState(() => _currentColor = c),
-              ),
-              _ColorBtn(
-                Colors.indigo,
-                _currentColor,
-                (c) => setState(() => _currentColor = c),
-              ),
-              _ColorBtn(
-                Colors.redAccent,
-                _currentColor,
-                (c) => setState(() => _currentColor = c),
-              ),
-            ],
-          ),
+        child: _buildPremiumToolbar(colorScheme),
+      ),
+    );
+  }
+
+  // ── Premium Toolbar ──────────────────────────────────────────
+
+  Widget _buildPremiumToolbar(ColorScheme colorScheme) {
+    return Container(
+      margin: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: colorScheme.surface.withValues(alpha: 0.95),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.08),
+            blurRadius: 16,
+            offset: const Offset(0, -4),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Pen type selector row
+          Padding(
+            padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: PenType.values.map((pen) {
+                final isSelected = _penType == pen;
+                return GestureDetector(
+                  onTap: () => setState(() => _penType = pen),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: isSelected
+                          ? colorScheme.primaryContainer
+                          : Colors.transparent,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          pen.icon,
+                          size: 22,
+                          color: isSelected
+                              ? colorScheme.primary
+                              : colorScheme.onSurfaceVariant,
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          pen.label,
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: isSelected
+                                ? FontWeight.w700
+                                : FontWeight.w500,
+                            color: isSelected
+                                ? colorScheme.primary
+                                : colorScheme.onSurfaceVariant,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+
+          // Expandable color/size controls
+          SizeTransition(
+            sizeFactor: _toolbarAnimation,
+            axisAlignment: -1.0,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+              child: Column(
+                children: [
+                  // Color palette
+                  SizedBox(
+                    height: 36,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: InkPalette.colors.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 6),
+                      itemBuilder: (context, index) {
+                        final c = InkPalette.colors[index];
+                        final isSelected = c == _color;
+                        return GestureDetector(
+                          onTap: () => setState(() => _color = c),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            width: isSelected ? 32 : 28,
+                            height: isSelected ? 32 : 28,
+                            decoration: BoxDecoration(
+                              color: c,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: isSelected
+                                    ? colorScheme.primary
+                                    : Colors.transparent,
+                                width: 2.5,
+                              ),
+                              boxShadow: isSelected
+                                  ? [
+                                      BoxShadow(
+                                        color: c.withValues(alpha: 0.4),
+                                        blurRadius: 8,
+                                      ),
+                                    ]
+                                  : null,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+
+                  // Stroke width slider
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.line_weight,
+                        size: 16,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      Expanded(
+                        child: Slider(
+                          value: _strokeWidth,
+                          min: 1.0,
+                          max: 12.0,
+                          divisions: 22,
+                          onChanged: (v) => setState(() => _strokeWidth = v),
+                        ),
+                      ),
+                      Text(
+                        _strokeWidth.toStringAsFixed(1),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // Opacity slider
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.opacity,
+                        size: 16,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      Expanded(
+                        child: Slider(
+                          value: _opacity,
+                          min: 0.1,
+                          max: 1.0,
+                          divisions: 9,
+                          onChanged: (v) => setState(() => _opacity = v),
+                        ),
+                      ),
+                      Text(
+                        '${(_opacity * 100).toInt()}%',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          // Toggle button
+          GestureDetector(
+            onTap: _toggleToolbar,
+            child: Container(
+              padding: const EdgeInsets.only(bottom: 6, top: 2),
+              child: AnimatedRotation(
+                turns: _isToolbarExpanded ? 0.5 : 0.0,
+                duration: const Duration(milliseconds: 250),
+                child: Icon(
+                  Icons.expand_less,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class SketchPath {
-  final Color color;
-  final List<Offset> points;
-  final List<double> velocities;
+// ─────────────────────────────────────────────────────────────────
+// Premium Stroke Painter — Catmull-Rom splines + pen effects
+// ─────────────────────────────────────────────────────────────────
 
-  SketchPath({
-    required this.color,
-    required this.points,
-    required this.velocities,
-  });
-}
+class _PremiumStrokePainter extends CustomPainter {
+  final List<SketchStroke> strokes;
 
-class SketchPainter extends CustomPainter {
-  final List<SketchPath> paths;
-
-  SketchPainter({required this.paths});
+  _PremiumStrokePainter({required this.strokes});
 
   @override
   void paint(Canvas canvas, Size size) {
-    for (final path in paths) {
-      if (path.points.isEmpty) continue;
+    for (final stroke in strokes) {
+      if (stroke.points.length < 2) continue;
 
-      final paint =
-          Paint()
-            ..color = path.color
-            ..strokeCap = StrokeCap.round
-            ..style = PaintingStyle.stroke;
-
-      for (int i = 0; i < path.points.length - 1; i++) {
-        final velocity = path.velocities[i];
-        // Slower = thicker, Faster = thinner (pencil logic)
-        final strokeWidth = (4.0 - (velocity * 0.2)).clamp(1.0, 5.0);
-
-        paint.strokeWidth = strokeWidth;
-        canvas.drawLine(path.points[i], path.points[i + 1], paint);
+      switch (stroke.penType) {
+        case PenType.fountain:
+          _drawFountainPen(canvas, stroke);
+          break;
+        case PenType.pencil:
+          _drawPencil(canvas, stroke);
+          break;
+        case PenType.highlighter:
+          _drawHighlighter(canvas, stroke);
+          break;
+        case PenType.eraser:
+          _drawEraser(canvas, stroke);
+          break;
       }
     }
   }
 
-  @override
-  bool shouldRepaint(covariant SketchPainter oldDelegate) => true;
-}
+  /// Fountain pen: variable width based on velocity + ink pooling at start/stop.
+  void _drawFountainPen(Canvas canvas, SketchStroke stroke) {
+    final points = stroke.points;
+    if (points.length < 2) return;
 
-class _ColorBtn extends StatelessWidget {
-  final Color color;
-  final Color current;
-  final ValueChanged<Color> onSelect;
+    for (int i = 0; i < points.length - 1; i++) {
+      final velocity = i < stroke.velocities.length
+          ? stroke.velocities[i]
+          : 0.0;
 
-  const _ColorBtn(this.color, this.current, this.onSelect);
+      // Slower = thicker (ink pools), faster = thinner
+      final width = (stroke.baseWidth * 1.5 - velocity * 0.15)
+          .clamp(stroke.baseWidth * 0.4, stroke.baseWidth * 2.0);
 
-  @override
-  Widget build(BuildContext context) {
-    final isSelected = color == current;
-    return GestureDetector(
-      onTap: () => onSelect(color),
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 8),
-        width: 32,
-        height: 32,
-        decoration: BoxDecoration(
-          color: color,
-          shape: BoxShape.circle,
-          border: Border.all(
-            color: isSelected ? Colors.grey : Colors.transparent,
-            width: 2,
-          ),
-          boxShadow:
-              isSelected
-                  ? [
-                    BoxShadow(
-                      color: color.withValues(alpha: 0.4),
-                      blurRadius: 8,
-                    ),
-                  ]
-                  : [],
-        ),
-      ),
+      final paint = Paint()
+        ..color = stroke.color.withValues(alpha: stroke.opacity)
+        ..strokeWidth = width
+        ..strokeCap = StrokeCap.round
+        ..style = PaintingStyle.stroke;
+
+      // Use quadratic bezier for smoother lines
+      if (i < points.length - 2) {
+        final p0 = points[i];
+        final p1 = points[i + 1];
+        final mid = Offset((p0.dx + p1.dx) / 2, (p0.dy + p1.dy) / 2);
+
+        final path = Path()
+          ..moveTo(p0.dx, p0.dy)
+          ..quadraticBezierTo(p0.dx, p0.dy, mid.dx, mid.dy);
+        canvas.drawPath(path, paint);
+      } else {
+        canvas.drawLine(points[i], points[i + 1], paint);
+      }
+    }
+
+    // Ink pool at start point
+    if (points.isNotEmpty) {
+      canvas.drawCircle(
+        points.first,
+        stroke.baseWidth * 0.6,
+        Paint()
+          ..color = stroke.color.withValues(
+            alpha: stroke.opacity * 0.4,
+          )
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
+      );
+    }
+  }
+
+  /// Pencil: grainy texture using multiple thin lines with jitter.
+  void _drawPencil(Canvas canvas, SketchStroke stroke) {
+    final random = math.Random(stroke.hashCode);
+
+    for (int i = 0; i < stroke.points.length - 1; i++) {
+      final velocity = i < stroke.velocities.length
+          ? stroke.velocities[i]
+          : 0.0;
+      final width = (stroke.baseWidth - velocity * 0.1)
+          .clamp(stroke.baseWidth * 0.5, stroke.baseWidth * 1.2);
+
+      // Draw 2-3 slightly offset lines for texture
+      for (var layer = 0; layer < 3; layer++) {
+        final jx = (random.nextDouble() - 0.5) * 1.2;
+        final jy = (random.nextDouble() - 0.5) * 1.2;
+        final alpha = stroke.opacity * (0.3 + random.nextDouble() * 0.4);
+
+        final paint = Paint()
+          ..color = stroke.color.withValues(alpha: alpha)
+          ..strokeWidth = width * (0.3 + random.nextDouble() * 0.4)
+          ..strokeCap = StrokeCap.round
+          ..style = PaintingStyle.stroke;
+
+        canvas.drawLine(
+          stroke.points[i] + Offset(jx, jy),
+          stroke.points[i + 1] + Offset(jx, jy),
+          paint,
+        );
+      }
+    }
+  }
+
+  /// Highlighter: wide, semi-transparent, flat cap.
+  void _drawHighlighter(Canvas canvas, SketchStroke stroke) {
+    if (stroke.points.length < 2) return;
+
+    final path = Path()..moveTo(stroke.points[0].dx, stroke.points[0].dy);
+
+    for (int i = 1; i < stroke.points.length; i++) {
+      final prev = stroke.points[i - 1];
+      final curr = stroke.points[i];
+      final mid = Offset((prev.dx + curr.dx) / 2, (prev.dy + curr.dy) / 2);
+      path.quadraticBezierTo(prev.dx, prev.dy, mid.dx, mid.dy);
+    }
+    path.lineTo(stroke.points.last.dx, stroke.points.last.dy);
+
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = stroke.color.withValues(alpha: 0.25)
+        ..strokeWidth = stroke.baseWidth * 4
+        ..strokeCap = StrokeCap.square
+        ..style = PaintingStyle.stroke
+        ..blendMode = BlendMode.multiply,
     );
   }
+
+  /// Eraser: white strokes.
+  void _drawEraser(Canvas canvas, SketchStroke stroke) {
+    if (stroke.points.length < 2) return;
+
+    final path = Path()..moveTo(stroke.points[0].dx, stroke.points[0].dy);
+    for (int i = 1; i < stroke.points.length; i++) {
+      path.lineTo(stroke.points[i].dx, stroke.points[i].dy);
+    }
+
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = const Color(0xFFF5F0E1) // paper color
+        ..strokeWidth = stroke.baseWidth * 3
+        ..strokeCap = StrokeCap.round
+        ..style = PaintingStyle.stroke
+        ..blendMode = BlendMode.srcOver,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _PremiumStrokePainter oldDelegate) => true;
 }

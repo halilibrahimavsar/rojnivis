@@ -20,6 +20,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<UpdateAttachmentBackdrop>(_onUpdateAttachmentBackdrop);
     on<UpdateNotebookCoverColor>(_onUpdateNotebookCoverColor);
     on<UpdateNotebookCoverTexture>(_onUpdateNotebookCoverTexture);
+    on<UpdateAiApiKey>(_onUpdateAiApiKey);
   }
 
   final SharedPreferences _prefs;
@@ -31,6 +32,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   static const _attachmentBackdropKey = StorageKeys.attachmentBackdrop;
   static const _coverColorKey = StorageKeys.notebookCoverColor;
   static const _coverTextureKey = StorageKeys.notebookCoverTexture;
+  static const _aiApiKeyKey = StorageKeys.aiApiKey;
 
   Future<void> _onLoad(LoadSettings event, Emitter<SettingsState> emit) async {
     try {
@@ -48,6 +50,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           _prefs.getInt(_coverColorKey) ?? AppDefaults.defaultNotebookCoverColor;
       final notebookCoverTexture =
           _readString(_coverTextureKey) ?? AppDefaults.defaultNotebookCoverTexture;
+      final aiApiKey = _readString(_aiApiKeyKey) ?? 'AIzaSyCj24N3bAE1dQii3Vuu3LPtV1qsYyswHAw';
 
       final localeRaw =
           _readString(_localeKey) ??
@@ -64,6 +67,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           showAttachmentBackdrop: showAttachmentBackdrop,
           notebookCoverColor: notebookCoverColor,
           notebookCoverTexture: notebookCoverTexture,
+          aiApiKey: aiApiKey,
         ),
       );
 
@@ -85,6 +89,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           showAttachmentBackdrop: AppDefaults.defaultAttachmentBackdrop,
           notebookCoverColor: AppDefaults.defaultNotebookCoverColor,
           notebookCoverTexture: AppDefaults.defaultNotebookCoverTexture,
+          aiApiKey: '',
         ),
       );
     }
@@ -155,6 +160,16 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     emit(current.copyWith(notebookCoverTexture: event.texture));
   }
 
+  Future<void> _onUpdateAiApiKey(
+    UpdateAiApiKey event,
+    Emitter<SettingsState> emit,
+  ) async {
+    final current = _requireLoaded();
+    await _prefs.setString(_aiApiKeyKey, event.apiKey.trim());
+    emit(current.copyWith(aiApiKey: event.apiKey.trim()));
+  }
+
+
   SettingsLoaded _requireLoaded() {
     final state = this.state;
     if (state is SettingsLoaded) return state;
@@ -166,6 +181,7 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       showAttachmentBackdrop: AppDefaults.defaultAttachmentBackdrop,
       notebookCoverColor: AppDefaults.defaultNotebookCoverColor,
       notebookCoverTexture: AppDefaults.defaultNotebookCoverTexture,
+      aiApiKey: '',
     );
   }
 

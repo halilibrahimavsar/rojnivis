@@ -136,5 +136,20 @@
   "biometric_auth_desc": "Biyometrik doğrulama kullanılsın",
   "pin_auth_desc": "PIN kullanarak giriş yapın",
   "privacy_guard_desc": "Uygulamadan ayrıldığınızda ekranı gizle",
-  "background_lock_desc": "Uygulama arka plana geçtiğinde kilitlensin"
+  "background_lock_desc": "Uygulama arka plana geçtiğinde kilitlensin",
+  "ai_assistant": "AI Asistanı",
+  "ai_api_key_desc": "Özetler ve yazma yardımı gibi AI özelliklerini etkinleştirmek için Gemini API anahtarınızı girin.",
+  "gemini_api_key": "Gemini API Anahtarı",
+  "api_key_updated": "API Anahtarı güncellendi!",
+  "summarize": "Özetle",
+  "continue_writing": "Yazmaya Devam Et",
+  "ai_thinking": "AI düşünüyor...",
+  "ai_write_suggestion": "AI Önerisi",
+  "use_suggestion": "Öneriyi Kullan",
+  "summary": "Özet",
+  "generating_summary": "Özet oluşturuluyor...",
+  "ai_not_configured": "AI yapılandırılmadı. Ayarlardan API anahtarı ekleyin.",
+  "generate_tags": "Etiket Oluştur",
+  "center": "Merkezle",
+  "minimap": "Mini Harita"
 }

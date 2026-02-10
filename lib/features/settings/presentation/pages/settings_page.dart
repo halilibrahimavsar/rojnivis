@@ -8,6 +8,7 @@ import '../../../../core/widgets/app_card.dart';
 import '../../../../di/injection.dart';
 import '../bloc/settings_bloc.dart';
 import '../../../../core/widgets/notebook_cover.dart';
+import '../../../../core/services/ai_service.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -256,6 +257,110 @@ class SettingsPage extends StatelessWidget {
                 child: LocalAuthSettingsWidget(
                   repository: getIt<LocalAuthRepository>(),
                   showHeader: false, // We have our own section header
+                ),
+              ),
+              const SizedBox(height: 12),
+              _Section(
+                title: 'ai_assistant'.tr(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'ai_api_key_desc'.tr(),
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      initialValue: state.aiApiKey,
+                      decoration: InputDecoration(
+                        labelText: 'gemini_api_key'.tr(),
+                        hintText: 'AI_API_KEY',
+                        prefixIcon: const Icon(Icons.vpn_key_outlined),
+                        suffixIcon: const Icon(Icons.auto_awesome),
+                      ),
+                      onChanged: (value) {
+                         // We use onChanged to update state as user types or pastes
+                         context.read<SettingsBloc>().add(UpdateAiApiKey(value));
+                      },
+                      onFieldSubmitted: (value) {
+                        context.read<SettingsBloc>().add(UpdateAiApiKey(value));
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('api_key_updated'.tr())),
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton.icon(
+                        onPressed: () async {
+                          final service = getIt<AiService>();
+                          if (!service.isConfigured) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('api_key_required'.tr())),
+                              );
+                              return;
+                          }
+                          
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (c) => const Center(child: CircularProgressIndicator()),
+                          );
+                          
+                          try {
+                            final models = await service.listAvailableModels();
+                            if (context.mounted) {
+                              Navigator.pop(context); // Pop loading
+                              showDialog(
+                                context: context,
+                                builder: (c) => AlertDialog(
+                                  title: const Text('AI Connection Test'),
+                                  content: SingleChildScrollView(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        if (models.any((m) => !m.contains('Error') && !m.contains('No working') && !m.contains(':')))
+                                          const Text('✅ Connection Successful!', style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold))
+                                        else
+                                          const Text('❌ Connection Failed', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+                                        const SizedBox(height: 8),
+                                        const Text('Analyzed Models:'),
+                                        const SizedBox(height: 4),
+                                        ...models.map((m) {
+                                            final isError = m.contains(':') || m.contains('No working');
+                                            return Text(
+                                              isError ? '❌ $m' : '✅ $m', 
+                                              style: TextStyle(fontSize: 12, color: isError ? Colors.red : Colors.green[700])
+                                            );
+                                        }),
+                                      ],
+                                    ),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(c),
+                                      child: const Text('OK'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              Navigator.pop(context); // Pop loading
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('Error: $e')),
+                              );
+                            }
+                          }
+                        },
+                        icon: const Icon(Icons.wifi_find),
+                        label: const Text('Test Connection'),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

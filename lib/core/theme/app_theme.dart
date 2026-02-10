@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../constants/app_constants.dart';
+import 'old_page_theme.dart';
 
 enum AppThemePreset {
   defaultPreset,
@@ -261,7 +262,10 @@ class AppTheme {
       brightness: brightness,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: background,
-      extensions: <ThemeExtension<dynamic>>[AppThemeStyle(preset: preset)],
+      extensions: <ThemeExtension<dynamic>>[
+        AppThemeStyle(preset: preset),
+        brightness == Brightness.light ? OldPageColors.light : OldPageColors.dark,
+      ],
       textTheme: textTheme,
       appBarTheme: AppBarTheme(
         centerTitle: true,

@@ -1,10 +1,14 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../../domain/models/mind_map_node.dart';
 import '../widgets/widgets.dart';
+import '../widgets/mind_map_minimap.dart';
+import '../widgets/grid_painter.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/theme/old_page_theme.dart';
 
 class MindMapCanvasView extends StatefulWidget {
   final MindMapNode mindMap;
@@ -20,7 +24,8 @@ class MindMapCanvasView extends StatefulWidget {
   State<MindMapCanvasView> createState() => _MindMapCanvasViewState();
 }
 
-class _MindMapCanvasViewState extends State<MindMapCanvasView> {
+class _MindMapCanvasViewState extends State<MindMapCanvasView>
+    with TickerProviderStateMixin {
   final TransformationController _transformController =
       TransformationController();
 
@@ -29,6 +34,12 @@ class _MindMapCanvasViewState extends State<MindMapCanvasView> {
 
   double _currentScale = 1.0;
   bool _isQuickEditMode = false;
+  bool _showMinimap = true;
+  bool _simpleMode = false;
+
+  // Entrance animation
+  late final AnimationController _entranceController;
+  late final Animation<double> _entranceAnimation;
 
   static const double _nodeWidth = AppMindMap.nodeWidth;
   static const double _nodeHeight = AppMindMap.nodeHeight;
@@ -38,9 +49,24 @@ class _MindMapCanvasViewState extends State<MindMapCanvasView> {
   @override
   void initState() {
     super.initState();
+    _entranceController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _entranceAnimation = CurvedAnimation(
+      parent: _entranceController,
+      curve: Curves.easeOutBack,
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _centerOnNodes();
+      _entranceController.forward();
     });
+  }
+
+  @override
+  void dispose() {
+    _entranceController.dispose();
+    super.dispose();
   }
 
   void _centerOnNodes() {
@@ -116,6 +142,23 @@ class _MindMapCanvasViewState extends State<MindMapCanvasView> {
 
     return Stack(
       children: [
+        // Background
+        if (_simpleMode)
+          Positioned.fill(
+            child: CustomPaint(
+              painter: GridPainter(
+                colorScheme: colorScheme,
+                scale: _currentScale,
+                offset: Offset(
+                  _transformController.value.getTranslation().x,
+                  _transformController.value.getTranslation().y,
+                ),
+              ),
+            ),
+          )
+        else
+          const OldPageBackground(showStains: true),
+
         InteractiveViewer(
           transformationController: _transformController,
           boundaryMargin: const EdgeInsets.all(double.infinity),
@@ -145,7 +188,31 @@ class _MindMapCanvasViewState extends State<MindMapCanvasView> {
                       colorScheme: colorScheme,
                     ),
                   ),
-                  ...nodes.map((node) => _buildNode(node, colorScheme)),
+                  // Animated node entrance
+                  ...nodes.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final node = entry.value;
+
+                    return Positioned(
+                      left: node.x,
+                      top: node.y,
+                      child: AnimatedBuilder(
+                        animation: _entranceAnimation,
+                        builder: (context, child) {
+                          final stagger = (index * 0.08).clamp(0.0, 0.6);
+                          final progress = ((_entranceAnimation.value -
+                                      stagger) /
+                                  (1.0 - stagger))
+                              .clamp(0.0, 1.0);
+                          return Transform.scale(
+                            scale: progress,
+                            child: Opacity(opacity: progress, child: child),
+                          );
+                        },
+                        child: _buildNodeInteractive(node, colorScheme),
+                      ),
+                    );
+                  }),
                 ],
               ),
             ),
@@ -153,97 +220,99 @@ class _MindMapCanvasViewState extends State<MindMapCanvasView> {
         ),
         _buildControls(colorScheme),
         if (_selectedNode != null) _buildEditor(colorScheme),
+
+        // Minimap
+        if (_showMinimap)
+          MindMapMinimap(
+            root: widget.mindMap,
+            transformController: _transformController,
+          ),
       ],
     );
   }
 
-  Widget _buildNode(MindMapNode node, ColorScheme colorScheme) {
+  Widget _buildNodeInteractive(MindMapNode node, ColorScheme colorScheme) {
     final isSelected = _selectedNode?.id == node.id;
 
-    return Positioned(
-      left: node.x,
-      top: node.y,
-      child: DragTarget<MindMapNode>(
-        onWillAcceptWithDetails: (details) {
-          final dragged = details.data;
-          // Cannot drop on itself or onto its own descendants
-          if (dragged.id == node.id) return false;
-          return !_isDescendantOf(node, dragged.id);
-        },
-        onAcceptWithDetails: (details) {
-          final dragged = details.data;
-          _reorganizeNode(dragged, node);
-        },
-        builder: (context, candidateData, rejectedData) {
-          final isTarget = candidateData.isNotEmpty;
-          return GestureDetector(
-            onTap:
-                () => setState(() => _selectedNode = isSelected ? null : node),
-            onPanUpdate: (d) {
-              if (_draggingNode != node) return;
-              final delta = d.delta;
-              final updated = widget.mindMap.updateNode(
-                node.id,
-                (n) => n.copyWith(x: n.x + delta.dx, y: n.y + delta.dy),
-              );
-              widget.onNodeUpdated(updated);
-            },
-            child: Draggable<MindMapNode>(
-              data: node,
-              feedback: Material(
-                color: Colors.transparent,
-                child: _buildNodeContent(
-                  node,
-                  colorScheme,
-                  isSelected: true,
-                  isDragging: true,
-                ),
+    return DragTarget<MindMapNode>(
+      onWillAcceptWithDetails: (details) {
+        final dragged = details.data;
+        // Cannot drop on itself or onto its own descendants
+        if (dragged.id == node.id) return false;
+        return !_isDescendantOf(node, dragged.id);
+      },
+      onAcceptWithDetails: (details) {
+        final dragged = details.data;
+        _reorganizeNode(dragged, node);
+      },
+      builder: (context, candidateData, rejectedData) {
+        final isTarget = candidateData.isNotEmpty;
+        return GestureDetector(
+          onTap: () => setState(() => _selectedNode = isSelected ? null : node),
+          onPanUpdate: (d) {
+            if (_draggingNode != node) return;
+            final delta = d.delta;
+            final updated = widget.mindMap.updateNode(
+              node.id,
+              (n) => n.copyWith(x: n.x + delta.dx, y: n.y + delta.dy),
+            );
+            widget.onNodeUpdated(updated);
+          },
+          child: Draggable<MindMapNode>(
+            data: node,
+            feedback: Material(
+              color: Colors.transparent,
+              child: _buildNodeContent(
+                node,
+                colorScheme,
+                isSelected: true,
+                isDragging: true,
               ),
-              childWhenDragging: Opacity(
-                opacity: 0.3,
-                child: _buildNodeContent(
-                  node,
-                  colorScheme,
-                  isSelected: isSelected,
-                ),
-              ),
-              onDragStarted: () => setState(() => _draggingNode = node),
-              onDragEnd: (details) {
-                setState(() => _draggingNode = null);
-                if (details.wasAccepted) {
-                  return; // Reorganized, position handled by reorganization
-                }
-
-                final RenderBox renderBox =
-                    context.findRenderObject() as RenderBox;
-                final localPos = renderBox.globalToLocal(details.offset);
-
-                // Adjust for transformation
-                final matrix = _transformController.value.clone()..invert();
-                final transformedOffset = MatrixUtils.transformPoint(
-                  matrix,
-                  localPos,
-                );
-
-                final updated = widget.mindMap.updateNode(
-                  node.id,
-                  (n) => n.copyWith(
-                    x: transformedOffset.dx,
-                    y: transformedOffset.dy,
-                  ),
-                );
-                widget.onNodeUpdated(updated);
-              },
+            ),
+            childWhenDragging: Opacity(
+              opacity: 0.3,
               child: _buildNodeContent(
                 node,
                 colorScheme,
                 isSelected: isSelected,
-                isTarget: isTarget,
               ),
             ),
-          );
-        },
-      ),
+            onDragStarted: () => setState(() => _draggingNode = node),
+            onDragEnd: (details) {
+              setState(() => _draggingNode = null);
+              if (details.wasAccepted) {
+                return; // Reorganized, position handled by reorganization
+              }
+
+              final RenderBox renderBox =
+                  context.findRenderObject() as RenderBox;
+              final localPos = renderBox.globalToLocal(details.offset);
+
+              // Adjust for transformation
+              final matrix = _transformController.value.clone()..invert();
+              final transformedOffset = MatrixUtils.transformPoint(
+                matrix,
+                localPos,
+              );
+
+              final updated = widget.mindMap.updateNode(
+                node.id,
+                (n) => n.copyWith(
+                  x: transformedOffset.dx,
+                  y: transformedOffset.dy,
+                ),
+              );
+              widget.onNodeUpdated(updated);
+            },
+            child: _buildNodeContent(
+              node,
+              colorScheme,
+              isSelected: isSelected,
+              isTarget: isTarget,
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -407,62 +476,107 @@ class _MindMapCanvasViewState extends State<MindMapCanvasView> {
       left: 16,
       right: 16,
       child: SafeArea(
-        child: Row(
-          children: [
-            _buildToolbarButton(
-              icon: Icons.center_focus_strong,
-              onPressed: _centerOnNodes,
-              colorScheme: colorScheme,
-            ),
-            const Spacer(),
-            Container(
-              decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest.withValues(
-                  alpha: 0.95,
-                ),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: colorScheme.outlineVariant),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  IconButton(
-                    onPressed: () => _zoom(0.25),
-                    icon: const Icon(Icons.add),
-                    tooltip: 'zoom_in'.tr(),
+        child:
+            _simpleMode
+                ? Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
                   ),
-                  Container(
-                    width: 1,
-                    height: 24,
-                    color: colorScheme.outlineVariant,
+                  decoration: BoxDecoration(
+                    color: colorScheme.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: colorScheme.outline),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Text(
-                      '${(_currentScale * 100).toInt()}%',
-                      style: const TextStyle(fontWeight: FontWeight.w600),
+                  child: _buildToolbarItems(colorScheme),
+                )
+                : ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: BackdropFilter(
+                    filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colorScheme.surface.withValues(alpha: 0.7),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: colorScheme.outlineVariant.withValues(
+                            alpha: 0.3,
+                          ),
+                        ),
+                      ),
+                      child: _buildToolbarItems(colorScheme),
                     ),
                   ),
-                  Container(
-                    width: 1,
-                    height: 24,
-                    color: colorScheme.outlineVariant,
-                  ),
-                  IconButton(
-                    onPressed: () => _zoom(-0.25),
-                    icon: const Icon(Icons.remove),
-                    tooltip: 'zoom_out'.tr(),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            _buildLayoutToggle(colorScheme),
-            const SizedBox(width: 8),
-            _buildQuickEditModeToggle(colorScheme),
-          ],
-        ),
+                ),
       ),
+    );
+  }
+
+  Widget _buildToolbarItems(ColorScheme colorScheme) {
+    return Row(
+      children: [
+        _buildToolbarButton(
+          icon: Icons.center_focus_strong,
+          onPressed: _centerOnNodes,
+          colorScheme: colorScheme,
+          tooltip: 'center'.tr(),
+        ),
+        const Spacer(),
+        IconButton(
+          onPressed: () => _zoom(0.25),
+          icon: const Icon(Icons.add, size: 20),
+          tooltip: 'zoom_in'.tr(),
+          visualDensity: VisualDensity.compact,
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 6),
+          child: Text(
+            '${(_currentScale * 100).toInt()}%',
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 12,
+              color: colorScheme.onSurface,
+            ),
+          ),
+        ),
+        IconButton(
+          onPressed: () => _zoom(-0.25),
+          icon: const Icon(Icons.remove, size: 20),
+          tooltip: 'zoom_out'.tr(),
+          visualDensity: VisualDensity.compact,
+        ),
+        const SizedBox(width: 4),
+        _buildToolbarButton(
+          icon: _showMinimap ? Icons.map : Icons.map_outlined,
+          onPressed: () => setState(() => _showMinimap = !_showMinimap),
+          colorScheme: colorScheme,
+          isActive: _showMinimap,
+          tooltip: 'minimap'.tr(),
+        ),
+        const SizedBox(width: 4),
+        _buildLayoutToggle(colorScheme),
+        const SizedBox(width: 4),
+        _buildQuickEditModeToggle(colorScheme),
+        const SizedBox(width: 4),
+        _buildToolbarButton(
+          icon: _simpleMode ? Icons.style_outlined : Icons.style,
+          onPressed: () => setState(() => _simpleMode = !_simpleMode),
+          colorScheme: colorScheme,
+          isActive: !_simpleMode,
+          tooltip: 'Toggle Theme',
+        ),
+      ],
     );
   }
 
@@ -867,15 +981,7 @@ class ConnectionsPainter extends CustomPainter {
   void _drawConnections(Canvas canvas, MindMapNode parent) {
     final isVertical = root.effectiveLayoutType == 'vertical';
 
-    final paint =
-        Paint()
-          ..color = parent.color.withValues(alpha: 0.6)
-          ..strokeWidth = 2.5
-          ..style = PaintingStyle.stroke
-          ..strokeCap = StrokeCap.round;
-
     for (final child in parent.children) {
-      // Calculate start and end points based on layout
       final Offset start;
       final Offset end;
 
@@ -889,7 +995,6 @@ class ConnectionsPainter extends CustomPainter {
 
       final path = Path()..moveTo(start.dx, start.dy);
 
-      // Create a more "organic" line using multiple cubic segments with random jitter
       final random = math.Random(child.id.hashCode);
       final jitterX = (random.nextDouble() - 0.5) * 15;
       final jitterY = (random.nextDouble() - 0.5) * 15;
@@ -914,21 +1019,48 @@ class ConnectionsPainter extends CustomPainter {
         );
       }
 
-      // Draw the main organic path
-      canvas.drawPath(path, paint);
+      // 1. Glow layer (wide, soft)
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = parent.color.withValues(alpha: 0.12)
+          ..strokeWidth = 6.0
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+      );
 
-      // Add a second, thinner, slightly offset line for "sketched" look
-      final sketchPaint =
-          Paint()
-            ..color = parent.color.withValues(alpha: 0.2)
-            ..strokeWidth = 1.0
-            ..style = PaintingStyle.stroke
-            ..strokeCap = StrokeCap.round;
+      // 2. Main organic path
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = parent.color.withValues(alpha: 0.55)
+          ..strokeWidth = 2.5
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round,
+      );
 
+      // 3. Sketched shadow line
       canvas.save();
       canvas.translate(1.5, 0.5);
-      canvas.drawPath(path, sketchPaint);
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = parent.color.withValues(alpha: 0.15)
+          ..strokeWidth = 1.0
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round,
+      );
       canvas.restore();
+
+      // 4. Small dot at connection point
+      canvas.drawCircle(
+        end,
+        3.5,
+        Paint()
+          ..color = child.color.withValues(alpha: 0.5)
+          ..style = PaintingStyle.fill,
+      );
 
       _drawConnections(canvas, child);
     }

@@ -20,6 +20,9 @@ import '../widgets/sketch_canvas.dart';
 import 'dart:io';
 import 'package:path_provider/path_provider.dart';
 import 'dart:ui' as ui;
+import '../../../../di/injection.dart';
+import '../../../journal/presentation/widgets/ai_writing_sheet.dart';
+import '../../../../core/services/ai_service.dart';
 
 const _compactDensity = VisualDensity(horizontal: -2, vertical: -2);
 
@@ -209,6 +212,60 @@ class _AddEntryPageState extends State<AddEntryPage> {
     return normalized.split('/').last;
   }
 
+  Future<void> _aiContinueWriting() async {
+    final aiService = getIt<AiService>();
+    if (!aiService.isConfigured) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('ai_not_configured'.tr())),
+      );
+      return;
+    }
+
+    final currentText = _contentController.text;
+    if (currentText.trim().isEmpty) return;
+    
+    final suggestionFuture = aiService.continueWriting(currentText);
+    
+    if (!mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => AiWritingSheet(
+        suggestionFuture: suggestionFuture,
+        onAccept: (suggestion) {
+          setState(() {
+            _contentController.text = '$currentText $suggestion';
+          });
+        },
+      ),
+    );
+  }
+
+  Future<void> _aiGenerateTags() async {
+    final aiService = getIt<AiService>();
+    if (!aiService.isConfigured) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('ai_not_configured'.tr())),
+      );
+      return;
+    }
+
+    final currentText = _contentController.text;
+    if (currentText.trim().length < 20) return;
+
+    final tags = await aiService.generateTags(currentText);
+    if (tags.isNotEmpty && mounted) {
+      setState(() {
+        final existingTags = _parseTags(_tagsController.text).toSet();
+        existingTags.addAll(tags);
+        _tagsController.text = existingTags.join(', ');
+      });
+    }
+  }
+
   Future<void> _save() async {
     final content = _contentController.text.trim();
     if (content.isEmpty) {
@@ -217,6 +274,20 @@ class _AddEntryPageState extends State<AddEntryPage> {
       ).showSnackBar(SnackBar(content: Text('content_required'.tr())));
       return;
     }
+
+    String? summary = _editingEntry?.summary;
+    final aiService = getIt<AiService>();
+    
+    // Auto-generate summary if long enough and not present
+    if (aiService.isConfigured && (summary == null || summary.isEmpty) && content.length > 100) {
+      try {
+        summary = await aiService.summarize(content);
+      } catch (_) {
+        // Silently fail summary generation
+      }
+    }
+
+    if (!mounted) return;
 
     final entry = JournalEntryModel(
       id: _editingEntry?.id ?? const Uuid().v4(),
@@ -227,14 +298,17 @@ class _AddEntryPageState extends State<AddEntryPage> {
       categoryId: _selectedCategoryId,
       tags: _parseTags(_tagsController.text),
       attachmentPaths: List.of(_attachmentPaths),
+      summary: summary,
     );
 
     context.read<JournalBloc>().add(UpsertEntryRequested(entry: entry));
+    
     if (context.canPop()) {
       context.pop();
     } else {
       context.go('/');
     }
+    
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text('saved'.tr())));
@@ -324,7 +398,18 @@ class _AddEntryPageState extends State<AddEntryPage> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      Text('content'.tr(), style: labelStyle),
+                      Row(
+                        children: [
+                          Text('content'.tr(), style: labelStyle),
+                          const Spacer(),
+                          TextButton.icon(
+                            onPressed: _aiContinueWriting,
+                            icon: const Icon(Icons.auto_awesome, size: 14),
+                            label: Text('Summarize / Continue'.tr(), style: const TextStyle(fontSize: 12)),
+                            style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                          ),
+                        ],
+                      ),
                       TextField(
                         controller: _contentController,
                         minLines: 6,
@@ -404,6 +489,11 @@ class _AddEntryPageState extends State<AddEntryPage> {
                     labelText: 'tags_label'.tr(),
                     hintText: 'tags_hint'.tr(),
                     prefixIcon: const Icon(Icons.tag_outlined),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.auto_awesome, size: 18),
+                      onPressed: _aiGenerateTags,
+                      tooltip: 'generate_tags'.tr(),
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),

@@ -11,6 +11,9 @@ import '../../../../core/widgets/themed_paper.dart';
 import '../../data/models/journal_entry_model.dart';
 import '../bloc/journal_bloc.dart';
 import '../../../settings/presentation/bloc/settings_bloc.dart';
+import '../widgets/ai_summary_card.dart';
+import '../../../../core/services/ai_service.dart';
+import '../../../../di/injection.dart';
 
 enum _EntryViewStyle { normal, letter, library }
 
@@ -27,6 +30,35 @@ class EntryDetailPage extends StatefulWidget {
 
 class _EntryDetailPageState extends State<EntryDetailPage> {
   _EntryViewStyle _style = _EntryViewStyle.letter;
+  bool _isSummarizing = false;
+
+  Future<void> _summarizeEntry(JournalEntryModel entry) async {
+    final aiService = getIt<AiService>();
+    if (!aiService.isConfigured) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('ai_not_configured'.tr())),
+      );
+      return;
+    }
+
+    setState(() => _isSummarizing = true);
+    try {
+      final summary = await aiService.summarize(entry.content);
+      if (mounted) {
+        context.read<JournalBloc>().add(
+          UpsertEntryRequested(entry: entry.copyWith(summary: summary)),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(content: Text('Failed to generate summary: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isSummarizing = false);
+    }
+  }
 
   Future<void> _confirmDelete(JournalEntryModel entry) async {
     final shouldDelete =
@@ -114,6 +146,25 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             _Header(entry: entry),
+                            if (entry.summary != null || _isSummarizing) ...[
+                              const SizedBox(height: 12),
+                              AiSummaryCard(
+                                summary: entry.summary ?? '',
+                                isLoading: _isSummarizing,
+                                onRefresh: () => _summarizeEntry(entry!),
+                              ),
+                            ] else if (getIt<AiService>().isConfigured) ...[
+                               const SizedBox(height: 8),
+                               Align(
+                                 alignment: Alignment.centerLeft,
+                                 child: TextButton.icon(
+                                   onPressed: () => _summarizeEntry(entry!),
+                                   icon: const Icon(Icons.auto_awesome, size: 14),
+                                   label: Text('summarize'.tr(), style: const TextStyle(fontSize: 12)),
+                                   style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                                 ),
+                               ),
+                            ],
                             const SizedBox(height: 12),
                             SegmentedButton<_EntryViewStyle>(
                               segments: [

@@ -73,3 +73,12 @@ class UpdateNotebookCoverTexture extends SettingsEvent {
   @override
   List<Object?> get props => [texture];
 }
+
+class UpdateAiApiKey extends SettingsEvent {
+  final String apiKey;
+
+  const UpdateAiApiKey(this.apiKey);
+
+  @override
+  List<Object?> get props => [apiKey];
+}

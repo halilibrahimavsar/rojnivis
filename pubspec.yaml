@@ -47,9 +47,10 @@ dependencies:
   google_fonts: ^6.2.1
   uuid: ^4.5.1
   
-  # Security (New)
+  # Security & AI
   local_auth: ^2.3.0
   crypto: ^3.0.6
+  google_generative_ai: ^0.4.5
 
   unified_flutter_features:
     path: /home/garuda/Masaüstü/unified_flutter_features

@@ -25,13 +25,14 @@ class JournalEntryModelAdapter extends TypeAdapter<JournalEntryModel> {
       tags: (fields[5] as List).cast<String>(),
       categoryId: fields[6] as String?,
       attachmentPaths: (fields[7] as List).cast<String>(),
+      summary: fields[8] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, JournalEntryModel obj) {
     writer
-      ..writeByte(8)
+      ..writeByte(9)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -47,7 +48,9 @@ class JournalEntryModelAdapter extends TypeAdapter<JournalEntryModel> {
       ..writeByte(6)
       ..write(obj.categoryId)
       ..writeByte(7)
-      ..write(obj.attachmentPaths);
+      ..write(obj.attachmentPaths)
+      ..writeByte(8)
+      ..write(obj.summary);
   }
 
   @override

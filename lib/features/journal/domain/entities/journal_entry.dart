@@ -11,6 +11,7 @@ class JournalEntry extends Equatable {
   final List<String> tags;
   final String? categoryId;
   final List<String> attachmentPaths;
+  final String? summary;
 
   const JournalEntry({
     required this.id,
@@ -21,6 +22,7 @@ class JournalEntry extends Equatable {
     required this.tags,
     this.categoryId,
     required this.attachmentPaths,
+    this.summary,
   });
 
   @override
@@ -33,5 +35,6 @@ class JournalEntry extends Equatable {
     tags,
     categoryId,
     attachmentPaths,
+    summary,
   ];
 }

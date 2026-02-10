@@ -33,7 +33,8 @@ class PageFlipTransition extends PageRouteBuilder {
       );
 }
 
-/// A custom transition for GoRouter that uses the PageFlipTransition effect.
+/// A premium custom transition for GoRouter that uses the PageFlipTransition
+/// effect with enhanced shadow, lighting, and depth cues.
 class PageFlipTransitionPage<T> extends CustomTransitionPage<T> {
   PageFlipTransitionPage({
     required super.child,
@@ -43,7 +44,7 @@ class PageFlipTransitionPage<T> extends CustomTransitionPage<T> {
     super.restorationId,
   }) : super(
          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-           // Animation for the entering page
+           // Entering page rotation (book opening from right)
            final openingTransform = Tween<double>(
              begin: math.pi / 2,
              end: 0,
@@ -54,7 +55,7 @@ class PageFlipTransitionPage<T> extends CustomTransitionPage<T> {
              ),
            );
 
-           // Animation for the exiting page (secondaryAnimation)
+           // Exiting page rotation (book closing to left)
            final closingTransform = Tween<double>(
              begin: 0,
              end: -math.pi / 2,
@@ -65,32 +66,99 @@ class PageFlipTransitionPage<T> extends CustomTransitionPage<T> {
              ),
            );
 
+           // Shadow intensity follows the flip midpoint
+           final shadowOpacity = Tween<double>(
+             begin: 0.0,
+             end: 0.4,
+           ).animate(CurvedAnimation(
+             parent: animation,
+             curve: const Interval(0.0, 0.5, curve: Curves.easeIn),
+             reverseCurve: const Interval(0.5, 1.0, curve: Curves.easeOut),
+           ));
+
            return AnimatedBuilder(
-             animation: animation,
+             animation: Listenable.merge([animation, secondaryAnimation]),
              builder: (context, child) {
                return Stack(
                  children: [
-                   // Handle exiting page (rotation to the left)
+                   // Exiting page with dimming overlay
                    if (secondaryAnimation.value > 0)
                      Transform(
-                       transform:
-                           Matrix4.identity()
-                             ..setEntry(3, 2, 0.001)
-                             ..rotateY(closingTransform.value),
+                       transform: Matrix4.identity()
+                         ..setEntry(3, 2, 0.001)
+                         ..rotateY(closingTransform.value),
                        alignment: Alignment.centerLeft,
-                       child: Container(
-                         color: Colors.black12,
-                       ), 
+                       child: Stack(
+                         children: [
+                           Container(color: Colors.black12),
+                           // Dimming overlay on the old page
+                           Positioned.fill(
+                             child: Container(
+                               color: Colors.black.withValues(
+                                 alpha: secondaryAnimation.value * 0.15,
+                               ),
+                             ),
+                           ),
+                         ],
+                       ),
                      ),
 
-                   // Handle entering page (rotation from the right)
+                   // Page edge shadow (cast by the flipping page)
+                   if (animation.value > 0.01 && animation.value < 0.99)
+                     Positioned(
+                       left: 0,
+                       top: 0,
+                       bottom: 0,
+                       width: 24,
+                       child: Container(
+                         decoration: BoxDecoration(
+                           gradient: LinearGradient(
+                             begin: Alignment.centerLeft,
+                             end: Alignment.centerRight,
+                             colors: [
+                               Colors.black.withValues(
+                                 alpha: shadowOpacity.value * 0.6,
+                               ),
+                               Colors.transparent,
+                             ],
+                           ),
+                         ),
+                       ),
+                     ),
+
+                   // Entering page with lighting gradient overlay
                    Transform(
-                     transform:
-                         Matrix4.identity()
-                           ..setEntry(3, 2, 0.001)
-                           ..rotateY(openingTransform.value),
+                     transform: Matrix4.identity()
+                       ..setEntry(3, 2, 0.001)
+                       ..rotateY(openingTransform.value),
                      alignment: Alignment.centerLeft,
-                     child: child,
+                     child: Stack(
+                       children: [
+                         child!,
+                         // Lighting gradient: simulates light on the page surface
+                         if (animation.value < 0.95)
+                           Positioned.fill(
+                             child: IgnorePointer(
+                               child: Container(
+                                 decoration: BoxDecoration(
+                                   gradient: LinearGradient(
+                                     begin: Alignment.centerLeft,
+                                     end: Alignment.centerRight,
+                                     colors: [
+                                       Colors.white.withValues(
+                                         alpha: (1 - animation.value) * 0.12,
+                                       ),
+                                       Colors.black.withValues(
+                                         alpha: (1 - animation.value) * 0.06,
+                                       ),
+                                     ],
+                                   ),
+                                 ),
+                               ),
+                             ),
+                           ),
+                       ],
+                     ),
                    ),
                  ],
                );

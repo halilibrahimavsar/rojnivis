@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../../core/theme/old_page_theme.dart';
 
 class MindMapNodeCard extends StatelessWidget {
   final String title;
@@ -20,11 +21,12 @@ class MindMapNodeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 2,
+    return Container(
+      decoration: AgedPaperDecoration.card(context),
+      margin: const EdgeInsets.symmetric(vertical: 4, horizontal: 2),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Column(
@@ -45,10 +47,13 @@ class MindMapNodeCard extends StatelessWidget {
                     child: Text(
                       title,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w700,
+                        fontFamily: 'Caveat',
+                        fontSize: 20,
                       ),
                     ),
                   ),
+
                   PopupMenuButton<String>(
                     onSelected: (value) {
                       switch (value) {

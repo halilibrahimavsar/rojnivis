@@ -2,9 +2,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-// Temporarily commented until unified_flutter_features is properly set up
-// import 'package:unified_flutter_features/features/local_auth/data/local_auth_repository.dart';
-// import 'package:unified_flutter_features/features/local_auth/presentation/widgets/local_auth_security_layer.dart';
+import 'package:unified_flutter_features/features/local_auth/data/local_auth_repository.dart';
+import 'package:unified_flutter_features/features/local_auth/presentation/widgets/local_auth_security_layer.dart';
 
 import 'core/constants/app_constants.dart';
 import 'core/errors/error_handler.dart';
@@ -177,9 +176,10 @@ class _AppConfiguration extends StatelessWidget {
           themeMode: settings.themeMode,
           routerConfig: AppRouter.router,
           builder: (context, child) {
-            // Temporarily return child without local auth layer
-            // TODO: Re-enable when unified_flutter_features is properly set up
-            return child ?? const SizedBox.shrink();
+            return LocalAuthSecurityLayer(
+              repository: getIt<LocalAuthRepository>(),
+              child: child ?? const SizedBox.shrink(),
+            );
           },
         );
       },

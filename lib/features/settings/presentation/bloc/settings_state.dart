@@ -19,6 +19,7 @@ class SettingsLoaded extends SettingsState {
   final bool showAttachmentBackdrop;
   final int notebookCoverColor;
   final String notebookCoverTexture;
+  final String aiApiKey;
 
   const SettingsLoaded({
     required this.themeMode,
@@ -28,6 +29,7 @@ class SettingsLoaded extends SettingsState {
     required this.showAttachmentBackdrop,
     required this.notebookCoverColor,
     required this.notebookCoverTexture,
+    required this.aiApiKey,
   });
 
   SettingsLoaded copyWith({
@@ -38,6 +40,7 @@ class SettingsLoaded extends SettingsState {
     bool? showAttachmentBackdrop,
     int? notebookCoverColor,
     String? notebookCoverTexture,
+    String? aiApiKey,
   }) {
     return SettingsLoaded(
       themeMode: themeMode ?? this.themeMode,
@@ -48,6 +51,7 @@ class SettingsLoaded extends SettingsState {
           showAttachmentBackdrop ?? this.showAttachmentBackdrop,
       notebookCoverColor: notebookCoverColor ?? this.notebookCoverColor,
       notebookCoverTexture: notebookCoverTexture ?? this.notebookCoverTexture,
+      aiApiKey: aiApiKey ?? this.aiApiKey,
     );
   }
 
@@ -60,5 +64,6 @@ class SettingsLoaded extends SettingsState {
     showAttachmentBackdrop,
     notebookCoverColor,
     notebookCoverTexture,
+    aiApiKey,
   ];
 }

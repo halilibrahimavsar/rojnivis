@@ -31,6 +31,9 @@ class JournalEntryModel {
   @HiveField(7)
   final List<String> attachmentPaths;
 
+  @HiveField(8)
+  final String? summary;
+
   const JournalEntryModel({
     required this.id,
     required this.title,
@@ -40,6 +43,7 @@ class JournalEntryModel {
     this.tags = const [],
     this.categoryId,
     this.attachmentPaths = const [],
+    this.summary,
   });
 
   JournalEntryModel copyWith({
@@ -51,6 +55,7 @@ class JournalEntryModel {
     List<String>? tags,
     String? categoryId,
     List<String>? attachmentPaths,
+    String? summary,
   }) {
     return JournalEntryModel(
       id: id ?? this.id,
@@ -61,6 +66,7 @@ class JournalEntryModel {
       tags: tags ?? this.tags,
       categoryId: categoryId ?? this.categoryId,
       attachmentPaths: attachmentPaths ?? this.attachmentPaths,
+      summary: summary ?? this.summary,
     );
   }
 }
