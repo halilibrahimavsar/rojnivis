@@ -1,0 +1,77 @@
+{
+  "tech_stack": ["Dart", "Flutter", "BLoC", "Hive", "Gemini AI", "GetIt"],
+  "features": [
+    {
+      "name": "Journal Management",
+      "description": "Core functionality for creating, viewing, and managing journal entries with support for search and advanced filters.",
+      "files": ["lib/features/journal/"],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "info": {
+          "title": "Journal API",
+          "version": "1.0.0"
+        },
+        "paths": {
+          "/entries": {
+            "get": {
+              "summary": "List all journal entries",
+              "responses": {
+                "200": {
+                  "description": "A list of entries"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Category Management",
+      "description": "Allows users to create and manage categories for their journal entries.",
+      "files": ["lib/features/categories/"],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "info": {
+          "title": "Category API",
+          "version": "1.0.0"
+        }
+      }
+    },
+    {
+      "name": "Mindmap visualization",
+      "description": "Interactive mindmap to visualize the connections between different notes and thoughts.",
+      "files": ["lib/features/mindmap/"],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "info": {
+          "title": "Mindmap API",
+          "version": "1.0.0"
+        }
+      }
+    },
+    {
+      "name": "AI Quick Questions",
+      "description": "Generates journaling prompts and questions using Google Gemini AI.",
+      "files": ["lib/features/quick_questions/"],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "info": {
+          "title": "AI Questions API",
+          "version": "1.0.0"
+        }
+      }
+    },
+    {
+      "name": "App Settings",
+      "description": "Manages app-wide settings including theme selection and local authentication.",
+      "files": ["lib/features/settings/"],
+      "api_doc": {
+        "openapi": "3.0.0",
+        "info": {
+          "title": "Settings API",
+          "version": "1.0.0"
+        }
+      }
+    }
+  ]
+}

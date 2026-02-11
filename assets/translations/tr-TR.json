@@ -99,6 +99,8 @@
   "nodes": "Düğümler",
   "no_sub_nodes": "Alt düğüm yok",
   "auto_layout": "Otomatik Düzen",
+  "show_tools": "Araçları göster",
+  "hide_tools": "Araçları gizle",
   "show_grid": "Izgarayı Göster",
   "fit_to_screen": "Ekrana Sığdır",
   "reset_view": "Görünümü Sıfırla",

@@ -176,9 +176,11 @@ class _AppConfiguration extends StatelessWidget {
           themeMode: settings.themeMode,
           routerConfig: AppRouter.router,
           builder: (context, child) {
-            return LocalAuthSecurityLayer(
-              repository: getIt<LocalAuthRepository>(),
-              child: child ?? const SizedBox.shrink(),
+            return SafeArea(
+              child: LocalAuthSecurityLayer(
+                repository: getIt<LocalAuthRepository>(),
+                child: child ?? const SizedBox.shrink(),
+              ),
             );
           },
         );

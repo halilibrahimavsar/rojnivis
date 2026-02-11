@@ -189,7 +189,8 @@ class _AddEntryPageState extends State<AddEntryPage> {
                 if (bytes == null) return;
 
                 final directory = await getApplicationDocumentsDirectory();
-                final fileName = 'sketch_${DateTime.now().millisecondsSinceEpoch}.png';
+                final fileName =
+                    'sketch_${DateTime.now().millisecondsSinceEpoch}.png';
                 final file = File('${directory.path}/$fileName');
                 await file.writeAsBytes(bytes.buffer.asUint8List());
 
@@ -212,34 +213,238 @@ class _AddEntryPageState extends State<AddEntryPage> {
     return normalized.split('/').last;
   }
 
+  String _moodKey(int index) {
+    switch (index) {
+      case 0:
+        return 'happy';
+      case 1:
+        return 'sad';
+      case 2:
+        return 'neutral';
+      case 3:
+        return 'excited';
+      case 4:
+        return 'angry';
+      default:
+        return 'neutral';
+    }
+  }
+
+  String _selectedCategoryLabel(CategoryState state) {
+    if (_selectedCategoryId == null) {
+      return 'no_category'.tr();
+    }
+    if (state is CategoryLoaded) {
+      for (final category in state.categories) {
+        if (category.id == _selectedCategoryId) {
+          return category.name;
+        }
+      }
+    }
+    return 'category'.tr();
+  }
+
+  Future<void> _openQuickQuestions() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder:
+          (context) => SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: QuickQuestionCard(
+                onUseQuestion: (question) {
+                  Navigator.pop(context);
+                  _insertQuickQuestion(question);
+                },
+              ),
+            ),
+          ),
+    );
+  }
+
+  Future<void> _openTagsEditor() async {
+    final controller = TextEditingController(text: _tagsController.text);
+    final result = await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      builder:
+          (context) => Padding(
+            padding: EdgeInsets.fromLTRB(
+              16,
+              16,
+              16,
+              16 + MediaQuery.of(context).viewInsets.bottom,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'tags_label'.tr(),
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                TextField(
+                  controller: controller,
+                  decoration: InputDecoration(
+                    hintText: 'tags_hint'.tr(),
+                    prefixIcon: const Icon(Icons.tag_outlined),
+                  ),
+                  autofocus: true,
+                  minLines: 1,
+                  maxLines: 3,
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text('cancel'.tr()),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: FilledButton(
+                        onPressed:
+                            () => Navigator.pop(context, controller.text),
+                        child: Text('save'.tr()),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+    );
+    controller.dispose();
+    if (result == null || !mounted) return;
+    setState(() => _tagsController.text = result);
+  }
+
+  Future<void> _openCategoryPicker() async {
+    const noCategoryValue = '__none__';
+    final selection = await showModalBottomSheet<String>(
+      context: context,
+      builder:
+          (context) => SafeArea(
+            child: BlocBuilder<CategoryBloc, CategoryState>(
+              builder: (context, state) {
+                final categories =
+                    state is CategoryLoaded ? state.categories : const [];
+                return ListView(
+                  shrinkWrap: true,
+                  children: [
+                    ListTile(
+                      leading: const Icon(Icons.category_outlined),
+                      title: Text('no_category'.tr()),
+                      trailing:
+                          _selectedCategoryId == null
+                              ? const Icon(Icons.check)
+                              : null,
+                      onTap: () => Navigator.pop(context, noCategoryValue),
+                    ),
+                    for (final category in categories)
+                      ListTile(
+                        leading: const Icon(Icons.circle, size: 12),
+                        title: Text(category.name),
+                        trailing:
+                            _selectedCategoryId == category.id
+                                ? const Icon(Icons.check)
+                                : null,
+                        onTap: () => Navigator.pop(context, category.id),
+                      ),
+                  ],
+                );
+              },
+            ),
+          ),
+    );
+    if (!mounted || selection == null) return;
+    setState(() {
+      _selectedCategoryId = selection == noCategoryValue ? null : selection;
+    });
+  }
+
+  Future<void> _openMoodPicker() async {
+    final selection = await showModalBottomSheet<int>(
+      context: context,
+      builder:
+          (context) => SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: _MoodPicker(
+                value: _selectedMoodIndex,
+                onChanged: (value) => Navigator.pop(context, value),
+              ),
+            ),
+          ),
+    );
+    if (selection == null || !mounted) return;
+    setState(() => _selectedMoodIndex = selection);
+  }
+
+  Future<void> _openAudioRecorder() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      builder:
+          (context) => SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Voice', style: Theme.of(context).textTheme.titleMedium),
+                  const SizedBox(height: 12),
+                  AudioRecorderWidget(
+                    onRecordingComplete: (path) {
+                      if (!mounted) return;
+                      setState(() {
+                        if (!_attachmentPaths.contains(path)) {
+                          _attachmentPaths.add(path);
+                        }
+                      });
+                      Navigator.pop(context);
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+    );
+  }
+
   Future<void> _aiContinueWriting() async {
     final aiService = getIt<AiService>();
     if (!aiService.isConfigured) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('ai_not_configured'.tr())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('ai_not_configured'.tr())));
       return;
     }
 
     final currentText = _contentController.text;
     if (currentText.trim().isEmpty) return;
-    
+
     final suggestionFuture = aiService.continueWriting(currentText);
-    
+
     if (!mounted) return;
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => AiWritingSheet(
-        suggestionFuture: suggestionFuture,
-        onAccept: (suggestion) {
-          setState(() {
-            _contentController.text = '$currentText $suggestion';
-          });
-        },
-      ),
+      builder:
+          (context) => AiWritingSheet(
+            suggestionFuture: suggestionFuture,
+            onAccept: (suggestion) {
+              setState(() {
+                _contentController.text = '$currentText $suggestion';
+              });
+            },
+          ),
     );
   }
 
@@ -247,9 +452,9 @@ class _AddEntryPageState extends State<AddEntryPage> {
     final aiService = getIt<AiService>();
     if (!aiService.isConfigured) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('ai_not_configured'.tr())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('ai_not_configured'.tr())));
       return;
     }
 
@@ -277,9 +482,11 @@ class _AddEntryPageState extends State<AddEntryPage> {
 
     String? summary = _editingEntry?.summary;
     final aiService = getIt<AiService>();
-    
+
     // Auto-generate summary if long enough and not present
-    if (aiService.isConfigured && (summary == null || summary.isEmpty) && content.length > 100) {
+    if (aiService.isConfigured &&
+        (summary == null || summary.isEmpty) &&
+        content.length > 100) {
       try {
         summary = await aiService.summarize(content);
       } catch (_) {
@@ -302,16 +509,213 @@ class _AddEntryPageState extends State<AddEntryPage> {
     );
 
     context.read<JournalBloc>().add(UpsertEntryRequested(entry: entry));
-    
+
     if (context.canPop()) {
       context.pop();
     } else {
       context.go('/');
     }
-    
+
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(SnackBar(content: Text('saved'.tr())));
+  }
+
+  ButtonStyle _miniButtonStyle({Color? background, Color? foreground}) {
+    return ButtonStyle(
+      visualDensity: _compactDensity,
+      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      minimumSize: const WidgetStatePropertyAll(Size(0, 0)),
+      padding: const WidgetStatePropertyAll(
+        EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      ),
+      backgroundColor:
+          background == null ? null : WidgetStatePropertyAll(background),
+      foregroundColor:
+          foreground == null ? null : WidgetStatePropertyAll(foreground),
+    );
+  }
+
+  Widget _buildMiniToolButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+    bool isPrimary = false,
+    bool isActive = false,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final background =
+        isPrimary
+            ? colorScheme.primary
+            : (isActive
+                ? colorScheme.secondaryContainer
+                : colorScheme.surfaceContainerHighest);
+    final foreground =
+        isPrimary
+            ? colorScheme.onPrimary
+            : (isActive
+                ? colorScheme.onSecondaryContainer
+                : colorScheme.onSurface);
+
+    return FilledButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 16),
+      label: Text(label, style: const TextStyle(fontSize: 12)),
+      style: _miniButtonStyle(background: background, foreground: foreground),
+    );
+  }
+
+  Widget _buildAttachmentStrip() {
+    if (_attachmentPaths.isEmpty) return const SizedBox.shrink();
+    return SizedBox(
+      height: 42,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        itemCount: _attachmentPaths.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          final path = _attachmentPaths[index];
+          return Tooltip(
+            message: _fileName(path),
+            child: InputChip(
+              label: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 180),
+                child: Text(
+                  _fileName(path),
+                  softWrap: false,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              avatar: Icon(_attachmentIcon(path), size: 18),
+              onDeleted: () => setState(() => _attachmentPaths.remove(path)),
+              onPressed: () => openAttachment(context, path),
+              visualDensity: _compactDensity,
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              labelPadding: const EdgeInsets.symmetric(horizontal: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildToolTray({
+    required String formattedDate,
+    required String categoryLabel,
+    required String moodLabel,
+    required String tagsLabel,
+    required bool hasTags,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return AnimatedPadding(
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+      child: SafeArea(
+        top: false,
+        child: Container(
+          margin: const EdgeInsets.fromLTRB(12, 6, 12, 12),
+          padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+          decoration: BoxDecoration(
+            color: colorScheme.surface.withValues(alpha: 0.92),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.6),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: colorScheme.shadow.withValues(alpha: 0.18),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (_attachmentPaths.isNotEmpty) ...[
+                _buildAttachmentStrip(),
+                const SizedBox(height: 10),
+              ],
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _buildMiniToolButton(
+                    icon: Icons.calendar_month_outlined,
+                    label: formattedDate,
+                    onPressed: _pickDateTime,
+                    isActive: true,
+                  ),
+                  _buildMiniToolButton(
+                    icon: Icons.category_outlined,
+                    label: categoryLabel,
+                    onPressed: _openCategoryPicker,
+                    isActive: _selectedCategoryId != null,
+                  ),
+                  _buildMiniToolButton(
+                    icon: Icons.mood_outlined,
+                    label: moodLabel,
+                    onPressed: _openMoodPicker,
+                    isActive: true,
+                  ),
+                  _buildMiniToolButton(
+                    icon: Icons.tag_outlined,
+                    label: tagsLabel,
+                    onPressed: _openTagsEditor,
+                    isActive: hasTags,
+                  ),
+                  _buildMiniToolButton(
+                    icon: Icons.question_answer_outlined,
+                    label: 'quick_question'.tr(),
+                    onPressed: _openQuickQuestions,
+                  ),
+                  _buildMiniToolButton(
+                    icon: Icons.auto_awesome,
+                    label: 'ai_assistant'.tr(),
+                    onPressed: _aiContinueWriting,
+                  ),
+                  _buildMiniToolButton(
+                    icon: Icons.auto_awesome_outlined,
+                    label: 'generate_tags'.tr(),
+                    onPressed: _aiGenerateTags,
+                  ),
+                  _buildMiniToolButton(
+                    icon: Icons.image_outlined,
+                    label: 'add_photo'.tr(),
+                    onPressed: _pickImage,
+                  ),
+                  _buildMiniToolButton(
+                    icon: Icons.attach_file_outlined,
+                    label: 'add_file'.tr(),
+                    onPressed: _pickFile,
+                  ),
+                  _buildMiniToolButton(
+                    icon: Icons.mic_none_outlined,
+                    label: 'Voice',
+                    onPressed: _openAudioRecorder,
+                  ),
+                  _buildMiniToolButton(
+                    icon: Icons.gesture_outlined,
+                    label: 'Sketch',
+                    onPressed: _openSketchCanvas,
+                  ),
+                  _buildMiniToolButton(
+                    icon: Icons.check,
+                    label: 'save'.tr(),
+                    onPressed: _save,
+                    isPrimary: true,
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   @override
@@ -324,30 +728,17 @@ class _AddEntryPageState extends State<AddEntryPage> {
 
     final isEditing = _editingEntry != null;
     final locale = context.locale.toString();
-    final formattedDate = DateFormat.yMMMMEEEEd(
+    final formattedDate = DateFormat.yMMMd(
       locale,
     ).add_Hm().format(_selectedDate);
-    final labelStyle = Theme.of(context).textTheme.labelLarge?.copyWith(
-      color: Theme.of(context).colorScheme.onSurfaceVariant,
-      fontWeight: FontWeight.w600,
-    );
-    final miniButtonPadding = const EdgeInsets.symmetric(
-      horizontal: 12,
-      vertical: 8,
-    );
-
-    ButtonStyle miniButtonStyle({Color? background, Color? foreground}) {
-      return ButtonStyle(
-        visualDensity: _compactDensity,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        minimumSize: const WidgetStatePropertyAll(Size(0, 0)),
-        padding: WidgetStatePropertyAll(miniButtonPadding),
-        backgroundColor:
-            background == null ? null : WidgetStatePropertyAll(background),
-        foregroundColor:
-            foreground == null ? null : WidgetStatePropertyAll(foreground),
-      );
-    }
+    final categoryState = context.watch<CategoryBloc>().state;
+    final categoryLabel = _selectedCategoryLabel(categoryState);
+    final moodLabel = 'mood_${_moodKey(_selectedMoodIndex)}'.tr();
+    final tags = _parseTags(_tagsController.text);
+    final tagsLabel =
+        tags.isEmpty
+            ? 'tags_label'.tr()
+            : '${tags.length} ${'tags_label'.tr()}';
 
     String? backdropPath;
     if (showAttachmentBackdrop) {
@@ -361,7 +752,6 @@ class _AddEntryPageState extends State<AddEntryPage> {
 
     return Scaffold(
       extendBodyBehindAppBar: true,
-      extendBody: true,
       appBar: AppBar(
         title: Text(isEditing ? 'edit_entry'.tr() : 'create_entry'.tr()),
       ),
@@ -372,279 +762,76 @@ class _AddEntryPageState extends State<AddEntryPage> {
           ),
           if (backdropPath != null) AttachmentBackdrop(path: backdropPath),
           SafeArea(
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 120),
-              children: [
-                QuickQuestionCard(onUseQuestion: _insertQuickQuestion),
-                const SizedBox(height: 12),
-                ThemedPaper(
-                  lined: true,
-                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 18),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('title'.tr(), style: labelStyle),
-                      TextField(
-                        controller: _titleController,
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          isDense: true,
-                          filled: false,
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        textInputAction: TextInputAction.next,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              child: Column(
+                children: [
+                  Expanded(
+                    child: ThemedPaper(
+                      lined: true,
+                      padding: EdgeInsets.zero,
+                      child: Stack(
                         children: [
-                          Text('content'.tr(), style: labelStyle),
-                          const Spacer(),
-                          TextButton.icon(
-                            onPressed: _aiContinueWriting,
-                            icon: const Icon(Icons.auto_awesome, size: 14),
-                            label: Text('Summarize / Continue'.tr(), style: const TextStyle(fontSize: 12)),
-                            style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
-                          ),
-                        ],
-                      ),
-                      TextField(
-                        controller: _contentController,
-                        minLines: 6,
-                        maxLines: 16,
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          isDense: true,
-                          filled: false,
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: _pickDateTime,
-                        icon: const Icon(Icons.calendar_month_outlined),
-                        label: Text(formattedDate),
-                        style: OutlinedButton.styleFrom(
-                          padding: miniButtonPadding,
-                          visualDensity: _compactDensity,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          minimumSize: const Size(0, 0),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                BlocBuilder<CategoryBloc, CategoryState>(
-                  builder: (context, state) {
-                    final items = <DropdownMenuItem<String?>>[
-                      DropdownMenuItem(
-                        value: null,
-                        child: Text('no_category'.tr()),
-                      ),
-                    ];
-
-                    if (state is CategoryLoaded) {
-                      items.addAll(
-                        state.categories.map(
-                          (c) =>
-                              DropdownMenuItem(value: c.id, child: Text(c.name)),
-                        ),
-                      );
-                    }
-
-                    return DropdownButtonFormField<String?>(
-                      value: _selectedCategoryId,
-                      items: items,
-                      onChanged:
-                          (value) => setState(() {
-                            _selectedCategoryId = value;
-                          }),
-                      decoration: InputDecoration(
-                        labelText: 'category'.tr(),
-                        prefixIcon: const Icon(Icons.category_outlined),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 12),
-                _MoodPicker(
-                  value: _selectedMoodIndex,
-                  onChanged:
-                      (value) => setState(() => _selectedMoodIndex = value),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: _tagsController,
-                  decoration: InputDecoration(
-                    labelText: 'tags_label'.tr(),
-                    hintText: 'tags_hint'.tr(),
-                    prefixIcon: const Icon(Icons.tag_outlined),
-                    suffixIcon: IconButton(
-                      icon: const Icon(Icons.auto_awesome, size: 18),
-                      onPressed: _aiGenerateTags,
-                      tooltip: 'generate_tags'.tr(),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                InputDecorator(
-                  decoration: InputDecoration(
-                    labelText: 'attachments'.tr(),
-                    prefixIcon: const Icon(Icons.attach_file_outlined),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (_attachmentPaths.isEmpty)
-                        Text(
-                          'no_attachments'.tr(),
-                          style: Theme.of(
-                            context,
-                          ).textTheme.bodyMedium?.copyWith(
-                            color:
-                                Theme.of(context).colorScheme.onSurfaceVariant,
-                          ),
-                        )
-                      else
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            final maxLabelWidth = (constraints.maxWidth - 110)
-                                .clamp(120.0, constraints.maxWidth);
-                            return Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
+                          const Positioned.fill(child: _BookSpineOverlay()),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                for (final path in _attachmentPaths)
-                                  Tooltip(
-                                    message: _fileName(path),
-                                    child: InputChip(
-                                      label: ConstrainedBox(
-                                        constraints: BoxConstraints(
-                                          maxWidth: maxLabelWidth,
-                                        ),
-                                        child: Text(
-                                          _fileName(path),
-                                          softWrap: false,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                      avatar: Icon(
-                                        _attachmentIcon(path),
-                                        size: 18,
-                                      ),
-                                      onDeleted:
-                                          () => setState(
-                                            () => _attachmentPaths.remove(path),
-                                          ),
-                                      onPressed:
-                                          () => openAttachment(context, path),
-                                      visualDensity: _compactDensity,
-                                      materialTapTargetSize:
-                                          MaterialTapTargetSize.shrinkWrap,
-                                      labelPadding: const EdgeInsets.symmetric(
-                                        horizontal: 6,
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 6,
-                                        vertical: 4,
-                                      ),
-                                    ),
+                                TextField(
+                                  controller: _titleController,
+                                  decoration: InputDecoration(
+                                    hintText: 'title'.tr(),
+                                    border: InputBorder.none,
+                                    isDense: true,
+                                    filled: false,
                                   ),
+                                  textInputAction: TextInputAction.next,
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.headlineSmall?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0.2,
+                                  ),
+                                  onSubmitted:
+                                      (_) => FocusScope.of(context).nextFocus(),
+                                ),
+                                const SizedBox(height: 12),
+                                Expanded(
+                                  child: TextField(
+                                    controller: _contentController,
+                                    expands: true,
+                                    maxLines: null,
+                                    minLines: null,
+                                    decoration: InputDecoration(
+                                      hintText: 'content'.tr(),
+                                      border: InputBorder.none,
+                                      isDense: true,
+                                      filled: false,
+                                    ),
+                                    style:
+                                        Theme.of(context).textTheme.bodyLarge,
+                                  ),
+                                ),
                               ],
-                            );
-                          },
-                        ),
-                      const SizedBox(height: 12),
-                      Wrap(
-                        spacing: 10,
-                        runSpacing: 10,
-                        crossAxisAlignment: WrapCrossAlignment.center,
-                        children: [
-                          FilledButton.icon(
-                            onPressed: _pickImage,
-                            icon: const Icon(Icons.image_outlined),
-                            label: Text('add_photo'.tr()),
-                            style: miniButtonStyle(
-                              background:
-                                  Theme.of(
-                                    context,
-                                  ).colorScheme.secondaryContainer,
-                              foreground:
-                                  Theme.of(
-                                    context,
-                                  ).colorScheme.onSecondaryContainer,
-                            ),
-                          ),
-                          FilledButton.icon(
-                            onPressed: _pickFile,
-                            icon: const Icon(Icons.attach_file_outlined),
-                            label: Text('add_file'.tr()),
-                            style: miniButtonStyle(
-                              background:
-                                  Theme.of(
-                                    context,
-                                  ).colorScheme.secondaryContainer,
-                              foreground:
-                                  Theme.of(
-                                    context,
-                                  ).colorScheme.onSecondaryContainer,
-                            ),
-                          ),
-                          AudioRecorderWidget(
-                            onRecordingComplete: (path) {
-                              setState(() {
-                                if (!_attachmentPaths.contains(path)) {
-                                  _attachmentPaths.add(path);
-                                }
-                              });
-                            },
-                          ),
-                          const SizedBox(width: 8),
-                          FilledButton.icon(
-                            onPressed: _openSketchCanvas,
-                            icon: const Icon(Icons.gesture_outlined),
-                            label: const Text('Sketch'),
-                            style: miniButtonStyle(
-                              background:
-                                  Theme.of(
-                                    context,
-                                  ).colorScheme.secondaryContainer,
-                              foreground:
-                                  Theme.of(
-                                    context,
-                                  ).colorScheme.onSecondaryContainer,
                             ),
                           ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
       ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: FilledButton.icon(
-            onPressed: _save,
-            icon: const Icon(Icons.check),
-            label: Text('save'.tr()),
-            style: miniButtonStyle(),
-          ),
-        ),
+      bottomNavigationBar: _buildToolTray(
+        formattedDate: formattedDate,
+        categoryLabel: categoryLabel,
+        moodLabel: moodLabel,
+        tagsLabel: tagsLabel,
+        hasTags: tags.isNotEmpty,
       ),
     );
   }
@@ -697,6 +884,44 @@ class _MoodPicker extends StatelessWidget {
               onSelected: (_) => onChanged(mood.index),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _BookSpineOverlay extends StatelessWidget {
+  const _BookSpineOverlay();
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final edge =
+        isDark
+            ? Colors.black.withValues(alpha: 0.18)
+            : Colors.black.withValues(alpha: 0.08);
+    final spine =
+        isDark
+            ? Colors.white.withValues(alpha: 0.08)
+            : Colors.black.withValues(alpha: 0.05);
+
+    return IgnorePointer(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+            colors: [
+              edge,
+              Colors.transparent,
+              Colors.transparent,
+              spine,
+              Colors.transparent,
+              Colors.transparent,
+              edge,
+            ],
+            stops: const [0.0, 0.1, 0.48, 0.5, 0.52, 0.9, 1.0],
+          ),
+        ),
       ),
     );
   }

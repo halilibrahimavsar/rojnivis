@@ -1,0 +1,21 @@
+{
+  "status": "commited",
+  "type": "frontend",
+  "scope": "codebase",
+  "localEndpoint": "http://localhost:3000",
+  "executionArgs": {
+    "projectName": "rojnivis",
+    "projectPath": "/home/garuda/Masaüstü/rojnivis",
+    "testIds": [
+      "TC001",
+      "TC003",
+      "TC004"
+    ],
+    "additionalInstruction": "The Flutter app is already running on http://localhost:3000. Please use this for frontend testing. Focus on TC001, TC003, and TC004. Generate Flutter widget/integration tests.",
+    "envs": {
+      "API_KEY": "sk-user-8zPnyDOsWKxoW28Wi2LCywIdaSnkWD-_Fc9OTZ2iIhQlFUF1bEu5wnZMqUbCwN3eQm40Q26-FYUFMzZbT1Uxqc1P6TEfAMv1M_fuHeeze1Vro4MuUOk3wxKkojL8ZcdfSjo"
+    }
+  },
+  "serverPort": 46755,
+  "proxy": "http://0be9a12d-bdd5-4a00-8101-d7e4f25c1519:MPfFO3zpUDxs5I4pih2shnNzM6klWBVj@tun.testsprite.com:8080"
+}

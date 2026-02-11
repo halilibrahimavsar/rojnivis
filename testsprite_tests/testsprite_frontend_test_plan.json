@@ -1,0 +1,704 @@
+[
+  {
+    "id": "TC001",
+    "title": "App Launch and Theme Selection with Biometric Authentication",
+    "description": "Verify app launch flow where user selects a theme and successfully authenticates using biometric security.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Launch the Rojnivis Flutter Journal app"
+      },
+      {
+        "type": "assertion",
+        "description": "The theme selection screen is displayed with multiple themes"
+      },
+      {
+        "type": "action",
+        "description": "Select a theme"
+      },
+      {
+        "type": "action",
+        "description": "Authenticate using biometric security (e.g. fingerprint or face recognition)"
+      },
+      {
+        "type": "assertion",
+        "description": "Authentication succeeds and user is navigated to the main journal management screen"
+      }
+    ]
+  },
+  {
+    "id": "TC002",
+    "title": "Failed Biometric Authentication Blocks Access",
+    "description": "Verify that the app blocks access if biometric authentication fails.",
+    "category": "error handling",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Launch the Rojnivis Flutter Journal app"
+      },
+      {
+        "type": "action",
+        "description": "Select a theme"
+      },
+      {
+        "type": "action",
+        "description": "Attempt biometric authentication with invalid biometric data"
+      },
+      {
+        "type": "assertion",
+        "description": "Authentication fails and user remains on authentication screen with error message"
+      }
+    ]
+  },
+  {
+    "id": "TC003",
+    "title": "Create New Journal Entry with Text and Rich Media",
+    "description": "Verify creating a new journal entry including text content and adding supported rich media such as images and sketches.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to journal management screen"
+      },
+      {
+        "type": "action",
+        "description": "Click 'Create New Entry'"
+      },
+      {
+        "type": "action",
+        "description": "Add text content to the entry"
+      },
+      {
+        "type": "action",
+        "description": "Insert an image into the entry"
+      },
+      {
+        "type": "action",
+        "description": "Add a sketch to the entry"
+      },
+      {
+        "type": "action",
+        "description": "Save the journal entry"
+      },
+      {
+        "type": "assertion",
+        "description": "Journal entry is saved and listed with its text and media content visible"
+      }
+    ]
+  },
+  {
+    "id": "TC004",
+    "title": "Search Journal Entries with Advanced Filters",
+    "description": "Verify searching journal entries by keywords and applying advanced filters including category and date ranges.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to journal entries list"
+      },
+      {
+        "type": "action",
+        "description": "Enter search keyword"
+      },
+      {
+        "type": "action",
+        "description": "Apply category filter"
+      },
+      {
+        "type": "action",
+        "description": "Apply date range filter"
+      },
+      {
+        "type": "action",
+        "description": "Execute search"
+      },
+      {
+        "type": "assertion",
+        "description": "Search results only include journal entries matching the keyword and filters"
+      }
+    ]
+  },
+  {
+    "id": "TC005",
+    "title": "AI-Powered Smart Categorization Suggestion",
+    "description": "Verify that AI suggests appropriate categories for newly created or existing journal entries.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Create or select an existing journal entry with descriptive content"
+      },
+      {
+        "type": "action",
+        "description": "Trigger AI smart categorization suggestion"
+      },
+      {
+        "type": "assertion",
+        "description": "AI suggests relevant categories based on entry content"
+      },
+      {
+        "type": "action",
+        "description": "Accept suggested category"
+      },
+      {
+        "type": "assertion",
+        "description": "Suggested category is applied to the journal entry and visible in its metadata"
+      }
+    ]
+  },
+  {
+    "id": "TC006",
+    "title": "Create and Manage Hierarchical Tags for Journal Entries",
+    "description": "Verify that users can create hierarchical tags and assign them to journal entries.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to category management section"
+      },
+      {
+        "type": "action",
+        "description": "Create a parent tag"
+      },
+      {
+        "type": "action",
+        "description": "Create one or more child tags under the parent tag"
+      },
+      {
+        "type": "assertion",
+        "description": "Hierarchy of tags is correctly displayed"
+      },
+      {
+        "type": "action",
+        "description": "Assign hierarchical tags to a journal entry"
+      },
+      {
+        "type": "assertion",
+        "description": "Journal entry shows assigned hierarchical tags with parent-child relation"
+      }
+    ]
+  },
+  {
+    "id": "TC007",
+    "title": "Interactive Mindmap Node Creation and Customization",
+    "description": "Verify that users can create mindmap nodes with different styles and customize node appearance.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open the mindmap visualization feature"
+      },
+      {
+        "type": "action",
+        "description": "Create new mindmap nodes connected to existing nodes"
+      },
+      {
+        "type": "action",
+        "description": "Apply different node styles (color, shape, size) to nodes"
+      },
+      {
+        "type": "assertion",
+        "description": "Nodes appear with selected styles and connections are visually correct"
+      }
+    ]
+  },
+  {
+    "id": "TC008",
+    "title": "Mindmap Auto-Layout and Zoom Functionality",
+    "description": "Verify that the mindmap supports automatic layout rearrangement and zooming in and out.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open a complex mindmap with multiple nodes"
+      },
+      {
+        "type": "action",
+        "description": "Trigger auto-layout algorithm"
+      },
+      {
+        "type": "assertion",
+        "description": "Mindmap nodes rearranged automatically for optimal layout"
+      },
+      {
+        "type": "action",
+        "description": "Use zoom controls or pinch gesture to zoom in and out"
+      },
+      {
+        "type": "assertion",
+        "description": "Mindmap zooms smoothly and maintains node and text clarity"
+      }
+    ]
+  },
+  {
+    "id": "TC009",
+    "title": "Export Mindmap to Supported Formats",
+    "description": "Verify that the mindmap can be exported correctly to supported file formats like PNG, PDF or SVG.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open mindmap export option"
+      },
+      {
+        "type": "action",
+        "description": "Select export file format (PNG, PDF, SVG)"
+      },
+      {
+        "type": "action",
+        "description": "Execute export"
+      },
+      {
+        "type": "assertion",
+        "description": "Exported file is generated with correct visual representation of the mindmap"
+      }
+    ]
+  },
+  {
+    "id": "TC010",
+    "title": "AI Quick Questions Prompt Generation",
+    "description": "Verify that the AI Quick Questions module generates relevant journaling prompts using Gemini AI.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to AI Quick Questions module"
+      },
+      {
+        "type": "action",
+        "description": "Request a journaling prompt"
+      },
+      {
+        "type": "assertion",
+        "description": "A meaningful and relevant journaling prompt is generated by Gemini AI"
+      },
+      {
+        "type": "action",
+        "description": "Generate multiple prompts consecutively"
+      },
+      {
+        "type": "assertion",
+        "description": "Each prompt is unique and contextually appropriate"
+      }
+    ]
+  },
+  {
+    "id": "TC011",
+    "title": "Automated Note Summarization Accuracy",
+    "description": "Verify that the AI-powered automated summarization provides concise and meaningful summaries of journal entries.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Select a journal entry with substantial content"
+      },
+      {
+        "type": "action",
+        "description": "Trigger AI automated summarization"
+      },
+      {
+        "type": "assertion",
+        "description": "Summary generated is concise, relevant, and accurately reflects the entry's content"
+      }
+    ]
+  },
+  {
+    "id": "TC012",
+    "title": "Multi-Modal Text Input: OCR Extraction from Images",
+    "description": "Verify that OCR correctly extracts text from image inputs and adds to journal entries.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Create a new journal entry"
+      },
+      {
+        "type": "action",
+        "description": "Insert an image with clear printed or handwritten text"
+      },
+      {
+        "type": "action",
+        "description": "Trigger OCR text extraction"
+      },
+      {
+        "type": "assertion",
+        "description": "Extracted text matches the contents of the image and is editable within the journal entry"
+      }
+    ]
+  },
+  {
+    "id": "TC013",
+    "title": "Voice Recording and Automatic Transcription Accuracy",
+    "description": "Verify that voice recordings are transcribed automatically and accurately into text.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Start a new journal entry"
+      },
+      {
+        "type": "action",
+        "description": "Record voice input clearly for over 30 seconds"
+      },
+      {
+        "type": "action",
+        "description": "Stop recording and wait for automatic transcription"
+      },
+      {
+        "type": "assertion",
+        "description": "Transcription text is generated and correctly reflects the spoken content"
+      }
+    ]
+  },
+  {
+    "id": "TC014",
+    "title": "Handwriting Recognition Input and Conversion",
+    "description": "Verify that handwriting input is captured and accurately converted into editable text.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Use handwriting input mode in a new journal entry"
+      },
+      {
+        "type": "action",
+        "description": "Write legible handwriting using the stylus or finger"
+      },
+      {
+        "type": "action",
+        "description": "Trigger handwriting recognition conversion"
+      },
+      {
+        "type": "assertion",
+        "description": "Converted text properly matches the handwritten input"
+      }
+    ]
+  },
+  {
+    "id": "TC015",
+    "title": "PDF Annotation Addition and Saving",
+    "description": "Verify users can annotate PDFs within entries and save annotations successfully.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Attach a PDF document in a journal entry"
+      },
+      {
+        "type": "action",
+        "description": "Use annotation tools to highlight, add notes or draw"
+      },
+      {
+        "type": "action",
+        "description": "Save the annotated PDF within the entry"
+      },
+      {
+        "type": "assertion",
+        "description": "Annotations are preserved and visible when reopening the entry"
+      }
+    ]
+  },
+  {
+    "id": "TC016",
+    "title": "Smart Collections and Advanced Filtering Functionality",
+    "description": "Verify that smart collections dynamically group related notes and filters effectively narrow displayed entries.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Create smart collection criteria (e.g. tags, categories)"
+      },
+      {
+        "type": "assertion",
+        "description": "Smart collection dynamically lists matching notes"
+      },
+      {
+        "type": "action",
+        "description": "Apply advanced filters such as date, category, and AI-generated tags"
+      },
+      {
+        "type": "assertion",
+        "description": "Displayed notes conform to applied filters"
+      }
+    ]
+  },
+  {
+    "id": "TC017",
+    "title": "Cross-Referencing and Backlinking Between Notes",
+    "description": "Verify users can create links between notes and view backlinks correctly.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open a journal entry and create a link reference to another note"
+      },
+      {
+        "type": "assertion",
+        "description": "Link appears clickable and navigates to the referenced note"
+      },
+      {
+        "type": "action",
+        "description": "Open referenced note and verify backlink to the original note is visible"
+      },
+      {
+        "type": "assertion",
+        "description": "Backlink correctly points back to the original note"
+      }
+    ]
+  },
+  {
+    "id": "TC018",
+    "title": "Real-Time Collaboration with Multi-User Editing and Commenting",
+    "description": "Verify that multiple users can edit and comment on a shared note simultaneously with changes synchronized.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "User A opens a shared journal note"
+      },
+      {
+        "type": "action",
+        "description": "User B opens the same shared page on a different device"
+      },
+      {
+        "type": "action",
+        "description": "User A edits text content"
+      },
+      {
+        "type": "assertion",
+        "description": "User B sees the update in real-time with minimal latency"
+      },
+      {
+        "type": "action",
+        "description": "User B adds a comment to the note"
+      },
+      {
+        "type": "assertion",
+        "description": "User A sees the comment appear live"
+      }
+    ]
+  },
+  {
+    "id": "TC019",
+    "title": "Cloud Backup to Google Drive, Dropbox, and OneDrive",
+    "description": "Verify cloud backup process completes successfully with supported providers and handles failures gracefully.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Configure cloud backup settings with Google Drive"
+      },
+      {
+        "type": "action",
+        "description": "Trigger manual backup"
+      },
+      {
+        "type": "assertion",
+        "description": "Backup completes successfully without data loss"
+      },
+      {
+        "type": "action",
+        "description": "Repeat backup configuration and backup with Dropbox and OneDrive"
+      },
+      {
+        "type": "assertion",
+        "description": "Backup completes successfully with each provider"
+      },
+      {
+        "type": "action",
+        "description": "Simulate network failure during backup"
+      },
+      {
+        "type": "assertion",
+        "description": "Backup process reports error and offers retry option"
+      }
+    ]
+  },
+  {
+    "id": "TC020",
+    "title": "Cross-Platform Synchronization Consistency",
+    "description": "Verify that changes made on one device synchronize properly and consistently appear on other devices.",
+    "category": "functional",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Create or update journal entry on Device A"
+      },
+      {
+        "type": "action",
+        "description": "Allow synchronization to complete"
+      },
+      {
+        "type": "action",
+        "description": "Check the same entry on Device B"
+      },
+      {
+        "type": "assertion",
+        "description": "Entry changes made on Device A appear on Device B accurately"
+      },
+      {
+        "type": "action",
+        "description": "Edit entry on Device B and sync"
+      },
+      {
+        "type": "assertion",
+        "description": "Changes from Device B appear on Device A"
+      }
+    ]
+  },
+  {
+    "id": "TC021",
+    "title": "App Settings Theme Morphing and UX Animation",
+    "description": "Verify that changing themes triggers smooth theme morphing animations and other UX enhancements such as ripple effects and ink effects.",
+    "category": "ui",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Navigate to app settings"
+      },
+      {
+        "type": "action",
+        "description": "Select a different theme from the current one"
+      },
+      {
+        "type": "assertion",
+        "description": "Theme morphing animation occurs smoothly without UI glitches"
+      },
+      {
+        "type": "assertion",
+        "description": "Ripple and ink effects are visible during theme changes and user interactions"
+      }
+    ]
+  },
+  {
+    "id": "TC022",
+    "title": "Performance: Verify App Startup Time under 2 Seconds",
+    "description": "Measure app startup elapsed time and verify it is under 2 seconds given typical user data.",
+    "category": "performance",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Launch the app multiple times fresh from device home screen"
+      },
+      {
+        "type": "assertion",
+        "description": "Each startup time measurement is below 2 seconds"
+      }
+    ]
+  },
+  {
+    "id": "TC023",
+    "title": "Performance: Verify Memory Usage Under 150MB In Normal Usage",
+    "description": "Monitor memory usage during common workflows ensuring memory usage remains below 150MB.",
+    "category": "performance",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Perform typical user activities like creating journal entries, switching themes, using mindmap"
+      },
+      {
+        "type": "assertion",
+        "description": "Memory usage remains below 150MB throughout"
+      }
+    ]
+  },
+  {
+    "id": "TC024",
+    "title": "Security: Validate Secure Data Storage and End-to-End Encryption",
+    "description": "Verify that all user data is securely stored on device and encrypted during cloud synchronization.",
+    "category": "security",
+    "priority": "High",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Store sensitive data such as journal entries and app settings locally"
+      },
+      {
+        "type": "assertion",
+        "description": "Data at rest is encrypted and inaccessible by unauthorized apps"
+      },
+      {
+        "type": "action",
+        "description": "Trigger cloud sync"
+      },
+      {
+        "type": "assertion",
+        "description": "Data is transmitted over secured, encrypted channels"
+      }
+    ]
+  },
+  {
+    "id": "TC025",
+    "title": "Error Handling for AI Feature Failures",
+    "description": "Verify app behavior when AI services (summarization, categorization, question generation) fail or return errors.",
+    "category": "error handling",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Simulate AI service failure or network error during summarization"
+      },
+      {
+        "type": "assertion",
+        "description": "App shows a user-friendly error message without crashing"
+      },
+      {
+        "type": "action",
+        "description": "Repeat for smart categorization and quick questions features"
+      },
+      {
+        "type": "assertion",
+        "description": "Each AI failure is handled gracefully with proper user notification"
+      }
+    ]
+  },
+  {
+    "id": "TC026",
+    "title": "Change Tracking and Version History in Collaboration",
+    "description": "Verify that changes made to shared notes are tracked with timestamps and version history is accessible.",
+    "category": "functional",
+    "priority": "Medium",
+    "steps": [
+      {
+        "type": "action",
+        "description": "Open a shared journal note"
+      },
+      {
+        "type": "action",
+        "description": "Make multiple edits with different users over time"
+      },
+      {
+        "type": "action",
+        "description": "Access change tracking or version history interface"
+      },
+      {
+        "type": "assertion",
+        "description": "Changes are listed with timestamps and the ability to view or revert versions"
+      }
+    ]
+  }
+]

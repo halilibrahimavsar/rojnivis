@@ -99,6 +99,8 @@
   "nodes": "Nodes",
   "no_sub_nodes": "No sub-nodes",
   "auto_layout": "Auto Layout",
+  "show_tools": "Show tools",
+  "hide_tools": "Hide tools",
   "show_grid": "Show Grid",
   "fit_to_screen": "Fit to Screen",
   "reset_view": "Reset View",

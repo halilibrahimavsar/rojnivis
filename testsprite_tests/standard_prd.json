@@ -1,0 +1,146 @@
+{
+  "meta": {
+    "project": "Rojnivis Flutter Journal App",
+    "date": "2026-02-10",
+    "prepared_by": "Software Development Manager"
+  },
+  "product_overview": "Rojnivis is a premium, AI-powered collaborative knowledge management platform designed for enhanced journaling, note-taking, and mind mapping. It integrates modern note-taking features with biometrics, advanced AI capabilities, rich media support, and real-time collaboration while maintaining a seamless, notebook-like user experience.",
+  "core_goals": [
+    "Resolve dependency injection issues and establish a centralized App Module for scalable architecture.",
+    "Integrate comprehensive AI-powered features including automated summarization, smart categorization, semantic search, voice-to-text transcription, and personalized writing suggestions.",
+    "Introduce multi-modal input methods such as OCR, voice recording, handwriting recognition, PDF annotation, and web clipping.",
+    "Enhance organization through smart collections, hierarchical tagging, cross-referencing, advanced filtering, and custom templates.",
+    "Build collaborative and synchronization capabilities including real-time collaboration, cloud backup, cross-platform sync, sharing, and permissions.",
+    "Upgrade UX with premium interactions, animations, and paper texture effects to simulate a physical notebook feel.",
+    "Improve Mindmap widget with advanced layout, customization, exporting, and multi-user collaboration features.",
+    "Perform technical refactoring focusing on performance optimization, code quality, and advanced security measures."
+  ],
+  "key_features": [
+    "Journal Management with powerful search and advanced filters supporting rich media including images, audio, sketches, and files.",
+    "Category Management with AI-powered smart categorization and hierarchical tagging system.",
+    "Interactive Mindmap visualization enhanced with multiple node styles, auto-layout algorithms, zoom, export options, and collaborative editing.",
+    "AI Quick Questions module generating journaling prompts via Gemini AI and providing automated note summarization and writing suggestions.",
+    "App Settings for theme selection, biometric security integration, local authentication and advanced device security options.",
+    "Multi-modal Inputs supporting OCR image text extraction, voice recording with automatic transcription, handwriting recognition, PDF annotation, and a web clipper function.",
+    "Advanced Organizational Tools including smart collections, cross-referencing, backlinking, saved searches, and custom templates.",
+    "Real-time Collaboration and Cloud Sync featuring multi-user editing, commenting, change tracking, cloud backups (Google Drive, Dropbox, OneDrive), and cross-platform synchronization.",
+    "Rich Media and Embeds supporting embeddable content like YouTube and Spotify, interactive charts and diagrams, and advanced file previews.",
+    "UX Enhancements featuring fluid page flip animations, ink effects, smooth theme morphing, ripple effects, gesture-based interactions, paper texture with shading, and defter (notebook) style visuals."
+  ],
+  "user_flow_summary": [
+    "Users launch the app selecting from multiple themes with biometric security authentication.",
+    "Users create, view, and manage journal entries with advanced search, filters, and AI-generated prompts to enrich content.",
+    "Users organize notes into categories using AI-assisted suggestions and hierarchical tagging.",
+    "Users navigate and explore their notes visually through an interactive mindmap which supports zoom, clustering, and exporting.",
+    "Users input notes via text, voice, images (OCR), handwriting, or PDF annotations, leveraging multi-modal methods.",
+    "Users collaborate in real-time on shared notes and mindmaps with commenting, change tracking, and voice annotations.",
+    "Users configure app settings including theme choice, authentication methods, and sync preferences.",
+    "Users benefit from cloud backups and cross-platform synchronization ensuring data safety and availability across devices."
+  ],
+  "validation_criteria": [
+    "Dependency Injection issues resolved with centralized App Module fully functional and tested.",
+    "Comprehensive test coverage >90% including DI, new AI features, multi-modal inputs, and collaboration modules.",
+    "Successful integration and accurate performance of AI features such as automatic summarization, smart categorization, and voice transcription.",
+    "Smooth, stable, and visually appealing UX animations including page flips, ink effects, and theme morphing validated with user feedback.",
+    "Effective performance optimizations demonstrated by app startup time <2 seconds and memory usage <150MB.",
+    "Secure storage and end-to-end encryption implementations pass security audits.",
+    "Cloud backup and real-time collaboration features operate reliably with minimal sync latency.",
+    "Cross-platform synchronization tested across supported devices with consistent data integrity.",
+    "User engagement metrics show improvement: +50% engagement, +30% daily actives, 4.8+ app store rating.",
+    "All new features documented with usage guides and API specifications consistent with OpenAPI standards."
+  ],
+  "code_summary": {
+    "tech_stack": [
+      "Dart",
+      "Flutter",
+      "BLoC",
+      "Hive",
+      "Gemini AI",
+      "GetIt"
+    ],
+    "features": [
+      {
+        "name": "Journal Management",
+        "description": "Core functionality for creating, viewing, and managing journal entries with support for search and advanced filters.",
+        "files": [
+          "lib/features/journal/"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "info": {
+            "title": "Journal API",
+            "version": "1.0.0"
+          },
+          "paths": {
+            "/entries": {
+              "get": {
+                "summary": "List all journal entries",
+                "responses": {
+                  "200": {
+                    "description": "A list of entries"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      {
+        "name": "Category Management",
+        "description": "Allows users to create and manage categories for their journal entries.",
+        "files": [
+          "lib/features/categories/"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "info": {
+            "title": "Category API",
+            "version": "1.0.0"
+          }
+        }
+      },
+      {
+        "name": "Mindmap visualization",
+        "description": "Interactive mindmap to visualize the connections between different notes and thoughts.",
+        "files": [
+          "lib/features/mindmap/"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "info": {
+            "title": "Mindmap API",
+            "version": "1.0.0"
+          }
+        }
+      },
+      {
+        "name": "AI Quick Questions",
+        "description": "Generates journaling prompts and questions using Google Gemini AI.",
+        "files": [
+          "lib/features/quick_questions/"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "info": {
+            "title": "AI Questions API",
+            "version": "1.0.0"
+          }
+        }
+      },
+      {
+        "name": "App Settings",
+        "description": "Manages app-wide settings including theme selection and local authentication.",
+        "files": [
+          "lib/features/settings/"
+        ],
+        "api_doc": {
+          "openapi": "3.0.0",
+          "info": {
+            "title": "Settings API",
+            "version": "1.0.0"
+          }
+        }
+      }
+    ]
+  }
+}
