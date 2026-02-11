@@ -47,10 +47,12 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           _readBool(_attachmentBackdropKey) ??
           AppDefaults.defaultAttachmentBackdrop;
       final notebookCoverColor =
-          _prefs.getInt(_coverColorKey) ?? AppDefaults.defaultNotebookCoverColor;
+          _prefs.getInt(_coverColorKey) ??
+          AppDefaults.defaultNotebookCoverColor;
       final notebookCoverTexture =
-          _readString(_coverTextureKey) ?? AppDefaults.defaultNotebookCoverTexture;
-      final aiApiKey = _readString(_aiApiKeyKey) ?? 'AIzaSyCj24N3bAE1dQii3Vuu3LPtV1qsYyswHAw';
+          _readString(_coverTextureKey) ??
+          AppDefaults.defaultNotebookCoverTexture;
+      final aiApiKey = _readString(_aiApiKeyKey) ?? '';
 
       final localeRaw =
           _readString(_localeKey) ??
@@ -83,7 +85,10 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       emit(
         const SettingsLoaded(
           themeMode: ThemeMode.system,
-          locale: Locale(AppDefaults.defaultLocale, AppDefaults.defaultCountryCode),
+          locale: Locale(
+            AppDefaults.defaultLocale,
+            AppDefaults.defaultCountryCode,
+          ),
           fontFamily: AppDefaults.defaultFontFamily,
           themePreset: AppDefaults.defaultThemePreset,
           showAttachmentBackdrop: AppDefaults.defaultAttachmentBackdrop,
@@ -169,7 +174,6 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     emit(current.copyWith(aiApiKey: event.apiKey.trim()));
   }
 
-
   SettingsLoaded _requireLoaded() {
     final state = this.state;
     if (state is SettingsLoaded) return state;
@@ -233,7 +237,10 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     if (parts.length == 1 && parts[0].isNotEmpty) {
       return Locale(parts[0]);
     }
-    return const Locale(AppDefaults.defaultLocale, AppDefaults.defaultCountryCode);
+    return const Locale(
+      AppDefaults.defaultLocale,
+      AppDefaults.defaultCountryCode,
+    );
   }
 
   String _normalizeLocale(String value) => value.replaceAll('_', '-');

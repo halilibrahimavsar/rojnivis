@@ -24,19 +24,17 @@ abstract class AiService {
 @LazySingleton(as: AiService)
 class GeminiAiService implements AiService {
   final SharedPreferences _prefs;
-  
+
   GeminiAiService(this._prefs);
 
-  static const String _promptBase = "You are a helpful writing assistant for a premium journal app called Rojnivis. The user is writing in a private, luxury digital notebook. Keep the tone elegant, introspective, and helpful.";
+  static const String _promptBase =
+      "You are a helpful writing assistant for a premium journal app called Rojnivis. The user is writing in a private, luxury digital notebook. Keep the tone elegant, introspective, and helpful.";
 
   GenerativeModel? _getModel() {
     final apiKey = _prefs.getString('ai_api_key');
     if (apiKey == null || apiKey.isEmpty) return null;
-    
-    return GenerativeModel(
-      model: 'gemini-1.5-flash',
-      apiKey: apiKey,
-    );
+
+    return GenerativeModel(model: 'gemini-2.0-flash', apiKey: apiKey);
   }
 
   @override
@@ -45,25 +43,39 @@ class GeminiAiService implements AiService {
   @override
   Future<String> summarize(String text) async {
     final model = _getModel();
-    if (model == null) return "AI not configured. Please add API key in settings.";
-    
+    if (model == null)
+      return "AI not configured. Please add API key in settings.";
+
     final prompt = [
-      Content.text("$_promptBase\n\nPlease provide a concise, elegant summary (max 2 sentences) of the following journal entry:\n\n$text")
+      Content.text(
+        "$_promptBase\n\nPlease provide a concise, elegant summary (max 2 sentences) of the following journal entry:\n\n$text",
+      ),
     ];
-    
+
     try {
       final response = await model.generateContent(prompt);
       return response.text ?? "Could not generate summary.";
     } catch (e) {
-      // Log the error (in a real app use a logger)
       debugPrint('AI Service Error (Summarize): $e');
-      if (e.toString().contains('403') || e.toString().contains('API key')) {
-         throw 'Invalid API Key or Quota Exceeded';
+      final errorStr = e.toString();
+
+      if (errorStr.contains('403') ||
+          errorStr.contains('API key') ||
+          errorStr.contains('permission')) {
+        throw 'Invalid API Key. Please check your API key in Settings > AI Assistant.';
       }
-      if (e.toString().contains('not found') || e.toString().contains('404')) {
-         throw 'Model not found. Please check API key availability.';
+      if (errorStr.contains('404') || errorStr.contains('not found')) {
+        throw 'AI model not available. Please try again later.';
       }
-      rethrow;
+      if (errorStr.contains('429') ||
+          errorStr.contains('quota') ||
+          errorStr.contains('rate limit')) {
+        throw 'API quota exceeded. Please wait a moment and try again.';
+      }
+      if (errorStr.contains('timeout') || errorStr.contains('deadline')) {
+        throw 'Request timed out. Please check your internet connection.';
+      }
+      throw 'AI service error: ${errorStr.substring(0, errorStr.length > 100 ? 100 : errorStr.length)}';
     }
   }
 
@@ -71,18 +83,29 @@ class GeminiAiService implements AiService {
   Future<String> continueWriting(String text, {String? context}) async {
     final model = _getModel();
     if (model == null) return "AI not configured.";
-    
-    final contextPart = context != null ? "Context about the day: $context\n" : "";
+
+    final contextPart =
+        context != null ? "Context about the day: $context\n" : "";
     final prompt = [
-      Content.text("$_promptBase\n${contextPart}Existing text: $text\n\nPlease continue the writing naturally, maintaining the user's style. Provide only the continuation text, max 3-4 sentences.")
+      Content.text(
+        "$_promptBase\n${contextPart}Existing text: $text\n\nPlease continue the writing naturally, maintaining the user's style. Provide only the continuation text, max 3-4 sentences.",
+      ),
     ];
-    
+
     try {
       final response = await model.generateContent(prompt);
       return response.text ?? "";
     } catch (e) {
       debugPrint('AI Service Error (Continue): $e');
-      return ""; // Fail silently for continuation to avoid interrupting flow
+      // Return user-friendly error message instead of empty string
+      final errorStr = e.toString();
+      if (errorStr.contains('403') || errorStr.contains('API key')) {
+        return "[Error: Invalid API Key. Please check Settings > AI Assistant.]";
+      }
+      if (errorStr.contains('429') || errorStr.contains('quota')) {
+        return "[Error: API quota exceeded. Please try again later.]";
+      }
+      return "[Error: Could not generate continuation. Please try again.]";
     }
   }
 
@@ -90,17 +113,24 @@ class GeminiAiService implements AiService {
   Future<List<String>> generateTags(String text) async {
     final model = _getModel();
     if (model == null) return [];
-    
+
     final prompt = [
-      Content.text("$_promptBase\nText: $text\n\nSuggest 3-5 relevant hashtags/tags for this entry. Provide only the tags separated by commas, no introductory text.")
+      Content.text(
+        "$_promptBase\nText: $text\n\nSuggest 3-5 relevant hashtags/tags for this entry. Provide only the tags separated by commas, no introductory text.",
+      ),
     ];
-    
+
     try {
       final response = await model.generateContent(prompt);
       final tagsRaw = response.text ?? "";
-      return tagsRaw.split(',').map((e) => e.trim().replaceAll('#', '')).where((e) => e.isNotEmpty).toList();
+      return tagsRaw
+          .split(',')
+          .map((e) => e.trim().replaceAll('#', ''))
+          .where((e) => e.isNotEmpty)
+          .toList();
     } catch (e) {
       debugPrint('AI Service Error (Tags): $e');
+      // Return empty list but show error via debugPrint
       return [];
     }
   }
@@ -111,19 +141,20 @@ class GeminiAiService implements AiService {
     if (apiKey == null || apiKey.isEmpty) return ['API Key not configured'];
 
     // We can't easily list models with the high-level GenerativeModel class
-    // but we can try to initialize a model and see if it throws immediately 
+    // but we can try to initialize a model and see if it throws immediately
     // or if there is a listModels equivalent in the library.
     // The google_generative_ai package doesn't expose listModels easily in the minimal API.
     // Instead, let's try a simple prompt on a few known model names to see which works.
-    
+
     final modelsToTest = [
-      'gemini-2.0-flash-exp',
-      'gemini-1.5-flash',
-      'gemini-1.5-flash-latest',
-      'gemini-1.5-pro',
-      'gemini-1.5-pro-latest',
-      'gemini-1.0-pro',
-      'gemini-pro',
+      'gemini-2.5-flash',
+      'gemini-2.5-pro',
+      'gemini-2.0-flash',
+      'gemini-2.0-flash-001',
+      'gemini-2.0-flash-lite',
+      'gemini-2.0-flash-lite-001',
+      'gemini-flash-latest',
+      'gemini-pro-latest',
     ];
     final available = <String>[];
     final errors = <String>[];
@@ -141,7 +172,7 @@ class GeminiAiService implements AiService {
         } else if (errorMsg.contains('403')) {
           errorMsg = 'Permission denied (403) - Check API Key';
         } else if (errorMsg.contains('429')) {
-             errorMsg = 'Quota exceeded (429)';
+          errorMsg = 'Quota exceeded (429)';
         }
         errors.add('$modelName: $errorMsg');
       }
