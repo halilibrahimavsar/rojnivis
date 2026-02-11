@@ -331,71 +331,58 @@ class _AddEntryPageState extends State<AddEntryPage> {
   }
 
   Future<void> _openTagsEditor() async {
+    var draft = _tagsController.text;
     final result = await showModalBottomSheet<String>(
       context: context,
       isScrollControlled: true,
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            final controller = TextEditingController(
-              text: _tagsController.text,
-            );
-
-            return Padding(
-              padding: EdgeInsets.fromLTRB(
-                16,
-                16,
-                16,
-                16 + MediaQuery.of(context).viewInsets.bottom,
+        return Padding(
+          padding: EdgeInsets.fromLTRB(
+            16,
+            16,
+            16,
+            16 + MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'tags_label'.tr(),
+                style: Theme.of(context).textTheme.titleMedium,
               ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+              const SizedBox(height: 8),
+              TextFormField(
+                initialValue: draft,
+                decoration: InputDecoration(
+                  hintText: 'tags_hint'.tr(),
+                  prefixIcon: const Icon(Icons.tag_outlined),
+                ),
+                autofocus: true,
+                minLines: 1,
+                maxLines: 3,
+                onChanged: (value) => draft = value,
+              ),
+              const SizedBox(height: 12),
+              Row(
                 children: [
-                  Text(
-                    'tags_label'.tr(),
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: controller,
-                    decoration: InputDecoration(
-                      hintText: 'tags_hint'.tr(),
-                      prefixIcon: const Icon(Icons.tag_outlined),
+                  Expanded(
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: Text('cancel'.tr()),
                     ),
-                    autofocus: true,
-                    minLines: 1,
-                    maxLines: 3,
                   ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextButton(
-                          onPressed: () {
-                            controller.dispose();
-                            Navigator.pop(context);
-                          },
-                          child: Text('cancel'.tr()),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: FilledButton(
-                          onPressed: () {
-                            final text = controller.text;
-                            controller.dispose();
-                            Navigator.pop(context, text);
-                          },
-                          child: Text('save'.tr()),
-                        ),
-                      ),
-                    ],
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: FilledButton(
+                      onPressed: () => Navigator.pop(context, draft),
+                      child: Text('save'.tr()),
+                    ),
                   ),
                 ],
               ),
-            );
-          },
+            ],
+          ),
         );
       },
     );

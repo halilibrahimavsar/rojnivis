@@ -156,5 +156,17 @@
   "ai_not_configured": "AI yapılandırılmadı. Ayarlardan API anahtarı ekleyin.",
   "generate_tags": "Etiket Oluştur",
   "center": "Merkezle",
-  "minimap": "Mini Harita"
+  "minimap": "Mini Harita",
+  "ai_model": "AI Modeli",
+  "ai_model_changed": "Model değiştirildi:",
+  "ai_quota": "Günlük Kota",
+  "ai_used": "Kullanılan",
+  "ai_remaining": "Kalan",
+  "ai_quota_warning": "⚠️ Düşük kota! Daha yüksek limitli modele geçmeyi düşünün.",
+  "ai_available": "Kullanılabilir",
+  "ai_unavailable": "Kullanılamıyor",
+  "ai_models": "Modeller",
+  "test_connection": "Bağlantıyı Test Et",
+  "ai_model_status": "AI Model Durumu",
+  "close": "Kapat"
 }

@@ -123,26 +123,39 @@ class _JournalPageState extends State<JournalPage> {
             const SliverToBoxAdapter(child: QuickQuestionCard()),
             BlocBuilder<JournalBloc, JournalState>(
               builder: (context, state) {
-                if (state is JournalLoading || state is JournalInitial) {
+                if (state is JournalLoading ||
+                    state is JournalInitial ||
+                    state is JournalActionInProgress) {
                   return const SliverFillRemaining(
                     hasScrollBody: false,
                     child: Center(child: CircularProgressIndicator()),
                   );
                 }
 
-                if (state is JournalError) {
+                if (state is JournalError || state is JournalActionError) {
+                  final message =
+                      state is JournalError
+                          ? state.message
+                          : (state as JournalActionError).message;
                   return SliverFillRemaining(
                     hasScrollBody: false,
                     child: Center(
                       child: Padding(
                         padding: const EdgeInsets.all(24),
-                        child: Text(state.message, textAlign: TextAlign.center),
+                        child: Text(message, textAlign: TextAlign.center),
                       ),
                     ),
                   );
                 }
 
-                final entries = (state as JournalLoaded).entries;
+                if (state is! JournalLoaded) {
+                  return const SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+
+                final entries = state.entries;
                 if (entries.isEmpty) {
                   return SliverFillRemaining(
                     hasScrollBody: false,

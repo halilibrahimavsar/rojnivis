@@ -156,5 +156,17 @@
   "ai_not_configured": "AI not configured. Add API key in settings.",
   "generate_tags": "Generate Tags",
   "center": "Center",
-  "minimap": "Minimap"
+  "minimap": "Minimap",
+  "ai_model": "AI Model",
+  "ai_model_changed": "Model changed to",
+  "ai_quota": "Daily Quota",
+  "ai_used": "Used",
+  "ai_remaining": "Remaining",
+  "ai_quota_warning": "⚠️ Low quota! Consider switching to a model with higher limits.",
+  "ai_available": "Available",
+  "ai_unavailable": "Unavailable",
+  "ai_models": "Models",
+  "test_connection": "Test Connection",
+  "ai_model_status": "AI Model Status",
+  "close": "Close"
 }
