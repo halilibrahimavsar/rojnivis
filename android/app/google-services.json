@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "628938091989",
+    "project_id": "rojnivis",
+    "storage_bucket": "rojnivis.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:628938091989:android:5aec0736cd9d78c922a15c",
+        "android_client_info": {
+          "package_name": "com.rojnivis.rojnivis"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBvA3xQnB7-bBuooJmCT7TY9nd8UqTURrE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

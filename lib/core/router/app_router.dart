@@ -6,6 +6,7 @@ import '../../features/journal/presentation/pages/entry_detail_page.dart';
 import '../../features/categories/presentation/pages/categories_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/mindmap/presentation/pages/mind_map_page.dart';
+import 'package:firebase_bloc_auth/firebase_bloc_auth.dart';
 
 class AppRouter {
   static final router = GoRouter(
@@ -60,6 +61,34 @@ class AppRouter {
             ),
           ),
         ],
+      ),
+      GoRoute(
+        path: '/public',
+        pageBuilder: (context, state) => PageFlipTransitionPage(
+          key: state.pageKey,
+          child: const PublicPage(privatePage: ProfileUpdatePage()),
+        ),
+      ),
+      GoRoute(
+        path: '/register',
+        pageBuilder: (context, state) => PageFlipTransitionPage(
+          key: state.pageKey,
+          child: const RegisterPage(),
+        ),
+      ),
+      GoRoute(
+        path: '/forgot_paswd',
+        pageBuilder: (context, state) => PageFlipTransitionPage(
+          key: state.pageKey,
+          child: const ForgotPaswdPage(),
+        ),
+      ),
+      GoRoute(
+        path: '/wait_a_little',
+        pageBuilder: (context, state) => PageFlipTransitionPage(
+          key: state.pageKey,
+          child: const WaitALittlePage(),
+        ),
       ),
     ],
   );

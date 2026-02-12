@@ -2,6 +2,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_bloc_auth/firebase_bloc_auth.dart';
 import 'package:unified_flutter_features/features/local_auth/data/local_auth_repository.dart';
 import 'package:unified_flutter_features/features/local_auth/presentation/widgets/local_auth_security_layer.dart';
 
@@ -46,6 +48,9 @@ void main() async {
 Future<void> _initializeApp() async {
   // Initialize localization
   await EasyLocalization.ensureInitialized();
+
+  // Initialize Firebase
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Initialize Hive
   await Hive.initFlutter();
@@ -127,6 +132,12 @@ class _AppProviders extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
+        BlocProvider(
+          create:
+              (_) =>
+                  AuthBloc(createUserCollection: true)
+                    ..add(IsAuthenticatedEvent()),
+        ),
         BlocProvider(
           create: (_) => getIt<SettingsBloc>()..add(const LoadSettings()),
         ),

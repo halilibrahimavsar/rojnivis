@@ -1,6 +1,9 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:go_router/go_router.dart';
+
+import 'package:firebase_bloc_auth/firebase_bloc_auth.dart';
 import 'package:unified_flutter_features/features/local_auth/data/local_auth_repository.dart';
 import 'package:unified_flutter_features/features/local_auth/presentation/widgets/local_auth_settings_widget.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -29,6 +32,16 @@ class SettingsPage extends StatelessWidget {
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
             children: [
+              _Section(
+                title: 'account'.tr(),
+                child: _buildAccountSection(context, state),
+              ),
+              const SizedBox(height: 12),
+              _Section(
+                title: 'account'.tr(),
+                child: _buildAccountSection(context, state),
+              ),
+              const SizedBox(height: 12),
               _Section(
                 title: 'theme'.tr(),
                 child: Column(
@@ -589,6 +602,77 @@ class SettingsPage extends StatelessWidget {
             ],
           ),
         );
+      },
+    );
+  }
+
+  Widget _buildAccountSection(
+    BuildContext context,
+    SettingsState settingsState,
+  ) {
+    return BlocBuilder<AuthBloc, AuthState>(
+      builder: (context, state) {
+        if (state is AuthenticatedState) {
+          final user = state.authUser; // AuthUserRepository
+          final displayName = user.userDetail.displayName ?? 'User';
+          final email = user.email;
+          final photoUrl = user.userDetail.photoURL;
+
+          return Column(
+            children: [
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: CircleAvatar(
+                  backgroundImage:
+                      photoUrl != null ? NetworkImage(photoUrl) : null,
+                  child:
+                      photoUrl == null
+                          ? Text(
+                            displayName.isNotEmpty
+                                ? displayName[0].toUpperCase()
+                                : 'U',
+                          )
+                          : null,
+                ),
+                title: Text(displayName),
+                subtitle: Text(email),
+                trailing: IconButton(
+                  icon: const Icon(Icons.logout),
+                  onPressed: () {
+                    context.read<AuthBloc>().add(LogoutEvent());
+                  },
+                ),
+              ),
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                onPressed: () {
+                  // Navigate to Profile/Manage Account
+                  context.push('/public');
+                },
+                icon: const Icon(Icons.manage_accounts),
+                label: Text('manage_account'.tr()),
+              ),
+            ],
+          );
+        } else {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'sign_in_desc'.tr(),
+                style: Theme.of(context).textTheme.bodyMedium,
+              ),
+              const SizedBox(height: 12),
+              FilledButton.icon(
+                onPressed: () {
+                  context.push('/public');
+                },
+                icon: const Icon(Icons.login),
+                label: Text('sign_in'.tr()),
+              ),
+            ],
+          );
+        }
       },
     );
   }

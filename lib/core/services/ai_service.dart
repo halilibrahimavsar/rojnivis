@@ -427,13 +427,13 @@ class GeminiAiService implements AiService {
   }
 
   /// Her AI isteğinde çağrılması gereken metod
-  Future<void> _incrementRequestCount() async {
-    final requestCountKey = 'ai_daily_request_count';
-    final lastRequestKey = 'ai_last_request_time';
-    final now = DateTime.now();
+  // Future<void> _incrementRequestCount() async {
+  //   final requestCountKey = 'ai_daily_request_count';
+  //   final lastRequestKey = 'ai_last_request_time';
+  //   final now = DateTime.now();
 
-    final currentCount = _prefs.getInt(requestCountKey) ?? 0;
-    await _prefs.setInt(requestCountKey, currentCount + 1);
-    await _prefs.setString(lastRequestKey, now.toIso8601String());
-  }
+  //   final currentCount = _prefs.getInt(requestCountKey) ?? 0;
+  //   await _prefs.setInt(requestCountKey, currentCount + 1);
+  //   await _prefs.setString(lastRequestKey, now.toIso8601String());
+  // }
 }
