@@ -483,7 +483,7 @@ class SettingsPage extends StatelessWidget {
               return RadioListTile<String>(
                 title: Text(model.displayName),
                 subtitle: Text(
-                  '${model.description}${model.quotaLimit != null ? ' (${model.quotaLimit}/gün)' : ''}',
+                  model.description,
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 value: model.id,

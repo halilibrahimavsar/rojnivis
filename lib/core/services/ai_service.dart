@@ -83,56 +83,47 @@ class GeminiAiService implements AiService {
   static const String _promptBase =
       "You are a helpful writing assistant for a premium journal app called Rojnivis. The user is writing in a private, luxury digital notebook. Keep the tone elegant, introspective, and helpful.";
 
-  /// Ücretsiz tier'da çalışan modeller (düşük kota tüketimi)
+  /// Güncel ve metin üretimi için güvenli model seçenekleri.
   static const List<ModelInfo> _models = [
     ModelInfo(
-      id: 'gemini-2.0-flash-lite',
-      displayName: 'Gemini 2.0 Flash Lite',
-      description: 'En hafif model - 1500 istek/gün',
+      id: 'gemini-2.5-flash-lite',
+      displayName: 'Gemini 2.5 Flash-Lite',
+      description: 'En hızlı ve düşük maliyetli',
       isFreeTier: true,
-      quotaLimit: 1500,
-    ),
-    ModelInfo(
-      id: 'gemini-2.0-flash',
-      displayName: 'Gemini 2.0 Flash',
-      description: 'Hızlı ve dengeli - 1000 istek/gün',
-      isFreeTier: true,
-      quotaLimit: 1000,
-    ),
-    ModelInfo(
-      id: 'gemini-1.5-flash',
-      displayName: 'Gemini 1.5 Flash',
-      description: 'Stabil ve güvenilir - 1000 istek/gün',
-      isFreeTier: true,
-      quotaLimit: 1000,
     ),
     ModelInfo(
       id: 'gemini-2.5-flash',
       displayName: 'Gemini 2.5 Flash',
-      description: 'En yeni model - 500 istek/gün',
+      description: 'Hızlı ve dengeli',
       isFreeTier: true,
-      quotaLimit: 500,
     ),
     ModelInfo(
       id: 'gemini-2.5-pro',
       displayName: 'Gemini 2.5 Pro',
-      description: 'En kaliteli - 100 istek/gün',
+      description: 'En yüksek kalite ve muhakeme',
       isFreeTier: true,
-      quotaLimit: 100,
     ),
   ];
 
-  /// Kota dostu sıralama (en yüksek kotadan düşüğe)
+  /// Seçili modelden başlayıp diğer modellere düşen sıra.
   List<ModelInfo> get _quotaFriendlyModels {
-    return List.from(_models)
-      ..sort((a, b) => (b.quotaLimit ?? 0).compareTo(a.quotaLimit ?? 0));
+    final current = selectedModel;
+    return [
+      ..._models.where((m) => m.id == current),
+      ..._models.where((m) => m.id != current),
+    ];
   }
 
   String get _storageKey => StorageKeys.aiModel;
 
   @override
   String get selectedModel {
-    return _prefs.getString(_storageKey) ?? _quotaFriendlyModels.first.id;
+    final stored = _prefs.getString(_storageKey);
+    // Validate stored model exists in current list, otherwise default to first
+    if (stored != null && _models.any((m) => m.id == stored)) {
+      return stored;
+    }
+    return _models.first.id;
   }
 
   @override
@@ -176,78 +167,65 @@ class GeminiAiService implements AiService {
     );
   }
 
-  /// Fallback mekanizması ile model oluşturma
-  Future<({GenerativeModel? model, String? error, String modelId})>
-  _getModelWithFallback() async {
-    // Önce seçili modeli dene
-    final primaryModel = _getModel();
-    if (primaryModel == null) {
-      return (model: null, error: 'API Key not configured', modelId: '');
+  bool _isFallbackWorthyError(Object error) {
+    final msg = error.toString().toLowerCase();
+    return msg.contains('429') ||
+        msg.contains('quota') ||
+        msg.contains('rate limit') ||
+        msg.contains('resource exhausted') ||
+        msg.contains('503') ||
+        msg.contains('unavailable') ||
+        msg.contains('404') ||
+        msg.contains('not found');
+  }
+
+  Future<({GenerateContentResponse? response, String? error, String modelId})>
+  _generateContentWithFallback(
+    List<Content> prompt, {
+    GenerationConfig? generationConfig,
+  }) async {
+    final model = _getModel();
+    if (model == null) {
+      return (response: null, error: 'API Key not configured', modelId: '');
     }
 
-    try {
-      // Test et
-      await primaryModel.generateContent([
-        Content.text('Test'),
-      ], generationConfig: GenerationConfig(maxOutputTokens: 1));
-      return (model: primaryModel, error: null, modelId: selectedModel);
-    } catch (e) {
-      debugPrint('Primary model failed: $e');
+    Object? lastError;
 
-      // Kota hatası mı?
-      if (e.toString().contains('429') || e.toString().contains('quota')) {
-        // Sıradaki modele geç
-        final currentIndex = _quotaFriendlyModels.indexWhere(
-          (m) => m.id == selectedModel,
-        );
-
-        for (int i = 0; i < _quotaFriendlyModels.length; i++) {
-          if (i == currentIndex) continue; // Aynı modeli tekrar deneme
-
-          final fallbackModel = _quotaFriendlyModels[i];
-          try {
-            final model = _getModel(overrideModel: fallbackModel.id);
-            if (model != null) {
-              await model.generateContent([
-                Content.text('Test'),
-              ], generationConfig: GenerationConfig(maxOutputTokens: 1));
-
-              // Otomatik geçiş yap
-              await setModel(fallbackModel.id);
-              debugPrint(
-                'Auto-switched to fallback model: ${fallbackModel.id}',
-              );
-
-              return (model: model, error: null, modelId: fallbackModel.id);
-            }
-          } catch (fallbackError) {
-            debugPrint(
-              'Fallback model ${fallbackModel.id} failed: $fallbackError',
-            );
-            continue;
-          }
-        }
-
-        return (
-          model: null,
-          error:
-              'Tüm modellerin kotası dolmuş. Lütfen daha sonra tekrar deneyin.',
-          modelId: '',
-        );
+    for (int index = 0; index < _quotaFriendlyModels.length; index++) {
+      final candidate = _quotaFriendlyModels[index];
+      final candidateModel = _getModel(overrideModel: candidate.id);
+      if (candidateModel == null) {
+        continue;
       }
 
-      return (model: null, error: e.toString(), modelId: '');
+      try {
+        final response = await candidateModel.generateContent(
+          prompt,
+          generationConfig: generationConfig,
+        );
+
+        if (candidate.id != selectedModel) {
+          await setModel(candidate.id);
+          debugPrint('Auto-switched to fallback model: ${candidate.id}');
+        }
+
+        return (response: response, error: null, modelId: candidate.id);
+      } catch (e) {
+        lastError = e;
+        debugPrint('Model ${candidate.id} failed: $e');
+
+        final isLastAttempt = index == _quotaFriendlyModels.length - 1;
+        if (!_isFallbackWorthyError(e) || isLastAttempt) {
+          break;
+        }
+      }
     }
+
+    return (response: null, error: lastError?.toString(), modelId: '');
   }
 
   @override
   Future<String> summarize(String text) async {
-    final modelResult = await _getModelWithFallback();
-
-    if (modelResult.model == null) {
-      return "Hata: ${modelResult.error ?? 'Model oluşturulamadı'}";
-    }
-
     final prompt = [
       Content.text(
         "$_promptBase\n\nPlease provide a concise, elegant summary (max 2 sentences) of the following journal entry:\n\n$text",
@@ -255,8 +233,11 @@ class GeminiAiService implements AiService {
     ];
 
     try {
-      final response = await modelResult.model!.generateContent(prompt);
-      return response.text ?? "Could not generate summary.";
+      final result = await _generateContentWithFallback(prompt);
+      if (result.response == null) {
+        return "Hata: ${_handleError(result.error ?? 'Model oluşturulamadı')}";
+      }
+      return result.response!.text ?? "Could not generate summary.";
     } catch (e) {
       debugPrint('AI Service Error (Summarize): $e');
       return _handleError(e);
@@ -265,12 +246,6 @@ class GeminiAiService implements AiService {
 
   @override
   Future<String> continueWriting(String text, {String? context}) async {
-    final modelResult = await _getModelWithFallback();
-
-    if (modelResult.model == null) {
-      return "[Hata: ${modelResult.error ?? 'AI şuanda kullanılamıyor'}]";
-    }
-
     final contextPart =
         context != null ? "Context about the day: $context\n" : "";
     final prompt = [
@@ -280,8 +255,11 @@ class GeminiAiService implements AiService {
     ];
 
     try {
-      final response = await modelResult.model!.generateContent(prompt);
-      return response.text ?? "";
+      final result = await _generateContentWithFallback(prompt);
+      if (result.response == null) {
+        return "[Hata: ${_handleError(result.error ?? 'AI şuanda kullanılamıyor')}]";
+      }
+      return result.response!.text ?? "";
     } catch (e) {
       debugPrint('AI Service Error (Continue): $e');
       return "[Hata: ${_handleError(e)}]";
@@ -290,12 +268,6 @@ class GeminiAiService implements AiService {
 
   @override
   Future<List<String>> generateTags(String text) async {
-    final modelResult = await _getModelWithFallback();
-
-    if (modelResult.model == null) {
-      return [];
-    }
-
     final prompt = [
       Content.text(
         "$_promptBase\nText: $text\n\nSuggest 3-5 relevant hashtags/tags for this entry. Provide only the tags separated by commas, no introductory text.",
@@ -303,8 +275,11 @@ class GeminiAiService implements AiService {
     ];
 
     try {
-      final response = await modelResult.model!.generateContent(prompt);
-      final tagsRaw = response.text ?? "";
+      final result = await _generateContentWithFallback(prompt);
+      final tagsRaw = result.response?.text ?? "";
+      if (tagsRaw.isEmpty) {
+        return [];
+      }
       return tagsRaw
           .split(',')
           .map((e) => e.trim().replaceAll('#', ''))
@@ -318,21 +293,23 @@ class GeminiAiService implements AiService {
 
   String _handleError(dynamic error) {
     final errorStr = error.toString();
+    final lowered = errorStr.toLowerCase();
 
-    if (errorStr.contains('403') ||
-        errorStr.contains('API key') ||
-        errorStr.contains('permission')) {
+    if (lowered.contains('403') ||
+        lowered.contains('api key') ||
+        lowered.contains('permission')) {
       return 'Geçersiz API Anahtarı. Ayarlar > AI Asistan bölümünü kontrol edin.';
     }
-    if (errorStr.contains('404') || errorStr.contains('not found')) {
-      return 'AI modeli mevcut değil. Lütfen daha sonra tekrar deneyin.';
+    if (lowered.contains('404') || lowered.contains('not found')) {
+      return 'AI modeli bulunamadı. Ayarlar > AI Model bölümünden güncel bir model seçin.';
     }
-    if (errorStr.contains('429') ||
-        errorStr.contains('quota') ||
-        errorStr.contains('rate limit')) {
-      return 'API kotası doldu. Otomatik olarak alternatif modele geçildi veya lütfen daha sonra tekrar deneyin.';
+    if (lowered.contains('429') ||
+        lowered.contains('quota') ||
+        lowered.contains('rate limit') ||
+        lowered.contains('resource exhausted')) {
+      return 'API kotası veya hız limiti aşıldı. Birkaç dakika bekleyip tekrar deneyin.';
     }
-    if (errorStr.contains('timeout') || errorStr.contains('deadline')) {
+    if (lowered.contains('timeout') || lowered.contains('deadline')) {
       return 'İstek zaman aşımına uğradı. İnternet bağlantınızı kontrol edin.';
     }
     return 'AI hatası: ${errorStr.substring(0, errorStr.length > 100 ? 100 : errorStr.length)}';
@@ -343,80 +320,34 @@ class GeminiAiService implements AiService {
     final apiKey = _prefs.getString('ai_api_key');
     if (apiKey == null || apiKey.isEmpty) return ['API Key not configured'];
 
-    final available = <String>[];
-    final errors = <String>[];
+    final selected = selectedModelInfo;
+    try {
+      final model = GenerativeModel(model: selected.id, apiKey: apiKey);
+      await model.generateContent([
+        Content.text('ok'),
+      ], generationConfig: GenerationConfig(maxOutputTokens: 1));
 
-    // Kota dostu sıralamayla test et
-    for (final modelInfo in _quotaFriendlyModels) {
-      try {
-        final model = GenerativeModel(model: modelInfo.id, apiKey: apiKey);
-        await model.generateContent([
-          Content.text('Test'),
-        ], generationConfig: GenerationConfig(maxOutputTokens: 1));
-        available.add(
-          '${modelInfo.displayName} ✓ (${modelInfo.quotaLimit}/gün)',
-        );
-      } catch (e) {
-        String errorMsg = e.toString();
-        if (errorMsg.contains('404') || errorMsg.contains('not found')) {
-          errorMsg = 'Model bulunamadı';
-        } else if (errorMsg.contains('403')) {
-          errorMsg = 'Erişim yok';
-        } else if (errorMsg.contains('429')) {
-          errorMsg = 'Kota doldu';
-        }
-        errors.add('${modelInfo.displayName}: $errorMsg');
-      }
+      return [
+        '${selected.displayName} ✓',
+        ..._models
+            .where((m) => m.id != selected.id)
+            .map((m) => '${m.displayName} (hazır)'),
+      ];
+    } catch (e) {
+      return [
+        '${selected.displayName}: ${_handleError(e)}',
+        ..._models
+            .where((m) => m.id != selected.id)
+            .map((m) => '${m.displayName} (alternatif)'),
+      ];
     }
-
-    if (available.isEmpty) {
-      return ['Çalışan model bulunamadı.', ...errors];
-    }
-    return [...available, ...errors];
   }
 
   @override
   Future<Map<String, dynamic>?> getQuotaInfo() async {
-    // Google Gemini API direkt kota bilgisi vermez
-    // Bu yüzden istek sayısını kendimiz takip edebiliriz
-    // Şimdilik null dönüyoruz, ileride istek sayacı ekleyebiliriz
-
-    final lastRequestKey = 'ai_last_request_time';
-    final requestCountKey = 'ai_daily_request_count';
-
-    final lastRequest = _prefs.getString(lastRequestKey);
-    final now = DateTime.now();
-
-    if (lastRequest != null) {
-      final lastDate = DateTime.tryParse(lastRequest);
-      if (lastDate != null) {
-        // Gün değişmiş mi kontrol et
-        if (lastDate.day != now.day ||
-            lastDate.month != now.month ||
-            lastDate.year != now.year) {
-          // Yeni gün, sayacı sıfırla
-          await _prefs.setInt(requestCountKey, 0);
-          await _prefs.setString(lastRequestKey, now.toIso8601String());
-          return {
-            'remaining': selectedModelInfo.quotaLimit,
-            'used': 0,
-            'limit': selectedModelInfo.quotaLimit,
-            'resetTime':
-                DateTime(now.year, now.month, now.day + 1).toIso8601String(),
-          };
-        }
-      }
-    }
-
-    final usedCount = _prefs.getInt(requestCountKey) ?? 0;
-    final limit = selectedModelInfo.quotaLimit ?? 1000;
-
-    return {
-      'remaining': limit - usedCount,
-      'used': usedCount,
-      'limit': limit,
-      'resetTime': DateTime(now.year, now.month, now.day + 1).toIso8601String(),
-    };
+    // Google Gemini API does not provide quota info programmatically.
+    // We return null to hide the quota UI.
+    return null;
   }
 
   ModelInfo get selectedModelInfo {
