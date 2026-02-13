@@ -12,7 +12,20 @@
           "package_name": "com.rojnivis.rojnivis"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "628938091989-u1crmqdprlrtukhlj3diaflv3f3f653q.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.rojnivis.rojnivis",
+            "certificate_hash": "c50dd62425fafaab6f7f5e68a27fbb7299d2920b"
+          }
+        },
+        {
+          "client_id": "628938091989-k01fs57t6up2qbepdvk8p39nt7n6j0q7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyBvA3xQnB7-bBuooJmCT7TY9nd8UqTURrE"
@@ -20,7 +33,19 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "628938091989-k01fs57t6up2qbepdvk8p39nt7n6j0q7.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "628938091989-d3p84l8odn7tddmu3b907hg6m4bff3e9.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.rojnivis.rojnivis"
+              }
+            }
+          ]
         }
       }
     }
