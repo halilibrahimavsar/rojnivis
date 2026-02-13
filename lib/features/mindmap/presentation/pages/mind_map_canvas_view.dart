@@ -40,7 +40,7 @@ class _MindMapCanvasViewState extends State<MindMapCanvasView> {
   // UI State
   bool _showGrid = true;
   bool _snapToGrid = true;
-  bool _showMinimap = true;
+  final bool _showMinimap = true;
   bool _showOverlays = true;
   CanvasMode _mode = CanvasMode.select;
   Size _viewportSize = Size.zero;
@@ -615,7 +615,7 @@ class _MindMapCanvasViewState extends State<MindMapCanvasView> {
 
   Widget _buildZoomControls(ColorScheme colorScheme) {
     return Material(
-      color: colorScheme.surface.withOpacity(0.95),
+      color: colorScheme.surface.withValues(alpha: 0.95),
       borderRadius: BorderRadius.circular(12),
       elevation: 2,
       child: AnimatedBuilder(
@@ -692,7 +692,7 @@ class _MindMapCanvasViewState extends State<MindMapCanvasView> {
     return Tooltip(
       message: tooltip,
       child: Material(
-        color: colorScheme.surface.withOpacity(0.95),
+        color: colorScheme.surface.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(12),
         elevation: 2,
         child: InkWell(
@@ -711,7 +711,7 @@ class _MindMapCanvasViewState extends State<MindMapCanvasView> {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.7),
+        color: Colors.black.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(8),
       ),
       child: AnimatedBuilder(
@@ -752,7 +752,7 @@ class _MindMapCanvasViewState extends State<MindMapCanvasView> {
             onSubmit: (label, color) {
               final newNode = MindMapNode.create(
                 label: label,
-                colorValue: color.value,
+                colorValue: color.toARGB32(),
               );
               _canvasController.addNode(parentId, newNode);
             },
@@ -832,7 +832,7 @@ class _AddNodeDialogState extends State<_AddNodeDialog> {
                             isSelected
                                 ? [
                                   BoxShadow(
-                                    color: color.withOpacity(0.5),
+                                    color: color.withValues(alpha: 0.5),
                                     blurRadius: 8,
                                     spreadRadius: 2,
                                   ),

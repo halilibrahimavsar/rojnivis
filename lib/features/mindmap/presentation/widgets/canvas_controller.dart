@@ -561,7 +561,4 @@ class CanvasController extends ChangeNotifier {
   }
 }
 
-/// Extension to convert Color to ARGB32
-extension ColorExtension on Color {
-  int toARGB32() => value;
-}
+

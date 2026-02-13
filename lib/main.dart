@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_bloc_auth/firebase_bloc_auth.dart';
+import 'package:remote_auth_module/remote_auth_module.dart';
+import 'package:rojnivis/firebase_options.dart';
+import 'di/manual_auth_di.dart';
 import 'package:unified_flutter_features/features/local_auth/data/local_auth_repository.dart';
 import 'package:unified_flutter_features/features/local_auth/presentation/widgets/local_auth_security_layer.dart';
 
@@ -62,6 +64,7 @@ Future<void> _initializeApp() async {
 
   // Configure dependency injection
   await configureDependencies();
+  registerAuthDependencies();
 }
 
 /// Registers all Hive type adapters.
@@ -133,10 +136,7 @@ class _AppProviders extends StatelessWidget {
     return MultiBlocProvider(
       providers: [
         BlocProvider(
-          create:
-              (_) =>
-                  AuthBloc(createUserCollection: true)
-                    ..add(IsAuthenticatedEvent()),
+          create: (_) => getIt<AuthBloc>()..add(const InitializeAuthEvent()),
         ),
         BlocProvider(
           create: (_) => getIt<SettingsBloc>()..add(const LoadSettings()),

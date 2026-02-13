@@ -4,6 +4,8 @@
 /// to ensure consistency and make maintenance easier.
 library;
 
+import 'package:flutter/material.dart';
+
 /// Animation and timing constants
 class AppDurations {
   const AppDurations._();
@@ -41,6 +43,20 @@ class AppSpacing {
   static const double screenPadding = 16.0;
   static const double cardPadding = 16.0;
   static const double sectionSpacing = 24.0;
+
+  /// EdgeInsets shortcuts
+  static const EdgeInsets xsAll = EdgeInsets.all(xs);
+  static const EdgeInsets smAll = EdgeInsets.all(sm);
+  static const EdgeInsets mdAll = EdgeInsets.all(md);
+  static const EdgeInsets lgAll = EdgeInsets.all(lg);
+  static const EdgeInsets xlAll = EdgeInsets.all(xl);
+  static const EdgeInsets xxlAll = EdgeInsets.all(xxl);
+
+  /// Common combinations
+  static const EdgeInsets horizontalMd = EdgeInsets.symmetric(horizontal: md);
+  static const EdgeInsets verticalMd = EdgeInsets.symmetric(vertical: md);
+  static const EdgeInsets horizontalSm = EdgeInsets.symmetric(horizontal: sm);
+  static const EdgeInsets verticalSm = EdgeInsets.symmetric(vertical: sm);
 }
 
 /// Border radius constants

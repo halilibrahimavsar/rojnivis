@@ -2,7 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
-import 'package:rojnivis/core/widgets/paper_background.dart';
+import '../../../../core/widgets/themed_paper.dart';
 
 import '../../../../core/widgets/app_card.dart';
 import '../../../quick_questions/presentation/quick_question_card.dart';
@@ -52,8 +52,8 @@ class _JournalPageState extends State<JournalPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: PaperBackground(
-        showLines: true,
+      body: ThemedPaper(
+        lined: true,
         child: CustomScrollView(
           slivers: [
             SliverAppBar.large(

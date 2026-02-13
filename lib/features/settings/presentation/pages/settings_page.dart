@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:firebase_bloc_auth/firebase_bloc_auth.dart';
+import 'package:remote_auth_module/remote_auth_module.dart';
 import 'package:unified_flutter_features/features/local_auth/data/local_auth_repository.dart';
 import 'package:unified_flutter_features/features/local_auth/presentation/widgets/local_auth_settings_widget.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -538,7 +538,7 @@ class SettingsPage extends StatelessWidget {
           decoration: BoxDecoration(
             color: Theme.of(
               context,
-            ).colorScheme.primaryContainer.withOpacity(0.3),
+            ).colorScheme.primaryContainer.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: Theme.of(context).colorScheme.primaryContainer,
@@ -610,13 +610,19 @@ class SettingsPage extends StatelessWidget {
     BuildContext context,
     SettingsState settingsState,
   ) {
-    return BlocBuilder<AuthBloc, AuthState>(
+    return BlocConsumer<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is UnauthenticatedState) {
+          // Redirect to login page upon sign out
+          context.go('/public');
+        }
+      },
       builder: (context, state) {
         if (state is AuthenticatedState) {
-          final user = state.authUser; // AuthUserRepository
-          final displayName = user.userDetail.displayName ?? 'User';
+          final user = state.user; // AuthUser from remote_auth_module
+          final displayName = user.displayName ?? 'User';
           final email = user.email;
-          final photoUrl = user.userDetail.photoURL;
+          final photoUrl = user.photoURL;
 
           return Column(
             children: [
@@ -639,7 +645,7 @@ class SettingsPage extends StatelessWidget {
                 trailing: IconButton(
                   icon: const Icon(Icons.logout),
                   onPressed: () {
-                    context.read<AuthBloc>().add(LogoutEvent());
+                    context.read<AuthBloc>().add(const SignOutEvent());
                   },
                 ),
               ),
@@ -647,7 +653,7 @@ class SettingsPage extends StatelessWidget {
               OutlinedButton.icon(
                 onPressed: () {
                   // Navigate to Profile/Manage Account
-                  context.push('/public');
+                  // For now, no separate profile page, but we could add one
                 },
                 icon: const Icon(Icons.manage_accounts),
                 label: Text('manage_account'.tr()),
@@ -665,7 +671,7 @@ class SettingsPage extends StatelessWidget {
               const SizedBox(height: 12),
               FilledButton.icon(
                 onPressed: () {
-                  context.push('/public');
+                  context.go('/public'); // Use go to clear stack if needed, or push
                 },
                 icon: const Icon(Icons.login),
                 label: Text('sign_in'.tr()),

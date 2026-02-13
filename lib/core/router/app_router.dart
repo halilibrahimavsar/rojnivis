@@ -6,7 +6,9 @@ import '../../features/journal/presentation/pages/entry_detail_page.dart';
 import '../../features/categories/presentation/pages/categories_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/mindmap/presentation/pages/mind_map_page.dart';
-import 'package:firebase_bloc_auth/firebase_bloc_auth.dart';
+import '../../features/splash/presentation/pages/splash_page.dart';
+
+import 'package:remote_auth_module/remote_auth_module.dart';
 
 class AppRouter {
   static final router = GoRouter(
@@ -16,8 +18,16 @@ class AppRouter {
         path: '/',
         pageBuilder: (context, state) => PageFlipTransitionPage(
           key: state.pageKey,
-          child: const JournalPage(),
+          child: const SplashPage(),
         ),
+      ),
+      GoRoute(
+        path: '/home',
+        pageBuilder:
+            (context, state) => PageFlipTransitionPage(
+              key: state.pageKey,
+              child: const JournalPage(),
+            ),
         routes: [
           GoRoute(
             path: 'add-entry',
@@ -41,54 +51,60 @@ class AppRouter {
           ),
           GoRoute(
             path: 'categories',
-            pageBuilder: (context, state) => PageFlipTransitionPage(
-              key: state.pageKey,
-              child: const CategoriesPage(),
-            ),
+            pageBuilder:
+                (context, state) => PageFlipTransitionPage(
+                  key: state.pageKey,
+                  child: const CategoriesPage(),
+                ),
           ),
           GoRoute(
             path: 'settings',
-            pageBuilder: (context, state) => PageFlipTransitionPage(
-              key: state.pageKey,
-              child: const SettingsPage(),
-            ),
+            pageBuilder:
+                (context, state) => PageFlipTransitionPage(
+                  key: state.pageKey,
+                  child: const SettingsPage(),
+                ),
           ),
           GoRoute(
             path: 'mindmap',
-            pageBuilder: (context, state) => PageFlipTransitionPage(
-              key: state.pageKey,
-              child: const MindMapPage(),
-            ),
+            pageBuilder:
+                (context, state) => PageFlipTransitionPage(
+                  key: state.pageKey,
+                  child: const MindMapPage(),
+                ),
           ),
         ],
       ),
       GoRoute(
         path: '/public',
-        pageBuilder: (context, state) => PageFlipTransitionPage(
-          key: state.pageKey,
-          child: const PublicPage(privatePage: ProfileUpdatePage()),
-        ),
+        pageBuilder:
+            (context, state) => PageFlipTransitionPage(
+              key: state.pageKey,
+              child: LoginPage(
+                onRegisterTap: () => context.push('/register'),
+                onForgotPasswordTap: () => context.push('/forgot_paswd'),
+                onAuthenticated: (user) => context.go('/home'),
+              ),
+            ),
       ),
       GoRoute(
         path: '/register',
-        pageBuilder: (context, state) => PageFlipTransitionPage(
-          key: state.pageKey,
-          child: const RegisterPage(),
-        ),
+        pageBuilder:
+            (context, state) => PageFlipTransitionPage(
+              key: state.pageKey,
+              child: RegisterPage(
+                onLoginTap: () => context.pop(),
+                onRegistered: (user) => context.go('/home'),
+              ),
+            ),
       ),
       GoRoute(
         path: '/forgot_paswd',
-        pageBuilder: (context, state) => PageFlipTransitionPage(
-          key: state.pageKey,
-          child: const ForgotPaswdPage(),
-        ),
-      ),
-      GoRoute(
-        path: '/wait_a_little',
-        pageBuilder: (context, state) => PageFlipTransitionPage(
-          key: state.pageKey,
-          child: const WaitALittlePage(),
-        ),
+        pageBuilder:
+            (context, state) => PageFlipTransitionPage(
+              key: state.pageKey,
+              child: const ForgotPasswordPage(),
+            ),
       ),
     ],
   );

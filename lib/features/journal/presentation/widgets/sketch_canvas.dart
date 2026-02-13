@@ -3,7 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 
 import '../../../../core/services/sound_service.dart';
-import '../../../../core/theme/old_page_theme.dart';
+import '../../../../core/widgets/themed_paper.dart';
 import '../../../../di/injection.dart';
 
 // ─────────────────────────────────────────────────────────────────
@@ -271,9 +271,11 @@ class _SketchCanvasState extends State<SketchCanvas>
       body: Stack(
         children: [
           // Paper background
-          const OldPageBackground(
-            showRuledLines: true,
-            showMarginLine: true,
+          const Positioned.fill(
+            child: ThemedPaper(
+              lined: true,
+              child: SizedBox.shrink(),
+            ),
           ),
 
           // Drawing canvas

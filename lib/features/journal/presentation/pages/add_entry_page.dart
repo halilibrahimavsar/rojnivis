@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
@@ -640,7 +639,9 @@ class _AddEntryPageState extends State<AddEntryPage> {
                             hintText: 'title'.tr(),
                             border: InputBorder.none,
                             hintStyle: TextStyle(
-                              color: colorScheme.onSurface.withOpacity(0.3),
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.3,
+                              ),
                             ),
                           ),
                           maxLines: null,
@@ -691,7 +692,9 @@ class _AddEntryPageState extends State<AddEntryPage> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer.withOpacity(0.4),
+                color: theme.colorScheme.primaryContainer.withValues(
+                  alpha: 0.4,
+                ),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -779,7 +782,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 labelPadding: const EdgeInsets.symmetric(horizontal: 6),
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                backgroundColor: colors.surfaceVariant.withValues(alpha: 0.6),
+                backgroundColor: colors.surfaceContainerHighest.withValues(alpha: 0.6),
                 side: BorderSide(
                   color: colors.outlineVariant.withValues(alpha: 0.6),
                 ),
@@ -894,7 +897,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
   Widget _buildAttachmentTile(ThemeData theme, String path) {
     final colors = theme.colorScheme;
     final isImage = isImagePath(path);
-    final previewBackground = colors.surfaceVariant.withValues(alpha: 0.5);
+    final previewBackground = colors.surfaceContainerHighest.withValues(alpha: 0.5);
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -991,12 +994,14 @@ class _AddEntryPageState extends State<AddEntryPage> {
       margin: const EdgeInsets.all(20),
       height: 86,
       decoration: BoxDecoration(
-        color: colorScheme.surface.withOpacity(0.85),
+        color: colorScheme.surface.withValues(alpha: 0.85),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -1079,7 +1084,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
               colors.primary.withValues(alpha: 0.18),
               colors.surface,
             )
-            : colors.surfaceVariant.withValues(alpha: 0.6);
+            : colors.surfaceContainerHighest.withValues(alpha: 0.6);
     final borderColor =
         isSpecial
             ? colors.primary.withValues(alpha: 0.4)

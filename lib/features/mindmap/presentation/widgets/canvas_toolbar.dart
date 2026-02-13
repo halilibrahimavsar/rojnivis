@@ -53,12 +53,12 @@ class CanvasToolbar extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: colorScheme.surface.withOpacity(0.95),
+        color: colorScheme.surface.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: colorScheme.outlineVariant),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.shadow.withOpacity(0.1),
+            color: colorScheme.shadow.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -222,7 +222,7 @@ class _ToolButton extends StatelessWidget {
                 size: 20,
                 color:
                     onPressed == null
-                        ? colorScheme.onSurface.withOpacity(0.3)
+                        ? colorScheme.onSurface.withValues(alpha: 0.3)
                         : isActive
                         ? colorScheme.onPrimaryContainer
                         : colorScheme.onSurface,
@@ -236,7 +236,7 @@ class _ToolButton extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                     color:
                         onPressed == null
-                            ? colorScheme.onSurface.withOpacity(0.3)
+                            ? colorScheme.onSurface.withValues(alpha: 0.3)
                             : isActive
                             ? colorScheme.onPrimaryContainer
                             : colorScheme.onSurface,

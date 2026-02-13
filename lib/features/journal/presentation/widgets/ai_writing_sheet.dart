@@ -1,6 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import '../../../../core/theme/old_page_theme.dart';
+import '../../../../core/widgets/themed_paper.dart';
 
 /// A bottom sheet that shows AI writing suggestions with a typewriter effect.
 class AiWritingSheet extends StatefulWidget {
@@ -67,8 +67,7 @@ class _AiWritingSheetState extends State<AiWritingSheet> with SingleTickerProvid
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Container(
-      decoration: AgedPaperDecoration.card(context),
+    return ThemedPaper(
       padding: const EdgeInsets.all(24),
       child: Column(
         mainAxisSize: MainAxisSize.min,

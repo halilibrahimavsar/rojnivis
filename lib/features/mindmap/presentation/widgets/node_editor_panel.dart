@@ -32,7 +32,7 @@ class NodeEditorPanel extends StatelessWidget {
         border: Border.all(color: colorScheme.outlineVariant),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.shadow.withOpacity(0.15),
+            color: colorScheme.shadow.withValues(alpha: 0.15),
             blurRadius: 20,
             offset: const Offset(0, -4),
           ),
@@ -66,7 +66,7 @@ class NodeEditorPanel extends StatelessWidget {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: node.color.withOpacity(0.3),
+                        color: node.color.withValues(alpha: 0.3),
                         blurRadius: 4,
                         spreadRadius: 1,
                       ),
@@ -215,10 +215,10 @@ class NodeEditorPanel extends StatelessWidget {
               runSpacing: 12,
               children:
                   colors.map((color) {
-                    final isSelected = color.value == node.colorValue;
+                    final isSelected = color.toARGB32() == node.colorValue;
                     return InkWell(
                       onTap: () {
-                        onUpdate(node.copyWith(colorValue: color.value));
+                        onUpdate(node.copyWith(colorValue: color.toARGB32()));
                         Navigator.pop(ctx);
                       },
                       borderRadius: BorderRadius.circular(24),
@@ -235,7 +235,7 @@ class NodeEditorPanel extends StatelessWidget {
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: color.withOpacity(0.4),
+                              color: color.withValues(alpha: 0.4),
                               blurRadius: isSelected ? 8 : 4,
                               spreadRadius: isSelected ? 2 : 0,
                             ),
@@ -280,7 +280,7 @@ class _ActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: color.withOpacity(0.1),
+      color: color.withValues(alpha: 0.1),
       borderRadius: BorderRadius.circular(24),
       child: InkWell(
         onTap: onPressed,

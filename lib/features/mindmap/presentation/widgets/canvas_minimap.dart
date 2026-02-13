@@ -27,12 +27,12 @@ class CanvasMinimap extends StatelessWidget {
       width: width,
       height: height,
       decoration: BoxDecoration(
-        color: colorScheme.surface.withOpacity(0.95),
+        color: colorScheme.surface.withValues(alpha: 0.95),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: colorScheme.outlineVariant),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.shadow.withOpacity(0.1),
+            color: colorScheme.shadow.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -47,14 +47,11 @@ class CanvasMinimap extends StatelessWidget {
             return GestureDetector(
               behavior: HitTestBehavior.opaque,
               onTapDown:
-                  (details) =>
-                      _navigateTo(details.localPosition, minimapSize),
+                  (details) => _navigateTo(details.localPosition, minimapSize),
               onPanStart:
-                  (details) =>
-                      _navigateTo(details.localPosition, minimapSize),
+                  (details) => _navigateTo(details.localPosition, minimapSize),
               onPanUpdate:
-                  (details) =>
-                      _navigateTo(details.localPosition, minimapSize),
+                  (details) => _navigateTo(details.localPosition, minimapSize),
               child: CustomPaint(
                 painter: _MinimapPainter(
                   controller: controller,
@@ -112,7 +109,7 @@ class _MinimapPainter extends CustomPainter {
     // Draw background
     final bgPaint =
         Paint()
-          ..color = colorScheme.surfaceContainerHighest.withOpacity(0.3)
+          ..color = colorScheme.surfaceContainerHighest.withValues(alpha: 0.3)
           ..style = PaintingStyle.fill;
     canvas.drawRect(Offset.zero & size, bgPaint);
 
@@ -139,7 +136,7 @@ class _MinimapPainter extends CustomPainter {
           ..style = PaintingStyle.stroke;
 
     void drawConnection(MindMapNode parent, MindMapNode child) {
-      paint.color = parent.color.withOpacity(0.4);
+      paint.color = parent.color.withValues(alpha: 0.4);
 
       final start = Offset(
         (parent.x + 180) * scale + offsetX,
@@ -185,7 +182,7 @@ class _MinimapPainter extends CustomPainter {
       // Node background
       final bgPaint =
           Paint()
-            ..color = node.color.withOpacity(0.3)
+            ..color = node.color.withValues(alpha: 0.3)
             ..style = PaintingStyle.fill;
 
       canvas.drawRRect(rect, bgPaint);
@@ -212,7 +209,7 @@ class _MinimapPainter extends CustomPainter {
 
     final viewportPaint =
         Paint()
-          ..color = colorScheme.primary.withOpacity(0.2)
+          ..color = colorScheme.primary.withValues(alpha: 0.2)
           ..style = PaintingStyle.fill;
 
     final viewportBorderPaint =

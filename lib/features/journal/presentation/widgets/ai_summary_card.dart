@@ -1,6 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import '../../../../core/theme/old_page_theme.dart';
+import '../../../../core/widgets/themed_paper.dart';
 
 /// A card that displays an AI-generated summary with a fade-in animation.
 class AiSummaryCard extends StatelessWidget {
@@ -19,14 +19,7 @@ class AiSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Container(
-      width: double.infinity,
-      decoration: AgedPaperDecoration.card(context).copyWith(
-        border: Border.all(
-          color: colorScheme.primary.withValues(alpha: 0.2),
-          width: 1,
-        ),
-      ),
+    return ThemedPaper(
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

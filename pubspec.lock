@@ -223,7 +223,7 @@ packages:
     source: hosted
     version: "1.1.2"
   cloud_firestore:
-    dependency: transitive
+    dependency: "direct main"
     description:
       name: cloud_firestore
       sha256: "54484b2fc49f41b46f35b60a54b12351181eeaad22c0e3def276a81e17ae7c9b"
@@ -430,30 +430,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.9.3+4"
-  firebase_analytics:
-    dependency: transitive
-    description:
-      name: firebase_analytics
-      sha256: "07e0a82e9b045dbd14522a0b23764e2dbcc269720e785d63c6a021133ebb766a"
-      url: "https://pub.dev"
-    source: hosted
-    version: "12.1.2"
-  firebase_analytics_platform_interface:
-    dependency: transitive
-    description:
-      name: firebase_analytics_platform_interface
-      sha256: "62fd3f27f342c898bd819fb97fa87c0b971e9fbe03357477282c0e14e1a40c3c"
-      url: "https://pub.dev"
-    source: hosted
-    version: "5.0.6"
-  firebase_analytics_web:
-    dependency: transitive
-    description:
-      name: firebase_analytics_web
-      sha256: "8fc488bb008439fc3b850cfac892dec1ff4cd438eee44438919a14c5e61b9828"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.6.1+2"
   firebase_auth:
     dependency: "direct main"
     description:
@@ -478,13 +454,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.1.2"
-  firebase_bloc_auth:
-    dependency: "direct main"
-    description:
-      path: "/home/garuda/Masaüstü/Programming/Flutterr/flutterPackages/firebase_bloc_auth"
-      relative: false
-    source: path
-    version: "1.0.0+1"
   firebase_core:
     dependency: "direct main"
     description:
@@ -575,54 +544,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.31"
-  flutter_secure_storage:
-    dependency: transitive
-    description:
-      name: flutter_secure_storage
-      sha256: da922f2aab2d733db7e011a6bcc4a825b844892d4edd6df83ff156b09a9b2e40
-      url: "https://pub.dev"
-    source: hosted
-    version: "10.0.0"
-  flutter_secure_storage_darwin:
-    dependency: transitive
-    description:
-      name: flutter_secure_storage_darwin
-      sha256: "8878c25136a79def1668c75985e8e193d9d7d095453ec28730da0315dc69aee3"
-      url: "https://pub.dev"
-    source: hosted
-    version: "0.2.0"
-  flutter_secure_storage_linux:
-    dependency: transitive
-    description:
-      name: flutter_secure_storage_linux
-      sha256: "2b5c76dce569ab752d55a1cee6a2242bcc11fdba927078fb88c503f150767cda"
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.0.0"
-  flutter_secure_storage_platform_interface:
-    dependency: transitive
-    description:
-      name: flutter_secure_storage_platform_interface
-      sha256: "8ceea1223bee3c6ac1a22dabd8feefc550e4729b3675de4b5900f55afcb435d6"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.0.1"
-  flutter_secure_storage_web:
-    dependency: transitive
-    description:
-      name: flutter_secure_storage_web
-      sha256: "6a1137df62b84b54261dca582c1c09ea72f4f9a4b2fcee21b025964132d5d0c3"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.1.0"
-  flutter_secure_storage_windows:
-    dependency: transitive
-    description:
-      name: flutter_secure_storage_windows
-      sha256: "3b7c8e068875dfd46719ff57c90d8c459c87f2302ed6b00ff006b3c9fcad1613"
-      url: "https://pub.dev"
-    source: hosted
-    version: "4.1.0"
   flutter_svg:
     dependency: "direct main"
     description:
@@ -1273,14 +1194,13 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.7"
-  restart_app:
-    dependency: transitive
+  remote_auth_module:
+    dependency: "direct main"
     description:
-      name: restart_app
-      sha256: "00d5ec3e9de871cedbe552fc41e615b042b5ec654385e090e0983f6d02f655ed"
-      url: "https://pub.dev"
-    source: hosted
-    version: "1.3.2"
+      path: "/home/garuda/Masaüstü/remote_auth_module"
+      relative: false
+    source: path
+    version: "1.0.0+1"
   shared_preferences:
     dependency: "direct main"
     description:
