@@ -6,6 +6,8 @@ import 'package:unified_flutter_features/features/local_auth/data/shared_prefs_l
 import 'package:unified_flutter_features/features/local_auth/presentation/bloc/login/local_auth_login_bloc.dart';
 import 'package:unified_flutter_features/features/local_auth/presentation/bloc/settings/local_auth_settings_bloc.dart';
 
+import 'package:local_auth/local_auth.dart';
+
 import 'injection.config.dart';
 
 final getIt = GetIt.instance;
@@ -20,6 +22,12 @@ Future<void> configureDependencies() => getIt.init();
 // External dependencies module
 @module
 abstract class ExternalDependenciesModule {
+  @preResolve
+  Future<SharedPreferences> get prefs => SharedPreferences.getInstance();
+
+  @lazySingleton
+  LocalAuthentication get localAuth => LocalAuthentication();
+
   // Local Auth Repository
   @lazySingleton
   LocalAuthRepository localAuthRepository(SharedPreferences prefs) {

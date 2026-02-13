@@ -168,5 +168,10 @@
   "ai_models": "Modeller",
   "test_connection": "Bağlantıyı Test Et",
   "ai_model_status": "AI Model Durumu",
-  "close": "Kapat"
+  "close": "Kapat",
+  "remote_auth_settings": "Bulut Hesabı",
+  "remote_auth_desc": "Hesap ve senkronizasyon yönetimi",
+  "local_auth_settings": "Gizlilik ve Güvenlik",
+  "local_auth_desc": "Uygulama kilidi, PIN ve biyometri",
+  "account_security": "Hesap ve Güvenlik"
 }

@@ -7,6 +7,8 @@ import '../../features/categories/presentation/pages/categories_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/mindmap/presentation/pages/mind_map_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
+import '../../features/settings/presentation/pages/local_auth_settings_page.dart';
+import '../../features/settings/presentation/pages/remote_auth_settings_page.dart';
 
 import 'package:remote_auth_module/remote_auth_module.dart';
 
@@ -64,6 +66,24 @@ class AppRouter {
                   key: state.pageKey,
                   child: const SettingsPage(),
                 ),
+            routes: [
+              GoRoute(
+                path: 'local-auth',
+                pageBuilder:
+                    (context, state) => PageFlipTransitionPage(
+                      key: state.pageKey,
+                      child: const LocalAuthSettingsPage(),
+                    ),
+              ),
+              GoRoute(
+                path: 'remote-auth',
+                pageBuilder:
+                    (context, state) => PageFlipTransitionPage(
+                      key: state.pageKey,
+                      child: const RemoteAuthSettingsPage(),
+                    ),
+              ),
+            ],
           ),
           GoRoute(
             path: 'mindmap',

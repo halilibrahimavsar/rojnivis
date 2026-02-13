@@ -168,5 +168,10 @@
   "ai_models": "Models",
   "test_connection": "Test Connection",
   "ai_model_status": "AI Model Status",
-  "close": "Close"
+  "close": "Close",
+  "remote_auth_settings": "Cloud Account",
+  "remote_auth_desc": "Manage your account and sync status",
+  "local_auth_settings": "Privacy & Security",
+  "local_auth_desc": "App lock, PIN, and biometrics",
+  "account_security": "Account & Security"
 }

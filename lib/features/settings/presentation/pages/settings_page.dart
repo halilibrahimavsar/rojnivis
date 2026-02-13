@@ -3,9 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:remote_auth_module/remote_auth_module.dart';
-import 'package:unified_flutter_features/features/local_auth/data/local_auth_repository.dart';
-import 'package:unified_flutter_features/features/local_auth/presentation/widgets/local_auth_settings_widget.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_card.dart';
 import '../../../../di/injection.dart';
@@ -33,8 +30,28 @@ class SettingsPage extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
             children: [
               _Section(
-                title: 'account'.tr(),
-                child: _buildAccountSection(context, state),
+                title: 'account_security'.tr(),
+                child: Column(
+                  children: [
+                    _SettingsButton(
+                      valid: true,
+                      icon: Icons.manage_accounts,
+                      title: 'remote_auth_settings'.tr(), // "Remote Account"
+                      subtitle:
+                          'remote_auth_desc'
+                              .tr(), // "Manage your cloud account"
+                      onTap: () => context.push('/home/settings/remote-auth'),
+                    ),
+                    const SizedBox(height: 12),
+                    _SettingsButton(
+                      valid: true,
+                      icon: Icons.fingerprint,
+                      title: 'local_auth_settings'.tr(), // "Local Security"
+                      subtitle: 'local_auth_desc'.tr(), // "PIN and Biometrics"
+                      onTap: () => context.push('/home/settings/local-auth'),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 12),
               _Section(
@@ -260,14 +277,7 @@ class SettingsPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              _Section(
-                title: 'security'.tr(),
-                child: LocalAuthSettingsWidget(
-                  repository: getIt<LocalAuthRepository>(),
-                  showHeader: false, // We have our own section header
-                ),
-              ),
-              const SizedBox(height: 12),
+
               _Section(
                 title: 'ai_assistant'.tr(),
                 child: Column(
@@ -600,81 +610,72 @@ class SettingsPage extends StatelessWidget {
       },
     );
   }
+}
 
-  Widget _buildAccountSection(
-    BuildContext context,
-    SettingsState settingsState,
-  ) {
-    return BlocConsumer<AuthBloc, AuthState>(
-      listener: (context, state) {
-        if (state is UnauthenticatedState) {
-          // Redirect to login page upon sign out
-          context.go('/public');
-        }
-      },
-      builder: (context, state) {
-        if (state is AuthenticatedState) {
-          final user = state.user; // AuthUser from remote_auth_module
-          final displayName = user.displayName ?? 'User';
-          final email = user.email;
-          final photoUrl = user.photoURL;
+class _SettingsButton extends StatelessWidget {
+  const _SettingsButton({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    required this.valid,
+  });
 
-          return Column(
-            children: [
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                leading: CircleAvatar(
-                  backgroundImage:
-                      photoUrl != null ? NetworkImage(photoUrl) : null,
-                  child:
-                      photoUrl == null
-                          ? Text(
-                            displayName.isNotEmpty
-                                ? displayName[0].toUpperCase()
-                                : 'U',
-                          )
-                          : null,
-                ),
-                title: Text(displayName),
-                subtitle: Text(email),
-                trailing: IconButton(
-                  icon: const Icon(Icons.logout),
-                  onPressed: () {
-                    context.read<AuthBloc>().add(const SignOutEvent());
-                  },
-                ),
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  final bool valid;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color:
+                valid
+                    ? Theme.of(context).colorScheme.outlineVariant
+                    : Theme.of(context).colorScheme.error,
+          ),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.secondaryContainer,
+                borderRadius: BorderRadius.circular(8),
               ),
-              const SizedBox(height: 8),
-              OutlinedButton.icon(
-                onPressed: () {
-                  // Navigate to Profile/Manage Account
-                  // For now, no separate profile page, but we could add one
-                },
-                icon: const Icon(Icons.manage_accounts),
-                label: Text('manage_account'.tr()),
+              child: Icon(
+                icon,
+                color: Theme.of(context).colorScheme.onSecondaryContainer,
               ),
-            ],
-          );
-        } else {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                'sign_in_desc'.tr(),
-                style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+                ],
               ),
-              const SizedBox(height: 12),
-              FilledButton.icon(
-                onPressed: () {
-                  context.go('/public'); // Use go to clear stack if needed, or push
-                },
-                icon: const Icon(Icons.login),
-                label: Text('sign_in'.tr()),
-              ),
-            ],
-          );
-        }
-      },
+            ),
+            const Icon(Icons.chevron_right),
+          ],
+        ),
+      ),
     );
   }
 }

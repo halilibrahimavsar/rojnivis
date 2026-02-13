@@ -19,7 +19,6 @@ import 'package:unified_flutter_features/features/local_auth/presentation/bloc/l
 import 'package:unified_flutter_features/features/local_auth/presentation/bloc/settings/local_auth_settings_bloc.dart'
     as _i1022;
 
-import '../core/di/register_module.dart' as _i796;
 import '../core/services/ai_service.dart' as _i805;
 import '../core/services/sound_service.dart' as _i173;
 import '../features/categories/data/datasources/category_local_datasource.dart'
@@ -64,14 +63,14 @@ extension GetItInjectableX on _i174.GetIt {
       environment,
       environmentFilter,
     );
-    final registerModule = _$RegisterModule();
     final externalDependenciesModule = _$ExternalDependenciesModule();
     await gh.factoryAsync<_i460.SharedPreferences>(
-      () => registerModule.prefs,
+      () => externalDependenciesModule.prefs,
       preResolve: true,
     );
-    gh.lazySingleton<_i152.LocalAuthentication>(() => registerModule.localAuth);
     gh.lazySingleton<_i173.SoundService>(() => _i173.SoundService());
+    gh.lazySingleton<_i152.LocalAuthentication>(
+        () => externalDependenciesModule.localAuth);
     gh.lazySingleton<_i314.LocalAuthRepository>(() => externalDependenciesModule
         .localAuthRepository(gh<_i460.SharedPreferences>()));
     gh.lazySingleton<_i762.MindMapLocalDataSource>(
@@ -124,7 +123,5 @@ extension GetItInjectableX on _i174.GetIt {
     return this;
   }
 }
-
-class _$RegisterModule extends _i796.RegisterModule {}
 
 class _$ExternalDependenciesModule extends _i460.ExternalDependenciesModule {}

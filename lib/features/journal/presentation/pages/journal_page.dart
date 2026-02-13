@@ -67,17 +67,17 @@ class _JournalPageState extends State<JournalPage> {
                 title: Text('app_title'.tr()),
                 actions: [
                   IconButton(
-                    onPressed: () => context.push('/mindmap'),
+                    onPressed: () => context.push('/home/mindmap'),
                     icon: const Icon(Icons.account_tree_outlined),
                     tooltip: 'mind_maps'.tr(),
                   ),
                   IconButton(
-                    onPressed: () => context.push('/categories'),
+                    onPressed: () => context.push('/home/categories'),
                     icon: const Icon(Icons.category_outlined),
                     tooltip: 'categories'.tr(),
                   ),
                   IconButton(
-                    onPressed: () => context.push('/settings'),
+                    onPressed: () => context.push('/home/settings'),
                     icon: const Icon(Icons.settings_outlined),
                     tooltip: 'settings'.tr(),
                   ),
@@ -186,7 +186,8 @@ class _JournalPageState extends State<JournalPage> {
                               ),
                               const SizedBox(height: 16),
                               FilledButton.icon(
-                                onPressed: () => context.push('/add-entry'),
+                                onPressed:
+                                    () => context.push('/home/add-entry'),
                                 icon: const Icon(Icons.edit_outlined),
                                 label: Text('create_entry'.tr()),
                               ),
@@ -262,11 +263,11 @@ class _JournalPageState extends State<JournalPage> {
                             date: entry.date,
                             onTap: () {
                               getIt<SoundService>().playPageFlip();
-                              context.push('/entry/${entry.id}');
+                              context.push('/home/entry/${entry.id}');
                             },
                             onEdit:
                                 () => context.push(
-                                  '/add-entry?entryId=${entry.id}',
+                                  '/home/add-entry?entryId=${entry.id}',
                                 ),
                             onDelete: () {
                               final journalBloc = context.read<JournalBloc>();
@@ -321,7 +322,7 @@ class _JournalPageState extends State<JournalPage> {
           ),
         ),
         floatingActionButton: FloatingActionButton.extended(
-          onPressed: () => context.push('/add-entry'),
+          onPressed: () => context.push('/home/add-entry'),
           icon: const Icon(Icons.add),
           label: Text('create_entry'.tr()),
         ),
