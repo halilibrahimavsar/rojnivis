@@ -38,11 +38,6 @@ class SettingsPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               _Section(
-                title: 'account'.tr(),
-                child: _buildAccountSection(context, state),
-              ),
-              const SizedBox(height: 12),
-              _Section(
                 title: 'theme'.tr(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

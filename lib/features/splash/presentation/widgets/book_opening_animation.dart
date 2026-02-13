@@ -865,7 +865,7 @@ class _WritingPainter extends CustomPainter {
     // 3. Wet Ink Highlight (Specular reflection on the fresh ink)
     // Only draw at the very end of the current path to simulate wetness
     if (writingProgress > 0 && writingProgress < 0.99) {
-      final metrics = drawnPath.computeMetrics();
+      final metrics = drawnPath.computeMetrics().toList();
       if (metrics.isNotEmpty) {
         final lastMetric = metrics.last;
         final tan = lastMetric.getTangentForOffset(lastMetric.length);

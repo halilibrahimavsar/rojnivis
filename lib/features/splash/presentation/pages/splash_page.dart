@@ -23,8 +23,12 @@ class _SplashPageState extends State<SplashPage> {
   
   void _checkAndNavigate() async {
     if (!_isAnimationComplete) return;
+    if (!mounted) return;
 
     final authState = context.read<AuthBloc>().state;
+    // Don't navigate while still initializing
+    if (authState is AuthInitialState || authState is AuthLoadingState) return;
+
     final localAuthRepo = getIt<LocalAuthRepository>();
     
     // Check if either biometric or PIN is enabled
@@ -32,30 +36,24 @@ class _SplashPageState extends State<SplashPage> {
     final isPinSet = await localAuthRepo.isPinSet();
     final isLocalAuthEnabled = isBiometricEnabled || isPinSet;
 
-    // Small delay to ensure smooth transition if animation *just* finished
-    await Future.delayed(const Duration(milliseconds: 300));
+    // Small delay to ensure smooth transition
     if (!mounted) return;
+    // We can remove the arbitrary delay or keep it minimal if we want to show the full book for a split second
+    // await Future.delayed(const Duration(milliseconds: 300)); 
 
     if (authState is AuthenticatedState) {
-      if (isLocalAuthEnabled) {
-        // User has local auth enabled, but since this is Splash,
-        // we might want to let the LocalAuthSecurityLayer handle the lock screen?
-        // HOWEVER, LocalAuthSecurityLayer usually wraps the *child* of the router
-        // or the specific protected pages.
-        // If we route to '/home', the layer should kick in.
-        // Let's route to home and let the security layer intercept if configured globally.
-        // OR if we want an explicit "Unlock" screen separate from the layer:
-        
-        // For now, standard behavior: Auth'd -> Home.
-        // The LocalAuthSecurityLayer (if wrapping MaterialApp builder) will show logic 
-        // if user has just opened app.
-        context.go('/home');
-      } else {
-        context.go('/home');
-      }
-    } else {
-      // Not authenticated -> Login
-      context.go('/public');
+        if (isLocalAuthEnabled) {
+             context.go('/home');
+        } else {
+             context.go('/home');
+        }
+    } else if (authState is UnauthenticatedState) {
+       context.go('/public');
+    }
+    // If AuthErrorState, we might want to go to public or show error. 
+    // Usually unauthenticated is safer.
+    else if (authState is AuthErrorState) {
+       context.go('/public');
     }
   }
 

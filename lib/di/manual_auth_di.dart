@@ -25,6 +25,11 @@ void registerAuthDependencies() {
         auth: getIt<FirebaseAuth>(),
         firestore: getIt<FirebaseFirestore>(),
         createUserCollection: true,
+        // TODO: Move this to a secure config or remote config
+        // This is the Web Client ID from Google Cloud Console -> APIs & Services -> Credentials
+        // This is the Web Client ID from google-services.json (client_type 3)
+        // It is required for Google Sign-In on Android.
+        serverClientId: '628938091989-k01fs57t6up2qbepdvk8p39nt7n6j0q7.apps.googleusercontent.com', 
       ));
 
   // Register BLoC

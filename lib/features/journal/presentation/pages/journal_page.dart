@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:remote_auth_module/remote_auth_module.dart';
 import '../../../../core/widgets/themed_paper.dart';
 
 import '../../../../core/widgets/app_card.dart';
@@ -51,270 +52,279 @@ class _JournalPageState extends State<JournalPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: ThemedPaper(
-        lined: true,
-        child: CustomScrollView(
-          slivers: [
-            SliverAppBar.large(
-              title: Text('app_title'.tr()),
-              actions: [
-                IconButton(
-                  onPressed: () => context.push('/mindmap'),
-                  icon: const Icon(Icons.account_tree_outlined),
-                  tooltip: 'mind_maps'.tr(),
-                ),
-                IconButton(
-                  onPressed: () => context.push('/categories'),
-                  icon: const Icon(Icons.category_outlined),
-                  tooltip: 'categories'.tr(),
-                ),
-                IconButton(
-                  onPressed: () => context.push('/settings'),
-                  icon: const Icon(Icons.settings_outlined),
-                  tooltip: 'settings'.tr(),
-                ),
-                const SizedBox(width: 4),
-              ],
-              bottom: PreferredSize(
-                preferredSize: const Size.fromHeight(72),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-                  child: SearchBar(
-                    controller: _searchController,
-                    hintText: 'search_hint'.tr(),
-                    leading: const Icon(Icons.search),
-                    trailing: [
-                      IconButton(
-                        onPressed: _showFilterDialog,
-                        icon: Icon(
-                          Icons.filter_list,
-                          color:
-                              _currentFilter.isEmpty ||
-                                      (_currentFilter.query.isNotEmpty &&
-                                          _currentFilter.startDate == null &&
-                                          _currentFilter.endDate == null &&
-                                          (_currentFilter.categoryIds == null ||
-                                              _currentFilter
-                                                  .categoryIds!
-                                                  .isEmpty) &&
-                                          (_currentFilter.tags == null ||
-                                              _currentFilter.tags!.isEmpty))
-                                  ? null
-                                  : Theme.of(context).colorScheme.primary,
-                        ),
-                        tooltip: 'filter'.tr(),
-                      ),
-                      if (_searchController.text.isNotEmpty)
+    return BlocListener<AuthBloc, AuthState>(
+      listener: (context, state) {
+        if (state is UnauthenticatedState) {
+          context.go('/public');
+        }
+      },
+      child: Scaffold(
+        body: ThemedPaper(
+          lined: true,
+          child: CustomScrollView(
+            slivers: [
+              SliverAppBar.large(
+                title: Text('app_title'.tr()),
+                actions: [
+                  IconButton(
+                    onPressed: () => context.push('/mindmap'),
+                    icon: const Icon(Icons.account_tree_outlined),
+                    tooltip: 'mind_maps'.tr(),
+                  ),
+                  IconButton(
+                    onPressed: () => context.push('/categories'),
+                    icon: const Icon(Icons.category_outlined),
+                    tooltip: 'categories'.tr(),
+                  ),
+                  IconButton(
+                    onPressed: () => context.push('/settings'),
+                    icon: const Icon(Icons.settings_outlined),
+                    tooltip: 'settings'.tr(),
+                  ),
+                  const SizedBox(width: 4),
+                ],
+                bottom: PreferredSize(
+                  preferredSize: const Size.fromHeight(72),
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                    child: SearchBar(
+                      controller: _searchController,
+                      hintText: 'search_hint'.tr(),
+                      leading: const Icon(Icons.search),
+                      trailing: [
                         IconButton(
-                          onPressed: () {
-                            _searchController.clear();
-                            _onSearchChanged('');
-                          },
-                          icon: const Icon(Icons.close),
-                          tooltip: 'clear'.tr(),
+                          onPressed: _showFilterDialog,
+                          icon: Icon(
+                            Icons.filter_list,
+                            color:
+                                _currentFilter.isEmpty ||
+                                        (_currentFilter.query.isNotEmpty &&
+                                            _currentFilter.startDate == null &&
+                                            _currentFilter.endDate == null &&
+                                            (_currentFilter.categoryIds ==
+                                                    null ||
+                                                _currentFilter
+                                                    .categoryIds!
+                                                    .isEmpty) &&
+                                            (_currentFilter.tags == null ||
+                                                _currentFilter.tags!.isEmpty))
+                                    ? null
+                                    : Theme.of(context).colorScheme.primary,
+                          ),
+                          tooltip: 'filter'.tr(),
                         ),
-                    ],
-                    onChanged: _onSearchChanged,
+                        if (_searchController.text.isNotEmpty)
+                          IconButton(
+                            onPressed: () {
+                              _searchController.clear();
+                              _onSearchChanged('');
+                            },
+                            icon: const Icon(Icons.close),
+                            tooltip: 'clear'.tr(),
+                          ),
+                      ],
+                      onChanged: _onSearchChanged,
+                    ),
                   ),
                 ),
               ),
-            ),
-            const SliverToBoxAdapter(child: QuickQuestionCard()),
-            BlocBuilder<JournalBloc, JournalState>(
-              builder: (context, state) {
-                if (state is JournalLoading ||
-                    state is JournalInitial ||
-                    state is JournalActionInProgress) {
-                  return const SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
+              const SliverToBoxAdapter(child: QuickQuestionCard()),
+              BlocBuilder<JournalBloc, JournalState>(
+                builder: (context, state) {
+                  if (state is JournalLoading ||
+                      state is JournalInitial ||
+                      state is JournalActionInProgress) {
+                    return const SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
 
-                if (state is JournalError || state is JournalActionError) {
-                  final message =
-                      state is JournalError
-                          ? state.message
-                          : (state as JournalActionError).message;
-                  return SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Text(message, textAlign: TextAlign.center),
-                      ),
-                    ),
-                  );
-                }
-
-                if (state is! JournalLoaded) {
-                  return const SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
-
-                final entries = state.entries;
-                if (entries.isEmpty) {
-                  return SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.auto_awesome_outlined,
-                              size: 48,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'empty_journal'.tr(),
-                              style: Theme.of(context).textTheme.titleMedium,
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 16),
-                            FilledButton.icon(
-                              onPressed: () => context.push('/add-entry'),
-                              icon: const Icon(Icons.edit_outlined),
-                              label: Text('create_entry'.tr()),
-                            ),
-                          ],
+                  if (state is JournalError || state is JournalActionError) {
+                    final message =
+                        state is JournalError
+                            ? state.message
+                            : (state as JournalActionError).message;
+                    return SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Text(message, textAlign: TextAlign.center),
                         ),
                       ),
-                    ),
-                  );
-                }
+                    );
+                  }
 
-                return SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                  sliver: SliverList.separated(
-                    itemCount: entries.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
-                    itemBuilder: (context, index) {
-                      final entry = entries[index];
-                      return Dismissible(
-                        key: ValueKey(entry.id),
-                        direction: DismissDirection.endToStart,
-                        background: Container(
-                          alignment: Alignment.centerRight,
-                          padding: const EdgeInsets.only(right: 20),
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).colorScheme.error,
-                            borderRadius: BorderRadius.circular(20),
-                          ),
-                          child: Icon(
-                            Icons.delete_outline,
-                            color: Theme.of(context).colorScheme.onError,
+                  if (state is! JournalLoaded) {
+                    return const SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  }
+
+                  final entries = state.entries;
+                  if (entries.isEmpty) {
+                    return SliverFillRemaining(
+                      hasScrollBody: false,
+                      child: Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(24),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.auto_awesome_outlined,
+                                size: 48,
+                                color: Theme.of(context).colorScheme.primary,
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'empty_journal'.tr(),
+                                style: Theme.of(context).textTheme.titleMedium,
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 16),
+                              FilledButton.icon(
+                                onPressed: () => context.push('/add-entry'),
+                                icon: const Icon(Icons.edit_outlined),
+                                label: Text('create_entry'.tr()),
+                              ),
+                            ],
                           ),
                         ),
-                        confirmDismiss: (_) async {
-                          return await showDialog<bool>(
+                      ),
+                    );
+                  }
+
+                  return SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                    sliver: SliverList.separated(
+                      itemCount: entries.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        final entry = entries[index];
+                        return Dismissible(
+                          key: ValueKey(entry.id),
+                          direction: DismissDirection.endToStart,
+                          background: Container(
+                            alignment: Alignment.centerRight,
+                            padding: const EdgeInsets.only(right: 20),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.error,
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Icon(
+                              Icons.delete_outline,
+                              color: Theme.of(context).colorScheme.onError,
+                            ),
+                          ),
+                          confirmDismiss: (_) async {
+                            return await showDialog<bool>(
+                                  context: context,
+                                  builder:
+                                      (context) => AlertDialog(
+                                        title: Text('delete_entry'.tr()),
+                                        content: Text(
+                                          'delete_entry_confirm'.tr(),
+                                        ),
+                                        actions: [
+                                          TextButton(
+                                            onPressed:
+                                                () => Navigator.of(
+                                                  context,
+                                                ).pop(false),
+                                            child: Text('cancel'.tr()),
+                                          ),
+                                          FilledButton(
+                                            onPressed:
+                                                () => Navigator.of(
+                                                  context,
+                                                ).pop(true),
+                                            child: Text('delete'.tr()),
+                                          ),
+                                        ],
+                                      ),
+                                ) ??
+                                false;
+                          },
+                          onDismissed: (_) {
+                            context.read<JournalBloc>().add(
+                              DeleteEntryRequested(entryId: entry.id),
+                            );
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('deleted'.tr())),
+                            );
+                          },
+                          child: _EntryCard(
+                            title: entry.title,
+                            subtitle: entry.content,
+                            date: entry.date,
+                            onTap: () {
+                              getIt<SoundService>().playPageFlip();
+                              context.push('/entry/${entry.id}');
+                            },
+                            onEdit:
+                                () => context.push(
+                                  '/add-entry?entryId=${entry.id}',
+                                ),
+                            onDelete: () {
+                              final journalBloc = context.read<JournalBloc>();
+                              final messenger = ScaffoldMessenger.of(context);
+                              final deletedMessage = 'deleted'.tr();
+                              final deleteTitle = 'delete_entry'.tr();
+                              final deleteContent = 'delete_entry_confirm'.tr();
+                              final cancelText = 'cancel'.tr();
+                              final deleteText = 'delete'.tr();
+
+                              showDialog<bool>(
                                 context: context,
                                 builder:
                                     (context) => AlertDialog(
-                                      title: Text('delete_entry'.tr()),
-                                      content: Text(
-                                        'delete_entry_confirm'.tr(),
-                                      ),
+                                      title: Text(deleteTitle),
+                                      content: Text(deleteContent),
                                       actions: [
                                         TextButton(
                                           onPressed:
                                               () => Navigator.of(
                                                 context,
                                               ).pop(false),
-                                          child: Text('cancel'.tr()),
+                                          child: Text(cancelText),
                                         ),
                                         FilledButton(
                                           onPressed:
                                               () => Navigator.of(
                                                 context,
                                               ).pop(true),
-                                          child: Text('delete'.tr()),
+                                          child: Text(deleteText),
                                         ),
                                       ],
                                     ),
-                              ) ??
-                              false;
-                        },
-                        onDismissed: (_) {
-                          context.read<JournalBloc>().add(
-                            DeleteEntryRequested(entryId: entry.id),
-                          );
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('deleted'.tr())),
-                          );
-                        },
-                        child: _EntryCard(
-                          title: entry.title,
-                          subtitle: entry.content,
-                          date: entry.date,
-                          onTap: () {
-                            getIt<SoundService>().playPageFlip();
-                            context.push('/entry/${entry.id}');
-                          },
-                          onEdit:
-                              () => context.push(
-                                '/add-entry?entryId=${entry.id}',
-                              ),
-                          onDelete: () {
-                            final journalBloc = context.read<JournalBloc>();
-                            final messenger = ScaffoldMessenger.of(context);
-                            final deletedMessage = 'deleted'.tr();
-                            final deleteTitle = 'delete_entry'.tr();
-                            final deleteContent = 'delete_entry_confirm'.tr();
-                            final cancelText = 'cancel'.tr();
-                            final deleteText = 'delete'.tr();
-
-                            showDialog<bool>(
-                              context: context,
-                              builder:
-                                  (context) => AlertDialog(
-                                    title: Text(deleteTitle),
-                                    content: Text(deleteContent),
-                                    actions: [
-                                      TextButton(
-                                        onPressed:
-                                            () => Navigator.of(
-                                              context,
-                                            ).pop(false),
-                                        child: Text(cancelText),
-                                      ),
-                                      FilledButton(
-                                        onPressed:
-                                            () =>
-                                                Navigator.of(context).pop(true),
-                                        child: Text(deleteText),
-                                      ),
-                                    ],
-                                  ),
-                            ).then((shouldDelete) {
-                              if (shouldDelete != true) return;
-                              journalBloc.add(
-                                DeleteEntryRequested(entryId: entry.id),
-                              );
-                              messenger.showSnackBar(
-                                SnackBar(content: Text(deletedMessage)),
-                              );
-                            });
-                          },
-                        ),
-                      );
-                    },
-                  ),
-                );
-              },
-            ),
-          ],
+                              ).then((shouldDelete) {
+                                if (shouldDelete != true) return;
+                                journalBloc.add(
+                                  DeleteEntryRequested(entryId: entry.id),
+                                );
+                                messenger.showSnackBar(
+                                  SnackBar(content: Text(deletedMessage)),
+                                );
+                              });
+                            },
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.push('/add-entry'),
-        icon: const Icon(Icons.add),
-        label: Text('create_entry'.tr()),
+        floatingActionButton: FloatingActionButton.extended(
+          onPressed: () => context.push('/add-entry'),
+          icon: const Icon(Icons.add),
+          label: Text('create_entry'.tr()),
+        ),
       ),
     );
   }
