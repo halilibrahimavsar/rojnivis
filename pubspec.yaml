@@ -63,6 +63,7 @@ dependencies:
   
   remote_auth_module:
     path: /home/garuda/Masaüstü/remote_auth_module/
+  firebase_remote_config: ^6.1.4
   
 
   

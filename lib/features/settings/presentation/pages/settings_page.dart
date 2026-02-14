@@ -278,38 +278,11 @@ class SettingsPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
 
-              _Section(
+                _Section(
                 title: 'ai_assistant'.tr(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'ai_api_key_desc'.tr(),
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    const SizedBox(height: 12),
-                    TextFormField(
-                      initialValue: state.aiApiKey,
-                      decoration: InputDecoration(
-                        labelText: 'gemini_api_key'.tr(),
-                        hintText: 'AI_API_KEY',
-                        prefixIcon: const Icon(Icons.vpn_key_outlined),
-                        suffixIcon: const Icon(Icons.auto_awesome),
-                      ),
-                      onChanged: (value) {
-                        // We use onChanged to update state as user types or pastes
-                        context.read<SettingsBloc>().add(UpdateAiApiKey(value));
-                      },
-                      onFieldSubmitted: (value) {
-                        context.read<SettingsBloc>().add(UpdateAiApiKey(value));
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('api_key_updated'.tr())),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Model Seçimi
                     Text(
                       'ai_model'.tr(),
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -319,127 +292,134 @@ class SettingsPage extends StatelessWidget {
                     const SizedBox(height: 8),
                     _buildModelSelector(),
                     const SizedBox(height: 16),
-
-                    // Kota Bilgisi
-                    _buildQuotaInfo(),
-                    const SizedBox(height: 12),
+                    
+                    // Connection Status & Test
+                    FutureBuilder<AiServiceStatus>(
+                      future: getIt<AiService>().getStatus(),
+                      builder: (context, snapshot) {
+                        final status = snapshot.data;
+                        final isConfigured = status?.isConfigured ?? false;
+                        
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  isConfigured ? Icons.check_circle : Icons.error,
+                                  color: isConfigured ? Colors.green : Colors.orange,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    isConfigured 
+                                      ? 'AI Servisi Hazır (Remote Config)' 
+                                      : 'AI Servisi Yapılandırılmadı',
+                                    style: TextStyle(
+                                      color: isConfigured ? Colors.green : Colors.orange,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            if (!isConfigured) ...[
+                              const SizedBox(height: 4),
+                              Text(
+                                'İnternet bağlantınızı kontrol edin ve uygulamanın güncel olduğundan emin olun.',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ],
+                          ],
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 16),
 
                     Align(
                       alignment: Alignment.centerRight,
-                      child: Wrap(
-                        spacing: 8,
-                        children: [
-                          TextButton.icon(
-                            onPressed: () async {
-                              final service = getIt<AiService>();
-                              if (!service.isConfigured) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(
-                                    content: Text('api_key_required'.tr()),
-                                  ),
-                                );
-                                return;
-                              }
+                      child: TextButton.icon(
+                        onPressed: () async {
+                          showDialog(
+                            context: context,
+                            barrierDismissible: false,
+                            builder: (c) => const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          );
 
+                          try {
+                            // Force refresh config
+                            await getIt<AiService>().init();
+                            final service = getIt<AiService>();
+                            final models = await service.listAvailableModels();
+                            
+                            if (context.mounted) {
+                              Navigator.pop(context); // Pop loading
                               showDialog(
                                 context: context,
-                                barrierDismissible: false,
-                                builder:
-                                    (c) => const Center(
-                                      child: CircularProgressIndicator(),
-                                    ),
-                              );
-
-                              try {
-                                final models =
-                                    await service.listAvailableModels();
-                                if (context.mounted) {
-                                  Navigator.pop(context); // Pop loading
-                                  showDialog(
-                                    context: context,
-                                    builder:
-                                        (c) => AlertDialog(
-                                          title: Text('ai_model_status'.tr()),
-                                          content: SingleChildScrollView(
-                                            child: Column(
-                                              mainAxisSize: MainAxisSize.min,
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                if (models.any(
-                                                  (m) =>
-                                                      !m.contains('Error') &&
-                                                      !m.contains(
-                                                        'No working',
-                                                      ) &&
-                                                      !m.contains(':'),
-                                                ))
-                                                  Text(
-                                                    '✅ ${'ai_available'.tr()}',
-                                                    style: const TextStyle(
-                                                      color: Colors.green,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                    ),
-                                                  )
-                                                else
-                                                  Text(
-                                                    '❌ ${'ai_unavailable'.tr()}',
-                                                    style: const TextStyle(
-                                                      color: Colors.red,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                    ),
-                                                  ),
-                                                const SizedBox(height: 8),
-                                                Text('${'ai_models'.tr()}:'),
-                                                const SizedBox(height: 4),
-                                                ...models.map((m) {
-                                                  final isError =
-                                                      m.contains(':') ||
-                                                      m.contains(
-                                                        'No working',
-                                                      ) ||
-                                                      m.contains('Kota');
-                                                  return Text(
-                                                    isError ? '⚠️ $m' : '✅ $m',
-                                                    style: TextStyle(
-                                                      fontSize: 12,
-                                                      color:
-                                                          isError
-                                                              ? Colors.orange
-                                                              : Colors
-                                                                  .green[700],
-                                                    ),
-                                                  );
-                                                }),
-                                              ],
+                                builder: (c) => AlertDialog(
+                                  title: Text('ai_model_status'.tr()),
+                                  content: SingleChildScrollView(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        if (service.isConfigured)
+                                          Text(
+                                            '✅ ${'ai_available'.tr()}',
+                                            style: const TextStyle(
+                                              color: Colors.green,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          )
+                                        else
+                                          Text(
+                                            '❌ ${'ai_unavailable'.tr()}',
+                                            style: const TextStyle(
+                                              color: Colors.red,
+                                              fontWeight: FontWeight.bold,
                                             ),
                                           ),
-                                          actions: [
-                                            TextButton(
-                                              onPressed: () => Navigator.pop(c),
-                                              child: Text('close'.tr()),
+                                        const SizedBox(height: 8),
+                                        Text('${'ai_models'.tr()}:'),
+                                        const SizedBox(height: 4),
+                                        ...models.map((m) {
+                                          final isError = m.contains(':') || 
+                                              m.contains('No working') || 
+                                              m.contains('Kota');
+                                          return Text(
+                                            isError ? '⚠️ $m' : '✅ $m',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: isError ? Colors.orange : Colors.green[700],
                                             ),
-                                          ],
-                                        ),
-                                  );
-                                }
-                              } catch (e) {
-                                if (context.mounted) {
-                                  Navigator.pop(context); // Pop loading
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text('${'error'.tr()}: $e'),
+                                          );
+                                        }),
+                                      ],
                                     ),
-                                  );
-                                }
-                              }
-                            },
-                            icon: const Icon(Icons.wifi_find),
-                            label: Text('test_connection'.tr()),
-                          ),
-                        ],
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(c),
+                                      child: Text('close'.tr()),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              Navigator.pop(context); // Pop loading
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text('${'error'.tr()}: $e')),
+                              );
+                            }
+                          }
+                        },
+                        icon: const Icon(Icons.refresh),
+                        label: Text('Bağlantıyı Kontrol Et'),
                       ),
                     ),
                   ],
@@ -517,99 +497,6 @@ class SettingsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildQuotaInfo() {
-    return FutureBuilder<Map<String, dynamic>?>(
-      future: getIt<AiService>().getQuotaInfo(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData || snapshot.data == null) {
-          return const SizedBox.shrink();
-        }
-
-        final quota = snapshot.data!;
-        final remaining = quota['remaining'] as int? ?? 0;
-        final used = quota['used'] as int? ?? 0;
-        final limit = quota['limit'] as int? ?? 1000;
-
-        final percentage = limit > 0 ? (used / limit) : 0.0;
-        final color =
-            percentage > 0.8
-                ? Colors.red
-                : percentage > 0.5
-                ? Colors.orange
-                : Colors.green;
-
-        return Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Theme.of(
-              context,
-            ).colorScheme.primaryContainer.withValues(alpha: 0.3),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: Theme.of(context).colorScheme.primaryContainer,
-            ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    Icons.speed,
-                    size: 16,
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'ai_quota'.tr(),
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              LinearProgressIndicator(
-                value: percentage,
-                backgroundColor:
-                    Theme.of(context).colorScheme.surfaceContainerHighest,
-                valueColor: AlwaysStoppedAnimation<Color>(color),
-                minHeight: 8,
-                borderRadius: BorderRadius.circular(4),
-              ),
-              const SizedBox(height: 8),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    '${'ai_used'.tr()}: $used / $limit',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  Text(
-                    '${'ai_remaining'.tr()}: $remaining',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: color,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              if (percentage > 0.8) ...[
-                const SizedBox(height: 4),
-                Text(
-                  'ai_quota_warning'.tr(),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.red,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ],
-          ),
-        );
-      },
-    );
-  }
 }
 
 class _SettingsButton extends StatelessWidget {

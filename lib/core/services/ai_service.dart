@@ -1,3 +1,4 @@
+import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -72,11 +73,15 @@ abstract class AiService {
 
   /// Gets quota information if available.
   Future<Map<String, dynamic>?> getQuotaInfo();
+
+  /// Initialize the service (fetch remote config)
+  Future<void> init();
 }
 
 @LazySingleton(as: AiService)
 class GeminiAiService implements AiService {
   final SharedPreferences _prefs;
+  final FirebaseRemoteConfig _remoteConfig = FirebaseRemoteConfig.instance;
 
   GeminiAiService(this._prefs);
 
@@ -86,33 +91,36 @@ class GeminiAiService implements AiService {
   /// Güncel ve metin üretimi için güvenli model seçenekleri.
   static const List<ModelInfo> _models = [
     ModelInfo(
-      id: 'gemini-2.5-flash-lite',
-      displayName: 'Gemini 2.5 Flash-Lite',
-      description: 'En hızlı ve düşük maliyetli',
+      id: 'gemini-2.0-flash',
+      displayName: 'Gemini 2.0 Flash',
+      description: 'Hızlı ve yetenekli (Önerilen)',
+      isFreeTier: true,
+    ),
+    ModelInfo(
+      id: 'gemini-2.0-flash-lite',
+      displayName: 'Gemini 2.0 Flash Lite',
+      description: 'Çok hızlı, hafif model',
+      isFreeTier: true,
+    ),
+    ModelInfo(
+      id: 'gemini-2.0-flash-001',
+      displayName: 'Gemini 2.0 Flash 001',
+      description: 'Kararlı 2.0 Flash sürümü',
       isFreeTier: true,
     ),
     ModelInfo(
       id: 'gemini-2.5-flash',
       displayName: 'Gemini 2.5 Flash',
-      description: 'Hızlı ve dengeli',
+      description: 'Gelişmiş 2.5 Flash modeli',
       isFreeTier: true,
     ),
     ModelInfo(
-      id: 'gemini-2.5-pro',
-      displayName: 'Gemini 2.5 Pro',
-      description: 'En yüksek kalite ve muhakeme',
+      id: 'gemini-3-flash-preview',
+      displayName: 'Gemini 3 Flash (Preview)',
+      description: 'Deneysel 3.0 Flash modeli',
       isFreeTier: true,
     ),
   ];
-
-  /// Seçili modelden başlayıp diğer modellere düşen sıra.
-  List<ModelInfo> get _quotaFriendlyModels {
-    final current = selectedModel;
-    return [
-      ..._models.where((m) => m.id == current),
-      ..._models.where((m) => m.id != current),
-    ];
-  }
 
   String get _storageKey => StorageKeys.aiModel;
 
@@ -134,19 +142,83 @@ class GeminiAiService implements AiService {
     await _prefs.setString(_storageKey, modelId);
   }
 
+  @override
+  Future<void> init() async {
+    try {
+      await _remoteConfig.setConfigSettings(
+        RemoteConfigSettings(
+          fetchTimeout: const Duration(minutes: 1),
+          minimumFetchInterval: const Duration(hours: 12),
+        ),
+      );
+
+      // Set default values
+      await _remoteConfig.setDefaults(const {'gemini_api_key': ''});
+
+      await _remoteConfig.fetchAndActivate();
+      debugPrint('Remote Config fetched. API Key configured: $isConfigured');
+
+      // If configured, run a quick check to see if the default model works
+      if (isConfigured) {
+        _checkAndHealModelSelection();
+      }
+    } catch (e) {
+      debugPrint('Failed to fetch remote config: $e');
+    }
+  }
+
+  /// Tries to use the selected model. If it fails, finds the first working model and switches to it.
+  Future<void> _checkAndHealModelSelection() async {
+    try {
+      // Check current model
+      final currentModel = _getModel();
+      if (currentModel == null) return;
+
+      await currentModel.generateContent([
+        Content.text('ping'),
+      ], generationConfig: GenerationConfig(maxOutputTokens: 1));
+    } catch (e) {
+      debugPrint(
+        'Current model $selectedModel failed ping: $e. Searching for working model...',
+      );
+      // Current model failed, try others
+      for (final model in _models) {
+        if (model.id == selectedModel) continue;
+
+        try {
+          final candidate = _getModel(overrideModel: model.id);
+          if (candidate != null) {
+            await candidate.generateContent([
+              Content.text('ping'),
+            ], generationConfig: GenerationConfig(maxOutputTokens: 1));
+            // Verify success
+            await setModel(model.id);
+            debugPrint('Switched to working model: ${model.id}');
+            return;
+          }
+        } catch (_) {}
+      }
+    }
+  }
+
   GenerativeModel? _getModel({String? overrideModel}) {
-    final apiKey = _prefs.getString('ai_api_key');
-    if (apiKey == null || apiKey.isEmpty) return null;
+    final apiKey = _remoteConfig.getString('gemini_api_key');
+    if (apiKey.isEmpty) return null;
 
     final modelId = overrideModel ?? selectedModel;
     return GenerativeModel(model: modelId, apiKey: apiKey);
   }
 
   @override
-  bool get isConfigured => _prefs.getString('ai_api_key')?.isNotEmpty ?? false;
+  bool get isConfigured => _remoteConfig.getString('gemini_api_key').isNotEmpty;
 
   @override
   Future<AiServiceStatus> getStatus() async {
+    // Try to fetch latest config when checking status
+    try {
+      await _remoteConfig.fetchAndActivate();
+    } catch (_) {}
+
     if (!isConfigured) {
       return AiServiceStatus(isConfigured: false);
     }
@@ -186,17 +258,29 @@ class GeminiAiService implements AiService {
   }) async {
     final model = _getModel();
     if (model == null) {
-      return (response: null, error: 'API Key not configured', modelId: '');
+      // Try to fetch config one more time if key is missing
+      await init();
+      if (_getModel() == null) {
+        return (
+          response: null,
+          error: 'API Key not configured in Remote Config',
+          modelId: '',
+        );
+      }
     }
+
+    // Prioritize selected model, then try others
+    final candidateModels = [
+      _models.firstWhere((m) => m.id == selectedModel),
+      ..._models.where((m) => m.id != selectedModel),
+    ];
 
     Object? lastError;
 
-    for (int index = 0; index < _quotaFriendlyModels.length; index++) {
-      final candidate = _quotaFriendlyModels[index];
+    for (int index = 0; index < candidateModels.length; index++) {
+      final candidate = candidateModels[index];
       final candidateModel = _getModel(overrideModel: candidate.id);
-      if (candidateModel == null) {
-        continue;
-      }
+      if (candidateModel == null) continue;
 
       try {
         final response = await candidateModel.generateContent(
@@ -204,17 +288,14 @@ class GeminiAiService implements AiService {
           generationConfig: generationConfig,
         );
 
-        if (candidate.id != selectedModel) {
-          await setModel(candidate.id);
-          debugPrint('Auto-switched to fallback model: ${candidate.id}');
-        }
-
+        // If we succeeded with a different model than selected, maybe update preference?
+        // For now, let's just use it without changing user preference permanently unless 'init' healing logic runs.
         return (response: response, error: null, modelId: candidate.id);
       } catch (e) {
         lastError = e;
         debugPrint('Model ${candidate.id} failed: $e');
 
-        final isLastAttempt = index == _quotaFriendlyModels.length - 1;
+        final isLastAttempt = index == candidateModels.length - 1;
         if (!_isFallbackWorthyError(e) || isLastAttempt) {
           break;
         }
@@ -292,79 +373,103 @@ class GeminiAiService implements AiService {
   }
 
   String _handleError(dynamic error) {
-    final errorStr = error.toString();
+    var errorStr = error.toString();
+
+    // Extract inner message from some wrapper exceptions if possible
+    if (errorStr.contains('GenerativeAIException')) {
+      errorStr = errorStr.replaceAll('GenerativeAIException: ', '');
+    }
+
     final lowered = errorStr.toLowerCase();
 
     if (lowered.contains('403') ||
         lowered.contains('api key') ||
         lowered.contains('permission')) {
-      return 'Geçersiz API Anahtarı. Ayarlar > AI Asistan bölümünü kontrol edin.';
+      return 'Geçersiz API Anahtarı. Remote Config ayarlarını kontrol edin.';
     }
     if (lowered.contains('404') || lowered.contains('not found')) {
-      return 'AI modeli bulunamadı. Ayarlar > AI Model bölümünden güncel bir model seçin.';
+      return 'AI modeli bulunamadı. Lütfen daha yeni bir model seçin.';
     }
     if (lowered.contains('429') ||
         lowered.contains('quota') ||
         lowered.contains('rate limit') ||
         lowered.contains('resource exhausted')) {
-      return 'API kotası veya hız limiti aşıldı. Birkaç dakika bekleyip tekrar deneyin.';
+      return 'API kotası aşıldı. Lütfen biraz bekleyin.';
     }
     if (lowered.contains('timeout') || lowered.contains('deadline')) {
-      return 'İstek zaman aşımına uğradı. İnternet bağlantınızı kontrol edin.';
+      return 'Zaman aşımı. İnternet bağlantınızı kontrol edin.';
     }
-    return 'AI hatası: ${errorStr.substring(0, errorStr.length > 100 ? 100 : errorStr.length)}';
+    return 'Hata: ${errorStr.length > 80 ? errorStr.substring(0, 80) + '...' : errorStr}';
   }
 
   @override
   Future<List<String>> listAvailableModels() async {
-    final apiKey = _prefs.getString('ai_api_key');
-    if (apiKey == null || apiKey.isEmpty) return ['API Key not configured'];
+    final apiKey = _remoteConfig.getString('gemini_api_key');
+    print("-----------------------------------------------------------");
+    print(apiKey);
+    print("-----------------------------------------------------------");
 
-    final selected = selectedModelInfo;
-    try {
-      final model = GenerativeModel(model: selected.id, apiKey: apiKey);
-      await model.generateContent([
-        Content.text('ok'),
-      ], generationConfig: GenerationConfig(maxOutputTokens: 1));
+    if (apiKey.isEmpty) {
+      // Try to fetch one more time urgently
+      await _remoteConfig.fetchAndActivate();
+      if (_remoteConfig.getString('gemini_api_key').isEmpty) {
+        return ['API Key not configured in Remote Config (Empty)'];
+      }
+    }
 
+    // Effective API Key
+    final effectiveApiKey = _remoteConfig.getString('gemini_api_key');
+    final maskedKey =
+        effectiveApiKey.length > 4
+            ? '${effectiveApiKey.substring(0, 4)}...${effectiveApiKey.substring(effectiveApiKey.length - 4)}'
+            : 'Invalid Key';
+
+    List<String> results = [];
+    List<String> errors = [];
+
+    for (final modelInfo in _models) {
+      try {
+        final model = GenerativeModel(
+          model: modelInfo.id,
+          apiKey: effectiveApiKey,
+        );
+        // Quick ping to check if model is actually accessible with this key
+        await model.generateContent([
+          Content.text('test'),
+        ], generationConfig: GenerationConfig(maxOutputTokens: 1));
+
+        final isSelected = modelInfo.id == selectedModel;
+        results.add(
+          '${modelInfo.displayName} ${isSelected ? '(Seçili) ✓' : ''}',
+        );
+      } catch (e) {
+        final err = e.toString();
+        final cleanErr =
+            err.contains('GenerativeAIException')
+                ? err.replaceAll('GenerativeAIException: ', '')
+                : err;
+
+        debugPrint('Model check failed for ${modelInfo.id}: $e');
+        errors.add(
+          '${modelInfo.displayName}: ${cleanErr.length > 50 ? cleanErr.substring(0, 50) + '...' : cleanErr}',
+        );
+      }
+    }
+
+    if (results.isEmpty) {
       return [
-        '${selected.displayName} ✓',
-        ..._models
-            .where((m) => m.id != selected.id)
-            .map((m) => '${m.displayName} (hazır)'),
-      ];
-    } catch (e) {
-      return [
-        '${selected.displayName}: ${_handleError(e)}',
-        ..._models
-            .where((m) => m.id != selected.id)
-            .map((m) => '${m.displayName} (alternatif)'),
+        'Hata: Hiçbir model çalışmadı.',
+        'API Key: $maskedKey',
+        'Detaylar:',
+        ...errors,
       ];
     }
+
+    return results;
   }
 
   @override
   Future<Map<String, dynamic>?> getQuotaInfo() async {
-    // Google Gemini API does not provide quota info programmatically.
-    // We return null to hide the quota UI.
     return null;
   }
-
-  ModelInfo get selectedModelInfo {
-    return _models.firstWhere(
-      (m) => m.id == selectedModel,
-      orElse: () => _quotaFriendlyModels.first,
-    );
-  }
-
-  /// Her AI isteğinde çağrılması gereken metod
-  // Future<void> _incrementRequestCount() async {
-  //   final requestCountKey = 'ai_daily_request_count';
-  //   final lastRequestKey = 'ai_last_request_time';
-  //   final now = DateTime.now();
-
-  //   final currentCount = _prefs.getInt(requestCountKey) ?? 0;
-  //   await _prefs.setInt(requestCountKey, currentCount + 1);
-  //   await _prefs.setString(lastRequestKey, now.toIso8601String());
-  // }
 }

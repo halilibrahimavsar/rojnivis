@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:remote_auth_module/remote_auth_module.dart';
+import 'package:rojnivis/core/services/ai_service.dart';
 import 'package:rojnivis/firebase_options.dart';
 import 'di/manual_auth_di.dart';
 import 'package:unified_flutter_features/features/local_auth/data/local_auth_repository.dart';
@@ -65,6 +66,13 @@ Future<void> _initializeApp() async {
   // Configure dependency injection
   await configureDependencies();
   registerAuthDependencies();
+
+  // Initialize AI Service (Remote Config)
+  try {
+    await getIt<AiService>().init();
+  } catch (e) {
+    debugPrint('AI Service init failed: $e');
+  }
 }
 
 /// Registers all Hive type adapters.

@@ -175,7 +175,6 @@ class StorageKeys {
   static const String attachmentBackdrop = 'attachment_backdrop';
   static const String notebookCoverColor = 'notebook_cover_color';
   static const String notebookCoverTexture = 'notebook_cover_texture';
-  static const String aiApiKey = 'ai_api_key';
   static const String aiModel = 'ai_model';
 }
 
