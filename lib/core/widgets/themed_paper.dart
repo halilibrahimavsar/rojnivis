@@ -407,8 +407,16 @@ _PaperSpec _paperSpecFor(AppThemePreset preset, bool isDark) {
         base: isDark ? const Color(0xFF2A131A) : const Color(0xFFFFF2F6),
         gradient:
             isDark
-                ? const [Color(0xFF2A131A), Color(0xFF3B1B24)]
-                : const [Color(0xFFFFF2F6), Color(0xFFFFD5E6)],
+                ? const [
+                  Color(0xFF2A131A),
+                  Color(0xFF351520),
+                  Color(0xFF3B1B24),
+                ]
+                : const [
+                  Color(0xFFFFF5F8),
+                  Color(0xFFFFF2F6),
+                  Color(0xFFFFD5E6),
+                ],
         accent: const Color(0xFFFF5C8D),
         accent2: const Color(0xFFFF9AA2),
         lineColor:
@@ -419,11 +427,19 @@ _PaperSpec _paperSpecFor(AppThemePreset preset, bool isDark) {
       );
     case AppThemePreset.ocean:
       return _PaperSpec(
-        base: isDark ? const Color(0xFF071826) : const Color(0xFFE7F6FF),
+        base: isDark ? const Color(0xFF04101B) : const Color(0xFFDAF0FF),
         gradient:
             isDark
-                ? const [Color(0xFF071826), Color(0xFF0B2A3F)]
-                : const [Color(0xFFE7F6FF), Color(0xFFB3E5FC)],
+                ? const [
+                  Color(0xFF04101B),
+                  Color(0xFF0A1E33),
+                  Color(0xFF0F2E4A),
+                ]
+                : const [
+                  Color(0xFFE7F6FF),
+                  Color(0xFFC5E8FA),
+                  Color(0xFFA3DAFF),
+                ],
         accent: const Color(0xFF00C4FF),
         accent2: const Color(0xFF00F5D4),
         lineColor:
@@ -434,11 +450,19 @@ _PaperSpec _paperSpecFor(AppThemePreset preset, bool isDark) {
       );
     case AppThemePreset.sunset:
       return _PaperSpec(
-        base: isDark ? const Color(0xFF24140E) : const Color(0xFFFFF4EA),
+        base: isDark ? const Color(0xFF1E0F09) : const Color(0xFFFFF6EE),
         gradient:
             isDark
-                ? const [Color(0xFF24140E), Color(0xFF3A1B12)]
-                : const [Color(0xFFFFF4EA), Color(0xFFFFD1B3)],
+                ? const [
+                  Color(0xFF1A0C08),
+                  Color(0xFF2E1510),
+                  Color(0xFF3A1B12),
+                ]
+                : const [
+                  Color(0xFFFFF8F0),
+                  Color(0xFFFFE4CC),
+                  Color(0xFFFFCBA8),
+                ],
         accent: const Color(0xFFFF7A59),
         accent2: const Color(0xFF8B5CF6),
         lineColor:
@@ -449,11 +473,19 @@ _PaperSpec _paperSpecFor(AppThemePreset preset, bool isDark) {
       );
     case AppThemePreset.forest:
       return _PaperSpec(
-        base: isDark ? const Color(0xFF0E1A12) : const Color(0xFFF3FAF4),
+        base: isDark ? const Color(0xFF0A150E) : const Color(0xFFEEF7EF),
         gradient:
             isDark
-                ? const [Color(0xFF0E1A12), Color(0xFF17301F)]
-                : const [Color(0xFFF3FAF4), Color(0xFFDDEFD9)],
+                ? const [
+                  Color(0xFF081008),
+                  Color(0xFF122018),
+                  Color(0xFF1A3022),
+                ]
+                : const [
+                  Color(0xFFF3FAF4),
+                  Color(0xFFE0F0DD),
+                  Color(0xFFCDE5C8),
+                ],
         accent: const Color(0xFF2E7D32),
         accent2: const Color(0xFF81C784),
         lineColor:
@@ -464,11 +496,19 @@ _PaperSpec _paperSpecFor(AppThemePreset preset, bool isDark) {
       );
     case AppThemePreset.spring:
       return _PaperSpec(
-        base: isDark ? const Color(0xFF102017) : const Color(0xFFF7FFF6),
+        base: isDark ? const Color(0xFF0E1C14) : const Color(0xFFF8FFF6),
         gradient:
             isDark
-                ? const [Color(0xFF102017), Color(0xFF1A2C1D)]
-                : const [Color(0xFFF7FFF6), Color(0xFFE8FEE8)],
+                ? const [
+                  Color(0xFF0E1C14),
+                  Color(0xFF162518),
+                  Color(0xFF1E301F),
+                ]
+                : const [
+                  Color(0xFFFBFFF9),
+                  Color(0xFFF0FDE8),
+                  Color(0xFFE6FCDF),
+                ],
         accent: const Color(0xFFFF8AD4),
         accent2: const Color(0xFF8EE4AF),
         lineColor:
@@ -479,11 +519,19 @@ _PaperSpec _paperSpecFor(AppThemePreset preset, bool isDark) {
       );
     case AppThemePreset.autumn:
       return _PaperSpec(
-        base: isDark ? const Color(0xFF20140C) : const Color(0xFFFFF8F0),
+        base: isDark ? const Color(0xFF1A100A) : const Color(0xFFFFF9F2),
         gradient:
             isDark
-                ? const [Color(0xFF20140C), Color(0xFF2F1B10)]
-                : const [Color(0xFFFFF8F0), Color(0xFFFFE1C1)],
+                ? const [
+                  Color(0xFF180E08),
+                  Color(0xFF24150C),
+                  Color(0xFF301E12),
+                ]
+                : const [
+                  Color(0xFFFFFAF2),
+                  Color(0xFFFFEDD5),
+                  Color(0xFFFFDFB8),
+                ],
         accent: const Color(0xFFC75D2C),
         accent2: const Color(0xFFFFB347),
         lineColor:
@@ -557,17 +605,24 @@ _PaperSpec _paperSpecFor(AppThemePreset preset, bool isDark) {
 
 Gradient _buildGradient(_PaperSpec spec, double t) {
   final drift = sin(t * pi * 2) * 0.15;
+  // Compute evenly spaced stops for any gradient length
+  final stops = List<double>.generate(
+    spec.gradient.length,
+    (i) => i / (spec.gradient.length - 1),
+  );
   if (spec.motif == _PaperMotif.sun) {
     return RadialGradient(
       center: Alignment(0.7 + drift, -0.6),
       radius: 1.3,
       colors: spec.gradient,
+      stops: stops,
     );
   }
   return LinearGradient(
     begin: Alignment(-0.9 + drift, -1.0),
     end: Alignment(0.9 - drift, 1.0),
     colors: spec.gradient,
+    stops: stops,
   );
 }
 
@@ -890,233 +945,500 @@ class _PaperEffectPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     switch (spec.motif) {
       case _PaperMotif.hearts:
-        _drawHearts(canvas, size);
+        _drawRealisticHearts(canvas, size);
         break;
       case _PaperMotif.waves:
-        _drawWaves(canvas, size);
+        _drawRealisticOcean(canvas, size);
         break;
       case _PaperMotif.petals:
-        _drawPetals(canvas, size);
+        _drawRealisticSpring(canvas, size);
         break;
       case _PaperMotif.leaves:
-        _drawLeaves(canvas, size);
+        _drawRealisticLeaves(canvas, size);
         break;
       case _PaperMotif.sun:
-        _drawSun(canvas, size);
+        _drawRealisticSunset(canvas, size);
         break;
       case _PaperMotif.grid:
-        _drawGrid(canvas, size);
+        _drawRealisticGrid(canvas, size);
         break;
       case _PaperMotif.bubbles:
-        _drawBubbles(canvas, size);
+        _drawRealisticBubbles(canvas, size);
         break;
       case _PaperMotif.none:
         break;
     }
   }
 
-  void _drawHearts(Canvas canvas, Size size) {
-    final paint =
+  // ── Ocean: multi-layered waves with foam and caustic shimmer ──
+  void _drawRealisticOcean(Canvas canvas, Size size) {
+    // Atmospheric depth gradient
+    final depthPaint =
         Paint()
-          ..color = spec.accent.withValues(alpha: 0.12)
-          ..style = PaintingStyle.fill;
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              spec.accent.withValues(alpha: 0.03),
+              spec.accent2.withValues(alpha: 0.08),
+              spec.accent.withValues(alpha: 0.12),
+            ],
+          ).createShader(Offset.zero & size);
+    canvas.drawRect(Offset.zero & size, depthPaint);
 
-    final random = Random(42);
-    for (int i = 0; i < 14; i++) {
-      final x = random.nextDouble();
-      final y = random.nextDouble();
-      final speed = lerpDouble(0.02, 0.08, random.nextDouble())!;
-      final drift = random.nextDouble();
-      final dy = (y - progress * speed + 1.2) % 1.2 - 0.1;
-      final dx = x + sin((progress + drift) * pi * 2) * 0.02;
-      final sizeFactor = lerpDouble(10, 24, random.nextDouble())!;
-      _paintHeart(
-        canvas,
-        Offset(dx * size.width, dy * size.height),
-        sizeFactor,
-        paint,
+    // Caustic light shimmer
+    final causticPaint =
+        Paint()
+          ..color = spec.accent2.withValues(alpha: 0.06)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
+    final rng = Random(88);
+    for (int i = 0; i < 18; i++) {
+      final cx = rng.nextDouble() * size.width;
+      final cy = rng.nextDouble() * size.height;
+      final drift = sin(progress * pi * 2 + i * 1.7) * 8;
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(cx + drift, cy),
+          width: 30 + rng.nextDouble() * 50,
+          height: 12 + rng.nextDouble() * 20,
+        ),
+        causticPaint,
       );
     }
-  }
 
-  void _drawWaves(Canvas canvas, Size size) {
-    final paint =
-        Paint()
-          ..color = spec.accent.withValues(alpha: 0.18)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.4;
+    // 5 layered wave crests with decreasing opacity
+    for (int layer = 0; layer < 5; layer++) {
+      final layerT = layer / 4.0;
+      final baseY = size.height * (0.25 + layerT * 0.18);
+      final amplitude = 6.0 + layer * 5;
+      final freq = 1.8 + layer * 0.5;
+      final phase = progress * pi * 2 * (0.4 + layer * 0.15);
+      final alpha = 0.06 + layerT * 0.10;
 
-    for (int i = 0; i < 3; i++) {
-      final path = Path();
-      final y = size.height * (0.35 + i * 0.2);
-      final amplitude = 8 + i * 4;
-      final frequency = 2.2 + i * 0.4;
-      final phase = progress * pi * 2 * (0.6 + i * 0.2);
-      path.moveTo(0, y);
-      for (double x = 0; x <= size.width; x += 16) {
-        final dy = sin((x / size.width) * pi * frequency + phase) * amplitude;
-        path.lineTo(x, y + dy);
+      final wavePath = Path();
+      wavePath.moveTo(-10, size.height);
+      wavePath.lineTo(-10, baseY);
+      for (double x = -10; x <= size.width + 10; x += 4) {
+        final y1 = sin((x / size.width) * pi * freq + phase) * amplitude;
+        final y2 =
+            sin((x / size.width) * pi * (freq * 1.3) + phase * 0.7) *
+            amplitude *
+            0.4;
+        wavePath.lineTo(x, baseY + y1 + y2);
       }
-      canvas.drawPath(path, paint);
-    }
-  }
+      wavePath.lineTo(size.width + 10, size.height);
+      wavePath.close();
 
-  void _drawPetals(Canvas canvas, Size size) {
-    final paint =
-        Paint()
-          ..color = spec.accent.withValues(alpha: 0.14)
-          ..style = PaintingStyle.fill;
-
-    final random = Random(7);
-    for (int i = 0; i < 16; i++) {
-      final x = random.nextDouble();
-      final y = random.nextDouble();
-      final speed = lerpDouble(0.02, 0.06, random.nextDouble())!;
-      final dy = (y + progress * speed) % 1.2 - 0.1;
-      final sizeFactor = lerpDouble(10, 20, random.nextDouble())!;
-      final angle = progress * pi * 2 * (0.4 + random.nextDouble());
-      _paintPetal(
-        canvas,
-        Offset(x * size.width, dy * size.height),
-        sizeFactor,
-        angle,
-        paint,
+      canvas.drawPath(
+        wavePath,
+        Paint()..color = spec.accent.withValues(alpha: alpha),
       );
+
+      // Foam highlights on wave crests
+      final foamPaint =
+          Paint()
+            ..color = Colors.white.withValues(alpha: alpha * 0.5)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.0 + layerT;
+      final foamPath = Path();
+      foamPath.moveTo(0, baseY);
+      for (double x = 0; x <= size.width; x += 4) {
+        final y1 = sin((x / size.width) * pi * freq + phase) * amplitude;
+        final y2 =
+            sin((x / size.width) * pi * (freq * 1.3) + phase * 0.7) *
+            amplitude *
+            0.4;
+        foamPath.lineTo(x, baseY + y1 + y2 - 1.5);
+      }
+      canvas.drawPath(foamPath, foamPaint);
     }
   }
 
-  void _drawLeaves(Canvas canvas, Size size) {
-    final paint =
-        Paint()
-          ..color = spec.accent2.withValues(alpha: 0.16)
-          ..style = PaintingStyle.fill;
+  // ── Sunset: volumetric sun glow, cloud bands, light rays ──
+  void _drawRealisticSunset(Canvas canvas, Size size) {
+    final sunCenter = Offset(size.width * 0.75, size.height * 0.22);
+    final sunRadius = size.shortestSide * 0.14;
 
-    final random = Random(11);
-    for (int i = 0; i < 12; i++) {
-      final x = random.nextDouble();
-      final y = random.nextDouble();
-      final speed = lerpDouble(0.015, 0.05, random.nextDouble())!;
-      final dy = (y + progress * speed) % 1.2 - 0.1;
-      final sizeFactor = lerpDouble(12, 24, random.nextDouble())!;
-      final angle = progress * pi * 2 * (0.3 + random.nextDouble());
-      _paintLeaf(
-        canvas,
-        Offset(x * size.width, dy * size.height),
-        sizeFactor,
-        angle,
-        paint,
-      );
-    }
-  }
-
-  void _drawSun(Canvas canvas, Size size) {
-    final center = Offset(size.width * 0.82, size.height * 0.18);
-    final radius = size.shortestSide * 0.22;
-    final glowPaint =
+    // Multi-ring sun glow
+    for (int ring = 4; ring >= 0; ring--) {
+      final r = sunRadius * (1.0 + ring * 0.8);
+      final alpha = 0.04 + (4 - ring) * 0.05;
+      canvas.drawCircle(
+        sunCenter,
+        r,
         Paint()
           ..shader = RadialGradient(
-            colors: [spec.accent.withValues(alpha: 0.35), Colors.transparent],
-          ).createShader(Rect.fromCircle(center: center, radius: radius * 1.6));
-    canvas.drawCircle(center, radius * 1.4, glowPaint);
+            colors: [spec.accent.withValues(alpha: alpha), Colors.transparent],
+          ).createShader(Rect.fromCircle(center: sunCenter, radius: r)),
+      );
+    }
 
-    final paint =
+    // Sun core
+    canvas.drawCircle(
+      sunCenter,
+      sunRadius * 0.5,
+      Paint()..color = spec.accent.withValues(alpha: 0.22),
+    );
+
+    // God rays from sun
+    final rayPaint =
         Paint()
-          ..color = spec.accent.withValues(alpha: 0.18)
-          ..style = PaintingStyle.fill;
-    canvas.drawCircle(center, radius * 0.7, paint);
+          ..strokeWidth = 1.5
+          ..style = PaintingStyle.stroke;
+    for (int i = 0; i < 12; i++) {
+      final angle = (i / 12.0) * pi * 2 + progress * pi * 0.3;
+      final len = sunRadius * (2.0 + sin(progress * pi * 2 + i) * 0.6);
+      final endX = sunCenter.dx + cos(angle) * len;
+      final endY = sunCenter.dy + sin(angle) * len;
+      rayPaint.shader = LinearGradient(
+        colors: [spec.accent.withValues(alpha: 0.12), Colors.transparent],
+      ).createShader(Rect.fromPoints(sunCenter, Offset(endX, endY)));
+      canvas.drawLine(sunCenter, Offset(endX, endY), rayPaint);
+    }
+
+    // Cloud bands
+    for (int i = 0; i < 4; i++) {
+      final cloudY = size.height * (0.38 + i * 0.14);
+      final drift = sin(progress * pi * 2 + i * 2.1) * 12;
+      final cloudPath = Path();
+      cloudPath.moveTo(-20, cloudY + 10);
+      final rng = Random(i * 37 + 5);
+      for (double x = -20; x <= size.width + 20; x += 20) {
+        final bumpH = 4.0 + rng.nextDouble() * 10;
+        cloudPath.quadraticBezierTo(
+          x + 10 + drift,
+          cloudY - bumpH,
+          x + 20 + drift,
+          cloudY,
+        );
+      }
+      cloudPath.lineTo(size.width + 20, cloudY + 30);
+      cloudPath.lineTo(-20, cloudY + 30);
+      cloudPath.close();
+
+      final cloudColor =
+          i < 2
+              ? spec.accent.withValues(alpha: 0.06 + i * 0.02)
+              : spec.accent2.withValues(alpha: 0.04 + i * 0.01);
+      canvas.drawPath(
+        cloudPath,
+        Paint()
+          ..color = cloudColor
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+      );
+    }
   }
 
-  void _drawGrid(Canvas canvas, Size size) {
-    final paint =
-        Paint()
-          ..color = spec.accent.withValues(alpha: 0.08)
-          ..strokeWidth = 1;
+  // ── Forest / Autumn leaves: volumetric light rays + realistic leaves ──
+  void _drawRealisticLeaves(Canvas canvas, Size size) {
+    // Dappled sunlight rays from top
+    for (int i = 0; i < 5; i++) {
+      final rng = Random(i * 13 + 7);
+      final rayX = rng.nextDouble() * size.width;
+      final rayW = 20.0 + rng.nextDouble() * 40;
+      final sway = sin(progress * pi * 2 + i * 1.5) * 6;
+      final rayPaint =
+          Paint()
+            ..shader = LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                spec.accent2.withValues(alpha: 0.10),
+                spec.accent2.withValues(alpha: 0.02),
+                Colors.transparent,
+              ],
+            ).createShader(
+              Rect.fromLTWH(rayX + sway, 0, rayW, size.height * 0.7),
+            );
+      canvas.drawRect(
+        Rect.fromLTWH(rayX + sway, 0, rayW, size.height * 0.7),
+        rayPaint,
+      );
+    }
 
+    // Floating realistic leaves
+    final rng = Random(11);
+    for (int i = 0; i < 16; i++) {
+      final x = rng.nextDouble();
+      final y = rng.nextDouble();
+      final speed = lerpDouble(0.015, 0.05, rng.nextDouble())!;
+      final sway = sin(progress * pi * 2 * (0.5 + rng.nextDouble()) + i) * 0.03;
+      final dy = (y + progress * speed) % 1.2 - 0.1;
+      final dx = x + sway;
+      final leafSize = lerpDouble(10, 22, rng.nextDouble())!;
+      final angle = progress * pi * 2 * (0.2 + rng.nextDouble() * 0.3);
+      // Multi-toned leaf color
+      final leafColor =
+          i.isEven
+              ? spec.accent.withValues(alpha: 0.14 + rng.nextDouble() * 0.06)
+              : spec.accent2.withValues(alpha: 0.12 + rng.nextDouble() * 0.06);
+      _paintRealisticLeaf(
+        canvas,
+        Offset(dx * size.width, dy * size.height),
+        leafSize,
+        angle,
+        leafColor,
+      );
+    }
+  }
+
+  // ── Spring: cherry blossoms with veining ──
+  void _drawRealisticSpring(Canvas canvas, Size size) {
+    // Soft bokeh glow background spots
+    final bokehPaint =
+        Paint()..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18);
+    final rng = Random(3);
+    for (int i = 0; i < 8; i++) {
+      final bx = rng.nextDouble() * size.width;
+      final by = rng.nextDouble() * size.height;
+      final drift = sin(progress * pi * 2 + i * 2.3) * 6;
+      bokehPaint.color =
+          i.isEven
+              ? spec.accent.withValues(alpha: 0.05)
+              : spec.accent2.withValues(alpha: 0.04);
+      canvas.drawCircle(
+        Offset(bx + drift, by),
+        16 + rng.nextDouble() * 24,
+        bokehPaint,
+      );
+    }
+
+    // Falling petals with realistic shape
+    final petalRng = Random(7);
+    for (int i = 0; i < 20; i++) {
+      final x = petalRng.nextDouble();
+      final y = petalRng.nextDouble();
+      final speed = lerpDouble(0.02, 0.06, petalRng.nextDouble())!;
+      final sway =
+          sin(progress * pi * 2 * (0.6 + petalRng.nextDouble()) + i) * 0.025;
+      final dy = (y + progress * speed) % 1.2 - 0.1;
+      final dx = x + sway;
+      final petalSize = lerpDouble(6, 16, petalRng.nextDouble())!;
+      final angle = progress * pi * 2 * (0.3 + petalRng.nextDouble() * 0.4);
+      final alpha = 0.10 + petalRng.nextDouble() * 0.10;
+      _paintCherryPetal(
+        canvas,
+        Offset(dx * size.width, dy * size.height),
+        petalSize,
+        angle,
+        spec.accent.withValues(alpha: alpha),
+      );
+    }
+  }
+
+  // ── Love: bokeh hearts with glow ──
+  void _drawRealisticHearts(Canvas canvas, Size size) {
+    // Warm bokeh glow
+    final glowPaint =
+        Paint()..maskFilter = const MaskFilter.blur(BlurStyle.normal, 20);
+    final rng = Random(42);
+    for (int i = 0; i < 10; i++) {
+      final gx = rng.nextDouble() * size.width;
+      final gy = rng.nextDouble() * size.height;
+      final drift = sin(progress * pi * 2 + i * 1.4) * 5;
+      glowPaint.color = spec.accent.withValues(
+        alpha: 0.04 + rng.nextDouble() * 0.03,
+      );
+      canvas.drawCircle(
+        Offset(gx + drift, gy),
+        20 + rng.nextDouble() * 30,
+        glowPaint,
+      );
+    }
+
+    // Floating hearts with soft edges
+    final heartRng = Random(42);
+    for (int i = 0; i < 14; i++) {
+      final x = heartRng.nextDouble();
+      final y = heartRng.nextDouble();
+      final speed = lerpDouble(0.02, 0.08, heartRng.nextDouble())!;
+      final drift = heartRng.nextDouble();
+      final dy = (y - progress * speed + 1.2) % 1.2 - 0.1;
+      final dx = x + sin((progress + drift) * pi * 2) * 0.02;
+      final sizeFactor = lerpDouble(8, 20, heartRng.nextDouble())!;
+      final alpha = 0.06 + heartRng.nextDouble() * 0.10;
+      // Heart with glow halo
+      final center = Offset(dx * size.width, dy * size.height);
+      _paintHeart(
+        canvas,
+        center,
+        sizeFactor + 4,
+        Paint()
+          ..color = spec.accent.withValues(alpha: alpha * 0.3)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+      );
+      _paintHeart(
+        canvas,
+        center,
+        sizeFactor,
+        Paint()..color = spec.accent.withValues(alpha: alpha),
+      );
+    }
+  }
+
+  // ── Futuristic grid: scan lines + neon pulse ──
+  void _drawRealisticGrid(Canvas canvas, Size size) {
+    // Subtle scan line effect
+    final scanPaint =
+        Paint()
+          ..color = spec.accent.withValues(alpha: 0.04)
+          ..strokeWidth = 0.5;
+    for (double y = 0; y <= size.height; y += 3) {
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), scanPaint);
+    }
+    // Grid
+    final gridPaint =
+        Paint()
+          ..color = spec.accent.withValues(alpha: 0.06)
+          ..strokeWidth = 0.8;
     const step = 48.0;
     for (double x = 0; x <= size.width; x += step) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+      canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
     }
     for (double y = 0; y <= size.height; y += step) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+    }
+    // Neon pulse nodes at intersections
+    final nodePaint =
+        Paint()..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+    final rng = Random(9);
+    for (double x = step; x < size.width; x += step) {
+      for (double y = step; y < size.height; y += step) {
+        if (rng.nextDouble() > 0.35) continue;
+        final pulse = sin(progress * pi * 2 + x * 0.01 + y * 0.02) * 0.5 + 0.5;
+        nodePaint.color = spec.accent.withValues(alpha: 0.05 + pulse * 0.08);
+        canvas.drawCircle(Offset(x, y), 2.5 + pulse * 1.5, nodePaint);
+      }
     }
   }
 
-  void _drawBubbles(Canvas canvas, Size size) {
-    final paint =
-        Paint()
-          ..color = spec.accent.withValues(alpha: 0.12)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.2;
-
-    final random = Random(21);
-    for (int i = 0; i < 10; i++) {
-      final x = random.nextDouble() * size.width;
+  // ── Glass: refraction bubbles with light sheen ──
+  void _drawRealisticBubbles(Canvas canvas, Size size) {
+    final rng = Random(21);
+    for (int i = 0; i < 14; i++) {
+      final x = rng.nextDouble() * size.width;
+      final rawY = rng.nextDouble();
       final y =
-          ((random.nextDouble() + progress) % 1.1) * size.height -
-          size.height * 0.05;
-      final radius = lerpDouble(18, 40, random.nextDouble())!;
-      canvas.drawCircle(Offset(x, y), radius, paint);
+          ((rawY + progress * 0.06) % 1.1) * size.height - size.height * 0.05;
+      final radius = lerpDouble(14, 38, rng.nextDouble())!;
+      final center = Offset(x, y);
+
+      // Bubble body
+      canvas.drawCircle(
+        center,
+        radius,
+        Paint()
+          ..color = spec.accent.withValues(alpha: 0.06)
+          ..style = PaintingStyle.fill,
+      );
+      // Rim
+      canvas.drawCircle(
+        center,
+        radius,
+        Paint()
+          ..color = spec.accent.withValues(alpha: 0.10)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.0,
+      );
+      // Specular highlight arc
+      final highlightRect = Rect.fromCircle(
+        center: Offset(center.dx - radius * 0.25, center.dy - radius * 0.3),
+        radius: radius * 0.5,
+      );
+      canvas.drawArc(
+        highlightRect,
+        -pi * 0.8,
+        pi * 0.7,
+        false,
+        Paint()
+          ..color = Colors.white.withValues(alpha: 0.12)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5
+          ..strokeCap = StrokeCap.round,
+      );
     }
   }
+
+  // ── Shape helpers ──
 
   void _paintHeart(Canvas canvas, Offset center, double size, Paint paint) {
     final path = Path();
-    final width = size;
-    final height = size;
-    path.moveTo(center.dx, center.dy + height * 0.35);
+    final w = size;
+    final h = size;
+    path.moveTo(center.dx, center.dy + h * 0.35);
     path.cubicTo(
-      center.dx + width * 0.5,
-      center.dy - height * 0.2,
-      center.dx + width * 1.1,
-      center.dy + height * 0.25,
+      center.dx + w * 0.5,
+      center.dy - h * 0.2,
+      center.dx + w * 1.1,
+      center.dy + h * 0.25,
       center.dx,
-      center.dy + height,
+      center.dy + h,
     );
     path.cubicTo(
-      center.dx - width * 1.1,
-      center.dy + height * 0.25,
-      center.dx - width * 0.5,
-      center.dy - height * 0.2,
+      center.dx - w * 1.1,
+      center.dy + h * 0.25,
+      center.dx - w * 0.5,
+      center.dy - h * 0.2,
       center.dx,
-      center.dy + height * 0.35,
+      center.dy + h * 0.35,
     );
     canvas.drawPath(path, paint);
   }
 
-  void _paintPetal(
+  void _paintRealisticLeaf(
     Canvas canvas,
     Offset center,
     double size,
     double angle,
-    Paint paint,
+    Color color,
   ) {
-    final rect = Rect.fromCenter(
-      center: Offset.zero,
-      width: size * 1.2,
-      height: size * 0.55,
-    );
     canvas.save();
     canvas.translate(center.dx, center.dy);
     canvas.rotate(angle);
-    canvas.drawOval(rect, paint);
+    // Leaf body
+    final body =
+        Path()
+          ..moveTo(0, 0)
+          ..quadraticBezierTo(size * 0.5, -size * 0.9, size * 1.1, 0)
+          ..quadraticBezierTo(size * 0.5, size * 0.9, 0, 0);
+    canvas.drawPath(body, Paint()..color = color);
+    // Center vein
+    canvas.drawLine(
+      Offset.zero,
+      Offset(size * 1.1, 0),
+      Paint()
+        ..color = color.withValues(alpha: (color.a * 1.4).clamp(0.0, 1.0))
+        ..strokeWidth = 0.6,
+    );
     canvas.restore();
   }
 
-  void _paintLeaf(
+  void _paintCherryPetal(
     Canvas canvas,
     Offset center,
     double size,
     double angle,
-    Paint paint,
+    Color color,
   ) {
-    final path = Path();
-    path.moveTo(0, 0);
-    path.quadraticBezierTo(size * 0.6, -size, size * 1.1, 0);
-    path.quadraticBezierTo(size * 0.5, size, 0, 0);
     canvas.save();
     canvas.translate(center.dx, center.dy);
     canvas.rotate(angle);
-    canvas.drawPath(path, paint);
+    // 5-petal cherry shape (draw one rounded petal shape)
+    final path =
+        Path()
+          ..moveTo(0, 0)
+          ..quadraticBezierTo(size * 0.4, -size * 0.8, size * 0.9, -size * 0.2)
+          ..quadraticBezierTo(size * 1.0, size * 0.3, size * 0.4, size * 0.4)
+          ..quadraticBezierTo(size * 0.1, size * 0.5, 0, 0);
+    canvas.drawPath(path, Paint()..color = color);
+    // Subtle inner vein
+    canvas.drawLine(
+      Offset(size * 0.1, 0),
+      Offset(size * 0.6, -size * 0.1),
+      Paint()
+        ..color = color.withValues(alpha: (color.a * 0.6).clamp(0.0, 1.0))
+        ..strokeWidth = 0.4,
+    );
     canvas.restore();
   }
 
