@@ -36,5 +36,10 @@
       ],
       "runtime": "python313"
     }
-  ]
+  ],
+  "auth": {
+    "providers": {
+      "emailPassword": true
+    }
+  }
 }

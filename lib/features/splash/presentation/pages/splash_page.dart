@@ -4,7 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:remote_auth_module/remote_auth_module.dart';
 import 'package:unified_flutter_features/features/local_auth/data/local_auth_repository.dart';
 
+import '../../../../core/constants/app_constants.dart';
+import '../../../../core/theme/page_studio_models.dart';
 import '../../../../di/injection.dart';
+import '../../../settings/presentation/bloc/settings_bloc.dart';
 import '../widgets/book_opening_animation.dart';
 
 class SplashPage extends StatefulWidget {
@@ -59,6 +62,13 @@ class _SplashPageState extends State<SplashPage> {
 
   @override
   Widget build(BuildContext context) {
+    final animationIntensityId = context.select<SettingsBloc, String>((bloc) {
+      final state = bloc.state;
+      if (state is SettingsLoaded) return state.animationIntensity;
+      return AppDefaults.defaultAnimationIntensity;
+    });
+    final animationIntensity = AnimationIntensityX.fromId(animationIntensityId);
+
     return Scaffold(
       body: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
@@ -69,6 +79,7 @@ class _SplashPageState extends State<SplashPage> {
           }
         },
         child: BookOpeningAnimation(
+          intensity: animationIntensity,
           onAnimationComplete: () {
             setState(() {
               _isAnimationComplete = true;

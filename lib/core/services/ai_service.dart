@@ -399,15 +399,12 @@ class GeminiAiService implements AiService {
     if (lowered.contains('timeout') || lowered.contains('deadline')) {
       return 'Zaman aşımı. İnternet bağlantınızı kontrol edin.';
     }
-    return 'Hata: ${errorStr.length > 80 ? errorStr.substring(0, 80) + '...' : errorStr}';
+    return 'Hata: ${errorStr.length > 80 ? '${errorStr.substring(0, 80)}...' : errorStr}';
   }
 
   @override
   Future<List<String>> listAvailableModels() async {
     final apiKey = _remoteConfig.getString('gemini_api_key');
-    print("-----------------------------------------------------------");
-    print(apiKey);
-    print("-----------------------------------------------------------");
 
     if (apiKey.isEmpty) {
       // Try to fetch one more time urgently
@@ -451,7 +448,7 @@ class GeminiAiService implements AiService {
 
         debugPrint('Model check failed for ${modelInfo.id}: $e');
         errors.add(
-          '${modelInfo.displayName}: ${cleanErr.length > 50 ? cleanErr.substring(0, 50) + '...' : cleanErr}',
+          '${modelInfo.displayName}: ${cleanErr.length > 50 ? '${cleanErr.substring(0, 50)}...' : cleanErr}',
         );
       }
     }

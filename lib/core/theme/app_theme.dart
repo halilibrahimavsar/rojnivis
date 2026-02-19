@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../constants/app_constants.dart';
+import 'page_studio_models.dart';
 
 
 enum AppThemePreset {
@@ -159,22 +160,34 @@ class AppTheme {
   static ThemeData getLightTheme(
     String fontFamily, {
     String preset = ThemePresets.defaultPreset,
+    PageVisualFamily pageVisualFamily = PageVisualFamily.classic,
+    VintagePaperVariant vintagePaperVariant = VintagePaperVariant.parchment,
+    AnimationIntensity animationIntensity = AnimationIntensity.subtle,
   }) {
     return _buildTheme(
       brightness: Brightness.light,
       fontFamily: fontFamily,
       presetId: preset,
+      pageVisualFamily: pageVisualFamily,
+      vintagePaperVariant: vintagePaperVariant,
+      animationIntensity: animationIntensity,
     );
   }
 
   static ThemeData getDarkTheme(
     String fontFamily, {
     String preset = ThemePresets.defaultPreset,
+    PageVisualFamily pageVisualFamily = PageVisualFamily.classic,
+    VintagePaperVariant vintagePaperVariant = VintagePaperVariant.parchment,
+    AnimationIntensity animationIntensity = AnimationIntensity.subtle,
   }) {
     return _buildTheme(
       brightness: Brightness.dark,
       fontFamily: fontFamily,
       presetId: preset,
+      pageVisualFamily: pageVisualFamily,
+      vintagePaperVariant: vintagePaperVariant,
+      animationIntensity: animationIntensity,
     );
   }
 
@@ -182,25 +195,44 @@ class AppTheme {
     required Brightness brightness,
     required String fontFamily,
     required String presetId,
+    required PageVisualFamily pageVisualFamily,
+    required VintagePaperVariant vintagePaperVariant,
+    required AnimationIntensity animationIntensity,
   }) {
     final preset = AppThemePresetX.fromId(presetId);
     final palette = _paletteFor(preset);
+    final useVintage = pageVisualFamily == PageVisualFamily.vintage;
 
     final baseScheme = ColorScheme.fromSeed(
       seedColor: palette.seed,
       brightness: brightness,
     ).copyWith(secondary: palette.secondary, tertiary: palette.tertiary);
 
-    final background =
+    var background =
         brightness == Brightness.light
             ? palette.backgroundLight
             : palette.backgroundDark;
-    final surface =
+    var surface =
         brightness == Brightness.light
             ? palette.surfaceLight
             : palette.surfaceDark;
 
-    final colorScheme = baseScheme.copyWith(surface: surface);
+    if (useVintage) {
+      final vintage = _vintagePaletteFor(vintagePaperVariant, brightness);
+      background = vintage.background;
+      surface = vintage.surface;
+    }
+
+    final colorScheme = baseScheme.copyWith(
+      surface: surface,
+      surfaceContainerHighest:
+          useVintage
+              ? Color.alphaBlend(
+                const Color(0xFF6D4C41).withValues(alpha: 0.10),
+                surface,
+              )
+              : null,
+    );
 
     final baseTextTheme = getTextTheme(fontFamily);
     final textTheme = _tuneTextTheme(
@@ -220,6 +252,14 @@ class AppTheme {
             ? Color.alphaBlend(
               (brightness == Brightness.light ? Colors.white : Colors.black)
                   .withValues(alpha: 0.16),
+              colorScheme.surface,
+            )
+            : useVintage
+            ? Color.alphaBlend(
+              (brightness == Brightness.light
+                      ? const Color(0xFFAD8756)
+                      : const Color(0xFFD6B88A))
+                  .withValues(alpha: brightness == Brightness.light ? 0.08 : 0.06),
               colorScheme.surface,
             )
             : colorScheme.surface;
@@ -263,7 +303,12 @@ class AppTheme {
       colorScheme: colorScheme,
       scaffoldBackgroundColor: background,
       extensions: <ThemeExtension<dynamic>>[
-        AppThemeStyle(preset: preset),
+        AppThemeStyle(
+          preset: preset,
+          pageVisualFamily: pageVisualFamily,
+          vintagePaperVariant: vintagePaperVariant,
+          animationIntensity: animationIntensity,
+        ),
       ],
       textTheme: textTheme,
       appBarTheme: AppBarTheme(
@@ -496,6 +541,49 @@ class AppTheme {
         );
     }
   }
+
+  static _VintagePalette _vintagePaletteFor(
+    VintagePaperVariant variant,
+    Brightness brightness,
+  ) {
+    if (brightness == Brightness.dark) {
+      switch (variant) {
+        case VintagePaperVariant.sepiaDiary:
+          return const _VintagePalette(
+            background: Color(0xFF1D1712),
+            surface: Color(0xFF2A221B),
+          );
+        case VintagePaperVariant.pressedFloral:
+          return const _VintagePalette(
+            background: Color(0xFF19160F),
+            surface: Color(0xFF262117),
+          );
+        case VintagePaperVariant.parchment:
+          return const _VintagePalette(
+            background: Color(0xFF18140F),
+            surface: Color(0xFF241E16),
+          );
+      }
+    }
+
+    switch (variant) {
+      case VintagePaperVariant.sepiaDiary:
+        return const _VintagePalette(
+          background: Color(0xFFF3E8D8),
+          surface: Color(0xFFF8EDDD),
+        );
+      case VintagePaperVariant.pressedFloral:
+        return const _VintagePalette(
+          background: Color(0xFFF2E9D8),
+          surface: Color(0xFFF7EEDD),
+        );
+      case VintagePaperVariant.parchment:
+        return const _VintagePalette(
+          background: Color(0xFFF1E6D0),
+          surface: Color(0xFFF8ECD7),
+        );
+    }
+  }
 }
 
 class _ThemePalette {
@@ -518,18 +606,44 @@ class _ThemePalette {
   final Color surfaceDark;
 }
 
+class _VintagePalette {
+  const _VintagePalette({required this.background, required this.surface});
+
+  final Color background;
+  final Color surface;
+}
+
 @immutable
 class AppThemeStyle extends ThemeExtension<AppThemeStyle> {
-  const AppThemeStyle({required this.preset});
+  const AppThemeStyle({
+    required this.preset,
+    required this.pageVisualFamily,
+    required this.vintagePaperVariant,
+    required this.animationIntensity,
+  });
 
   final AppThemePreset preset;
+  final PageVisualFamily pageVisualFamily;
+  final VintagePaperVariant vintagePaperVariant;
+  final AnimationIntensity animationIntensity;
 
   bool get isGlass => preset == AppThemePreset.glass;
   bool get isNeomorphic => preset == AppThemePreset.neomorphic;
+  bool get isVintage => pageVisualFamily == PageVisualFamily.vintage;
 
   @override
-  AppThemeStyle copyWith({AppThemePreset? preset}) {
-    return AppThemeStyle(preset: preset ?? this.preset);
+  AppThemeStyle copyWith({
+    AppThemePreset? preset,
+    PageVisualFamily? pageVisualFamily,
+    VintagePaperVariant? vintagePaperVariant,
+    AnimationIntensity? animationIntensity,
+  }) {
+    return AppThemeStyle(
+      preset: preset ?? this.preset,
+      pageVisualFamily: pageVisualFamily ?? this.pageVisualFamily,
+      vintagePaperVariant: vintagePaperVariant ?? this.vintagePaperVariant,
+      animationIntensity: animationIntensity ?? this.animationIntensity,
+    );
   }
 
   @override
@@ -538,6 +652,14 @@ class AppThemeStyle extends ThemeExtension<AppThemeStyle> {
     double t,
   ) {
     if (other is! AppThemeStyle) return this;
-    return t < 0.5 ? this : other;
+    return AppThemeStyle(
+      preset: t < 0.5 ? preset : other.preset,
+      pageVisualFamily:
+          t < 0.5 ? pageVisualFamily : other.pageVisualFamily,
+      vintagePaperVariant:
+          t < 0.5 ? vintagePaperVariant : other.vintagePaperVariant,
+      animationIntensity:
+          t < 0.5 ? animationIntensity : other.animationIntensity,
+    );
   }
 }

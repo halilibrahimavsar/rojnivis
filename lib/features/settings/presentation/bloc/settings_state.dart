@@ -19,6 +19,9 @@ class SettingsLoaded extends SettingsState {
   final bool showAttachmentBackdrop;
   final int notebookCoverColor;
   final String notebookCoverTexture;
+  final String pageVisualFamily;
+  final String vintagePaperVariant;
+  final String animationIntensity;
 
   const SettingsLoaded({
     required this.themeMode,
@@ -28,6 +31,9 @@ class SettingsLoaded extends SettingsState {
     required this.showAttachmentBackdrop,
     required this.notebookCoverColor,
     required this.notebookCoverTexture,
+    required this.pageVisualFamily,
+    required this.vintagePaperVariant,
+    required this.animationIntensity,
   });
 
   SettingsLoaded copyWith({
@@ -38,6 +44,9 @@ class SettingsLoaded extends SettingsState {
     bool? showAttachmentBackdrop,
     int? notebookCoverColor,
     String? notebookCoverTexture,
+    String? pageVisualFamily,
+    String? vintagePaperVariant,
+    String? animationIntensity,
   }) {
     return SettingsLoaded(
       themeMode: themeMode ?? this.themeMode,
@@ -48,6 +57,9 @@ class SettingsLoaded extends SettingsState {
           showAttachmentBackdrop ?? this.showAttachmentBackdrop,
       notebookCoverColor: notebookCoverColor ?? this.notebookCoverColor,
       notebookCoverTexture: notebookCoverTexture ?? this.notebookCoverTexture,
+      pageVisualFamily: pageVisualFamily ?? this.pageVisualFamily,
+      vintagePaperVariant: vintagePaperVariant ?? this.vintagePaperVariant,
+      animationIntensity: animationIntensity ?? this.animationIntensity,
     );
   }
 
@@ -60,5 +72,8 @@ class SettingsLoaded extends SettingsState {
     showAttachmentBackdrop,
     notebookCoverColor,
     notebookCoverTexture,
+    pageVisualFamily,
+    vintagePaperVariant,
+    animationIntensity,
   ];
 }

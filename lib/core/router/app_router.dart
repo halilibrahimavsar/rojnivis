@@ -5,6 +5,7 @@ import '../../features/journal/presentation/pages/add_entry_page.dart';
 import '../../features/journal/presentation/pages/entry_detail_page.dart';
 import '../../features/categories/presentation/pages/categories_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
+import '../../features/settings/presentation/pages/page_studio_page.dart';
 import '../../features/mindmap/presentation/pages/mind_map_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../features/settings/presentation/pages/local_auth_settings_page.dart';
@@ -81,6 +82,14 @@ class AppRouter {
                     (context, state) => PageFlipTransitionPage(
                       key: state.pageKey,
                       child: const RemoteAuthSettingsPage(),
+                    ),
+              ),
+              GoRoute(
+                path: 'page-studio',
+                pageBuilder:
+                    (context, state) => PageFlipTransitionPage(
+                      key: state.pageKey,
+                      child: const PageStudioPage(),
                     ),
               ),
             ],

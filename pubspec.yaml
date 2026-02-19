@@ -89,6 +89,7 @@ flutter:
     - assets/translations/
     - assets/images/
     - assets/icons/
+    - assets/stickers/
     - assets/sounds/
 
 flutter_native_splash:

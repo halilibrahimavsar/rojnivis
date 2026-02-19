@@ -6,10 +6,17 @@ import 'package:flutter/physics.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../../../core/theme/page_studio_models.dart';
+
 class BookOpeningAnimation extends StatefulWidget {
-  const BookOpeningAnimation({super.key, required this.onAnimationComplete});
+  const BookOpeningAnimation({
+    super.key,
+    required this.onAnimationComplete,
+    this.intensity = AnimationIntensity.subtle,
+  });
 
   final VoidCallback onAnimationComplete;
+  final AnimationIntensity intensity;
 
   @override
   State<BookOpeningAnimation> createState() => _BookOpeningAnimationState();
@@ -59,11 +66,41 @@ class _BookOpeningAnimationState extends State<BookOpeningAnimation>
     );
     _ambientController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 10),
-    )..repeat();
+      duration: _ambientDurationFor(widget.intensity),
+    );
+    _syncAmbientAnimation();
 
     _penPhysicsTicker = createTicker(_tickPenPhysics);
     _runSequence();
+  }
+
+  @override
+  void didUpdateWidget(covariant BookOpeningAnimation oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.intensity != widget.intensity) {
+      _ambientController.duration = _ambientDurationFor(widget.intensity);
+      _syncAmbientAnimation();
+    }
+  }
+
+  Duration _ambientDurationFor(AnimationIntensity intensity) {
+    switch (intensity) {
+      case AnimationIntensity.off:
+        return const Duration(seconds: 18);
+      case AnimationIntensity.subtle:
+        return const Duration(seconds: 12);
+      case AnimationIntensity.cinematic:
+        return const Duration(seconds: 8);
+    }
+  }
+
+  void _syncAmbientAnimation() {
+    if (widget.intensity == AnimationIntensity.off) {
+      _ambientController.stop();
+      _ambientController.value = 0.0;
+      return;
+    }
+    _ambientController.repeat();
   }
 
   Future<void> _runSequence() async {
@@ -245,7 +282,10 @@ class _BookOpeningAnimationState extends State<BookOpeningAnimation>
             final writingProgress = _handwritingProgress(
               _writingController.value,
             );
-            final ambientTime = _ambientController.value;
+            final ambientTime =
+                widget.intensity == AnimationIntensity.off
+                    ? 0.0
+                    : _ambientController.value;
 
             return Stack(
               fit: StackFit.expand,
@@ -254,6 +294,7 @@ class _BookOpeningAnimationState extends State<BookOpeningAnimation>
                   painter: _SplashBackgroundPainter(
                     openProgress: openProgress,
                     ambientTime: ambientTime,
+                    intensity: widget.intensity,
                   ),
                 ),
                 Align(
@@ -654,10 +695,12 @@ class _SplashBackgroundPainter extends CustomPainter {
   const _SplashBackgroundPainter({
     required this.openProgress,
     required this.ambientTime,
+    required this.intensity,
   });
 
   final double openProgress;
   final double ambientTime;
+  final AnimationIntensity intensity;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -700,16 +743,28 @@ class _SplashBackgroundPainter extends CustomPainter {
     );
 
     // Dust motes
+    final particleCount = switch (intensity) {
+      AnimationIntensity.off => 0,
+      AnimationIntensity.subtle => 20,
+      AnimationIntensity.cinematic => 46,
+    };
+    final driftScale = intensity == AnimationIntensity.cinematic ? 1.6 : 1.0;
+    if (particleCount == 0) return;
+
     final particlePaint = Paint();
     final drift = ambientTime * math.pi * 2.0;
-    for (var i = 0; i < 30; i++) {
+    for (var i = 0; i < particleCount; i++) {
       final seed = i + 1;
       final px = _rand(seed * 13, 0.31) * size.width;
       final py = _rand(seed * 29, 1.87) * size.height;
       final dx =
-          math.sin(drift + (seed * 0.73)) * (10 + _rand(seed, 2.41) * 10);
+          math.sin(drift + (seed * 0.73)) *
+          (10 + _rand(seed, 2.41) * 10) *
+          driftScale;
       final dy =
-          math.cos((drift * 0.8) + (seed * 0.61)) * (5 + _rand(seed, 3.11) * 5);
+          math.cos((drift * 0.8) + (seed * 0.61)) *
+          (5 + _rand(seed, 3.11) * 5) *
+          driftScale;
       final alpha = 0.04 + (_rand(seed, 4.19) * 0.1) + (openProgress * 0.02);
       final radius = 1.0 + _rand(seed, 5.93) * 2.0;
 
@@ -728,7 +783,8 @@ class _SplashBackgroundPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _SplashBackgroundPainter oldDelegate) {
     return oldDelegate.openProgress != openProgress ||
-        oldDelegate.ambientTime != ambientTime;
+        oldDelegate.ambientTime != ambientTime ||
+        oldDelegate.intensity != intensity;
   }
 }
 

@@ -14,6 +14,7 @@ import 'core/constants/app_constants.dart';
 import 'core/errors/error_handler.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/page_studio_models.dart';
 import 'di/injection.dart';
 import 'features/categories/data/models/category_model.dart';
 import 'features/categories/presentation/bloc/category_bloc.dart';
@@ -87,6 +88,7 @@ Future<void> _openHiveBoxes() async {
   await Hive.openBox<CategoryModel>(CategoryModel.boxName);
   await Hive.openBox<JournalEntryModel>(JournalEntryModel.boxName);
   await Hive.openBox<MindMapNode>(mindMapsBoxName);
+  await Hive.openBox<String>(StorageKeys.entryDecorationsBox);
 }
 
 /// Seeds default categories if the categories box is empty.
@@ -187,10 +189,28 @@ class _AppConfiguration extends StatelessWidget {
           theme: AppTheme.getLightTheme(
             settings.fontFamily,
             preset: settings.themePreset,
+            pageVisualFamily: PageVisualFamilyX.fromId(
+              settings.pageVisualFamily,
+            ),
+            vintagePaperVariant: VintagePaperVariantX.fromId(
+              settings.vintagePaperVariant,
+            ),
+            animationIntensity: AnimationIntensityX.fromId(
+              settings.animationIntensity,
+            ),
           ),
           darkTheme: AppTheme.getDarkTheme(
             settings.fontFamily,
             preset: settings.themePreset,
+            pageVisualFamily: PageVisualFamilyX.fromId(
+              settings.pageVisualFamily,
+            ),
+            vintagePaperVariant: VintagePaperVariantX.fromId(
+              settings.vintagePaperVariant,
+            ),
+            animationIntensity: AnimationIntensityX.fromId(
+              settings.animationIntensity,
+            ),
           ),
           themeMode: settings.themeMode,
           routerConfig: AppRouter.router,
@@ -215,6 +235,9 @@ class _AppConfiguration extends StatelessWidget {
         locale: state.locale,
         fontFamily: state.fontFamily,
         themePreset: state.themePreset,
+        pageVisualFamily: state.pageVisualFamily,
+        vintagePaperVariant: state.vintagePaperVariant,
+        animationIntensity: state.animationIntensity,
       );
     }
 
@@ -223,6 +246,9 @@ class _AppConfiguration extends StatelessWidget {
       locale: null,
       fontFamily: AppDefaults.defaultFontFamily,
       themePreset: AppDefaults.defaultThemePreset,
+      pageVisualFamily: AppDefaults.defaultPageVisualFamily,
+      vintagePaperVariant: AppDefaults.defaultVintagePaperVariant,
+      animationIntensity: AppDefaults.defaultAnimationIntensity,
     );
   }
 }
@@ -234,10 +260,16 @@ class _SettingsData {
     required this.locale,
     required this.fontFamily,
     required this.themePreset,
+    required this.pageVisualFamily,
+    required this.vintagePaperVariant,
+    required this.animationIntensity,
   });
 
   final ThemeMode themeMode;
   final Locale? locale;
   final String fontFamily;
   final String themePreset;
+  final String pageVisualFamily;
+  final String vintagePaperVariant;
+  final String animationIntensity;
 }

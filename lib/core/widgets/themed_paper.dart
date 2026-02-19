@@ -4,6 +4,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
+import '../theme/page_studio_models.dart';
 
 class ThemedPaper extends StatefulWidget {
   const ThemedPaper({
@@ -48,6 +49,7 @@ class ThemedBackdrop extends StatefulWidget {
 class _ThemedBackdropState extends State<ThemedBackdrop>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+  bool _isRepeating = false;
 
   @override
   void initState() {
@@ -56,20 +58,37 @@ class _ThemedBackdropState extends State<ThemedBackdrop>
       vsync: this,
       duration: const Duration(seconds: 22),
     );
-    if (widget.animated) {
-      _controller.repeat();
-    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncAnimationState();
   }
 
   @override
   void didUpdateWidget(covariant ThemedBackdrop oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.animated != oldWidget.animated) {
-      if (widget.animated) {
-        _controller.repeat();
-      } else {
-        _controller.stop();
-      }
+    _syncAnimationState();
+  }
+
+  void _syncAnimationState() {
+    final intensity =
+        Theme.of(context).extension<AppThemeStyle>()?.animationIntensity ??
+        AnimationIntensity.subtle;
+    _controller.duration = switch (intensity) {
+      AnimationIntensity.off => const Duration(seconds: 24),
+      AnimationIntensity.subtle => const Duration(seconds: 26),
+      AnimationIntensity.cinematic => const Duration(seconds: 12),
+    };
+    final shouldAnimate = widget.animated && intensity.isAnimated;
+    if (shouldAnimate == _isRepeating) return;
+    _isRepeating = shouldAnimate;
+    if (shouldAnimate) {
+      _controller.repeat();
+    } else {
+      _controller.stop();
+      _controller.value = 0.0;
     }
   }
 
@@ -83,28 +102,48 @@ class _ThemedBackdropState extends State<ThemedBackdrop>
   Widget build(BuildContext context) {
     final style = Theme.of(context).extension<AppThemeStyle>();
     final preset = style?.preset ?? AppThemePreset.defaultPreset;
+    final visualFamily = style?.pageVisualFamily ?? PageVisualFamily.classic;
+    final variant =
+        style?.vintagePaperVariant ?? VintagePaperVariant.parchment;
+    final intensity = style?.animationIntensity ?? AnimationIntensity.subtle;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final spec = _paperSpecFor(preset, isDark);
+    final vintageSpec = _vintagePaperSpecFor(variant, isDark);
 
     return IgnorePointer(
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
-          final t = widget.animated ? _controller.value : 0.0;
+          final t = widget.animated && intensity.isAnimated
+              ? _controller.value
+              : 0.0;
           final content = Stack(
             children: [
               Positioned.fill(
                 child: DecoratedBox(
                   decoration: BoxDecoration(
-                    color: spec.base,
-                    gradient: _buildGradient(spec, t),
+                    color:
+                        visualFamily == PageVisualFamily.vintage
+                            ? vintageSpec.base
+                            : spec.base,
+                    gradient:
+                        visualFamily == PageVisualFamily.vintage
+                            ? _buildVintageGradient(vintageSpec, t, intensity)
+                            : _buildGradient(spec, t),
                   ),
                 ),
               ),
               Positioned.fill(
                 child: RepaintBoundary(
                   child: CustomPaint(
-                    painter: _PaperEffectPainter(spec: spec, progress: t),
+                    painter:
+                        visualFamily == PageVisualFamily.vintage
+                            ? _VintageBackdropPainter(
+                              spec: vintageSpec,
+                              progress: t,
+                              intensity: intensity,
+                            )
+                            : _PaperEffectPainter(spec: spec, progress: t),
                   ),
                 ),
               ),
@@ -150,6 +189,7 @@ class _ThemedBackdropState extends State<ThemedBackdrop>
 class _ThemedPaperState extends State<ThemedPaper>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
+  bool _isRepeating = false;
 
   @override
   void initState() {
@@ -158,20 +198,37 @@ class _ThemedPaperState extends State<ThemedPaper>
       vsync: this,
       duration: const Duration(seconds: 18),
     );
-    if (widget.animated) {
-      _controller.repeat();
-    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncAnimationState();
   }
 
   @override
   void didUpdateWidget(covariant ThemedPaper oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.animated != oldWidget.animated) {
-      if (widget.animated) {
-        _controller.repeat();
-      } else {
-        _controller.stop();
-      }
+    _syncAnimationState();
+  }
+
+  void _syncAnimationState() {
+    final intensity =
+        Theme.of(context).extension<AppThemeStyle>()?.animationIntensity ??
+        AnimationIntensity.subtle;
+    _controller.duration = switch (intensity) {
+      AnimationIntensity.off => const Duration(seconds: 22),
+      AnimationIntensity.subtle => const Duration(seconds: 22),
+      AnimationIntensity.cinematic => const Duration(seconds: 10),
+    };
+    final shouldAnimate = widget.animated && intensity.isAnimated;
+    if (shouldAnimate == _isRepeating) return;
+    _isRepeating = shouldAnimate;
+    if (shouldAnimate) {
+      _controller.repeat();
+    } else {
+      _controller.stop();
+      _controller.value = 0.0;
     }
   }
 
@@ -185,8 +242,13 @@ class _ThemedPaperState extends State<ThemedPaper>
   Widget build(BuildContext context) {
     final style = Theme.of(context).extension<AppThemeStyle>();
     final preset = style?.preset ?? AppThemePreset.defaultPreset;
+    final visualFamily = style?.pageVisualFamily ?? PageVisualFamily.classic;
+    final variant =
+        style?.vintagePaperVariant ?? VintagePaperVariant.parchment;
+    final intensity = style?.animationIntensity ?? AnimationIntensity.subtle;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final spec = _paperSpecFor(preset, isDark);
+    final vintageSpec = _vintagePaperSpecFor(variant, isDark);
 
     final shadowColor =
         isDark
@@ -218,25 +280,41 @@ class _ThemedPaperState extends State<ThemedPaper>
           animation: _controller,
           child: content,
           builder: (context, child) {
-            final t = widget.animated ? _controller.value : 0.0;
+            final t = widget.animated && intensity.isAnimated
+                ? _controller.value
+                : 0.0;
             return Stack(
               children: [
                 Positioned.fill(
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: spec.base,
-                      gradient: _buildGradient(spec, t),
+                      color:
+                          visualFamily == PageVisualFamily.vintage
+                              ? vintageSpec.base
+                              : spec.base,
+                      gradient:
+                          visualFamily == PageVisualFamily.vintage
+                              ? _buildVintageGradient(vintageSpec, t, intensity)
+                              : _buildGradient(spec, t),
                     ),
                   ),
                 ),
                 Positioned.fill(
                   child: RepaintBoundary(
                     child: CustomPaint(
-                      painter: _PaperEffectPainter(spec: spec, progress: t),
+                      painter:
+                          visualFamily == PageVisualFamily.vintage
+                              ? _VintagePaperPainter(
+                                spec: vintageSpec,
+                                progress: t,
+                                intensity: intensity,
+                                drawLines: widget.lined,
+                              )
+                              : _PaperEffectPainter(spec: spec, progress: t),
                     ),
                   ),
                 ),
-                if (widget.lined)
+                if (widget.lined && visualFamily != PageVisualFamily.vintage)
                   Positioned.fill(
                     child: CustomPaint(
                       painter: _PaperLinesPainter(lineColor: spec.lineColor),
@@ -441,6 +519,306 @@ Gradient _buildGradient(_PaperSpec spec, double t) {
     end: Alignment(0.9 - drift, 1.0),
     colors: spec.gradient,
   );
+}
+
+class _VintagePaperSpec {
+  const _VintagePaperSpec({
+    required this.base,
+    required this.gradientA,
+    required this.gradientB,
+    required this.foxing,
+    required this.edgeTint,
+    required this.lineColor,
+    required this.floralTint,
+  });
+
+  final Color base;
+  final Color gradientA;
+  final Color gradientB;
+  final Color foxing;
+  final Color edgeTint;
+  final Color lineColor;
+  final Color floralTint;
+}
+
+_VintagePaperSpec _vintagePaperSpecFor(
+  VintagePaperVariant variant,
+  bool isDark,
+) {
+  if (isDark) {
+    switch (variant) {
+      case VintagePaperVariant.sepiaDiary:
+        return const _VintagePaperSpec(
+          base: Color(0xFF2C241C),
+          gradientA: Color(0xFF2E251C),
+          gradientB: Color(0xFF201A14),
+          foxing: Color(0xFF7D634B),
+          edgeTint: Color(0xFF120F0C),
+          lineColor: Color(0x33D8C6A8),
+          floralTint: Color(0x338D7A63),
+        );
+      case VintagePaperVariant.pressedFloral:
+        return const _VintagePaperSpec(
+          base: Color(0xFF2A2519),
+          gradientA: Color(0xFF312B1C),
+          gradientB: Color(0xFF1F1A11),
+          foxing: Color(0xFF7A6A4B),
+          edgeTint: Color(0xFF110F0A),
+          lineColor: Color(0x33D8CFAD),
+          floralTint: Color(0x445E7E57),
+        );
+      case VintagePaperVariant.parchment:
+        return const _VintagePaperSpec(
+          base: Color(0xFF2C261A),
+          gradientA: Color(0xFF312A1D),
+          gradientB: Color(0xFF211A12),
+          foxing: Color(0xFF7A6547),
+          edgeTint: Color(0xFF100E09),
+          lineColor: Color(0x33D6C7A2),
+          floralTint: Color(0x336E6753),
+        );
+    }
+  }
+
+  switch (variant) {
+    case VintagePaperVariant.sepiaDiary:
+      return const _VintagePaperSpec(
+        base: Color(0xFFF1E4CE),
+        gradientA: Color(0xFFF5E9D6),
+        gradientB: Color(0xFFE7D6B8),
+        foxing: Color(0xFFA9885D),
+        edgeTint: Color(0xFF7A5F3E),
+        lineColor: Color(0x337A6243),
+        floralTint: Color(0x337B5D3C),
+      );
+    case VintagePaperVariant.pressedFloral:
+      return const _VintagePaperSpec(
+        base: Color(0xFFF0E7D5),
+        gradientA: Color(0xFFF7EDDE),
+        gradientB: Color(0xFFE4D7BE),
+        foxing: Color(0xFF9C835F),
+        edgeTint: Color(0xFF6A5A43),
+        lineColor: Color(0x336A5E4C),
+        floralTint: Color(0x335C7F4E),
+      );
+    case VintagePaperVariant.parchment:
+      return const _VintagePaperSpec(
+        base: Color(0xFFF1E6CE),
+        gradientA: Color(0xFFF9EEDB),
+        gradientB: Color(0xFFE7D8BB),
+        foxing: Color(0xFFA18159),
+        edgeTint: Color(0xFF71593A),
+        lineColor: Color(0x336E5A3E),
+        floralTint: Color(0x335E5C55),
+      );
+  }
+}
+
+Gradient _buildVintageGradient(
+  _VintagePaperSpec spec,
+  double t,
+  AnimationIntensity intensity,
+) {
+  final amplitude = switch (intensity) {
+    AnimationIntensity.off => 0.0,
+    AnimationIntensity.subtle => 0.06,
+    AnimationIntensity.cinematic => 0.12,
+  };
+  final drift = sin(t * pi * 2) * amplitude;
+  return LinearGradient(
+    begin: Alignment(-0.9 + drift, -1.0),
+    end: Alignment(0.9 - drift, 1.0),
+    colors: [spec.gradientA, spec.base, spec.gradientB],
+    stops: const [0.0, 0.55, 1.0],
+  );
+}
+
+class _VintageBackdropPainter extends CustomPainter {
+  const _VintageBackdropPainter({
+    required this.spec,
+    required this.progress,
+    required this.intensity,
+  });
+
+  final _VintagePaperSpec spec;
+  final double progress;
+  final AnimationIntensity intensity;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final density = switch (intensity) {
+      AnimationIntensity.off => 0,
+      AnimationIntensity.subtle => 22,
+      AnimationIntensity.cinematic => 38,
+    };
+
+    final grainPaint =
+        Paint()
+          ..color = Colors.black.withValues(alpha: 0.025)
+          ..style = PaintingStyle.fill;
+    for (int i = 0; i < 340; i++) {
+      final x = _noise(i, 1.1) * size.width;
+      final y = _noise(i, 2.3) * size.height;
+      canvas.drawCircle(Offset(x, y), 0.7, grainPaint);
+    }
+
+    if (density == 0) return;
+
+    final dustPaint = Paint();
+    final drift = progress * pi * 2;
+    for (int i = 0; i < density; i++) {
+      final px = _noise(i * 17, 0.41) * size.width;
+      final py = _noise(i * 31, 0.97) * size.height;
+      final dx = sin(drift + i * 0.3) * (intensity == AnimationIntensity.cinematic ? 10 : 5);
+      final dy = cos(drift * 0.75 + i * 0.2) * (intensity == AnimationIntensity.cinematic ? 5 : 2);
+      dustPaint.color = Colors.white.withValues(
+        alpha: intensity == AnimationIntensity.cinematic ? 0.065 : 0.04,
+      );
+      canvas.drawCircle(Offset(px + dx, py + dy), 1.4, dustPaint);
+    }
+  }
+
+  double _noise(int seed, double shift) {
+    final v = sin((seed * 12.9898) + shift) * 43758.5453;
+    return v - v.floorToDouble();
+  }
+
+  @override
+  bool shouldRepaint(covariant _VintageBackdropPainter oldDelegate) {
+    return oldDelegate.progress != progress ||
+        oldDelegate.intensity != intensity ||
+        oldDelegate.spec != spec;
+  }
+}
+
+class _VintagePaperPainter extends CustomPainter {
+  const _VintagePaperPainter({
+    required this.spec,
+    required this.progress,
+    required this.intensity,
+    required this.drawLines,
+  });
+
+  final _VintagePaperSpec spec;
+  final double progress;
+  final AnimationIntensity intensity;
+  final bool drawLines;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final grainPaint =
+        Paint()
+          ..color = Colors.black.withValues(alpha: 0.03)
+          ..style = PaintingStyle.fill;
+    for (int i = 0; i < 620; i++) {
+      final x = _noise(i, 0.7) * size.width;
+      final y = _noise(i, 1.9) * size.height;
+      final radius = 0.4 + _noise(i, 2.8) * 0.7;
+      canvas.drawCircle(Offset(x, y), radius, grainPaint);
+    }
+
+    final foxingAlpha = switch (intensity) {
+      AnimationIntensity.off => 0.12,
+      AnimationIntensity.subtle => 0.16,
+      AnimationIntensity.cinematic => 0.22,
+    };
+    final foxingPaint =
+        Paint()
+          ..color = spec.foxing.withValues(alpha: foxingAlpha)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.8);
+    for (int i = 0; i < 24; i++) {
+      final x = _noise(i * 13, 0.3) * size.width;
+      final y = _noise(i * 29, 1.2) * size.height;
+      final r = 8 + _noise(i * 7, 2.1) * 18;
+      canvas.drawCircle(Offset(x, y), r, foxingPaint);
+    }
+
+    final edgeOverlay =
+        Paint()
+          ..shader = RadialGradient(
+            center: const Alignment(0, -0.1),
+            radius: 1.12,
+            colors: [
+              Colors.transparent,
+              spec.edgeTint.withValues(alpha: 0.18),
+            ],
+          ).createShader(Offset.zero & size);
+    canvas.drawRect(Offset.zero & size, edgeOverlay);
+
+    final foldPaint =
+        Paint()
+          ..color = spec.edgeTint.withValues(alpha: 0.08)
+          ..strokeWidth = 1.2;
+    final foldShift = intensity == AnimationIntensity.cinematic
+        ? sin(progress * pi * 2) * 1.2
+        : 0.0;
+    final foldX = size.width * 0.32 + foldShift;
+    canvas.drawLine(Offset(foldX, 0), Offset(foldX, size.height), foldPaint);
+
+    if (drawLines) {
+      final linePaint =
+          Paint()
+            ..color = spec.lineColor
+            ..strokeWidth = 1.0;
+      const topPadding = 64.0;
+      const lineStep = 28.0;
+      for (double y = topPadding; y < size.height; y += lineStep) {
+        canvas.drawLine(Offset(0, y), Offset(size.width, y), linePaint);
+      }
+      canvas.drawLine(
+        const Offset(48, 0),
+        Offset(48, size.height),
+        Paint()
+          ..color = spec.lineColor.withValues(alpha: 0.65)
+          ..strokeWidth = 1.3,
+      );
+    }
+
+    _drawFloralHints(canvas, size);
+  }
+
+  void _drawFloralHints(Canvas canvas, Size size) {
+    final petals =
+        Paint()
+          ..color = spec.floralTint.withValues(alpha: 0.26)
+          ..style = PaintingStyle.fill;
+    final stems =
+        Paint()
+          ..color = spec.floralTint.withValues(alpha: 0.20)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.2;
+    final accents = [
+      Offset(size.width * 0.88, size.height * 0.14),
+      Offset(size.width * 0.12, size.height * 0.82),
+      Offset(size.width * 0.78, size.height * 0.78),
+    ];
+
+    for (final c in accents) {
+      final stem = Path()
+        ..moveTo(c.dx - 10, c.dy + 16)
+        ..quadraticBezierTo(c.dx, c.dy + 6, c.dx + 14, c.dy + 22);
+      canvas.drawPath(stem, stems);
+      canvas.drawCircle(c, 5.5, petals);
+      canvas.drawCircle(
+        Offset(c.dx + 6, c.dy - 4),
+        3.5,
+        petals,
+      );
+    }
+  }
+
+  double _noise(int seed, double shift) {
+    final v = sin((seed * 12.9898) + shift) * 43758.5453;
+    return v - v.floorToDouble();
+  }
+
+  @override
+  bool shouldRepaint(covariant _VintagePaperPainter oldDelegate) {
+    return oldDelegate.progress != progress ||
+        oldDelegate.intensity != intensity ||
+        oldDelegate.drawLines != drawLines ||
+        oldDelegate.spec != spec;
+  }
 }
 
 class _PaperEffectPainter extends CustomPainter {

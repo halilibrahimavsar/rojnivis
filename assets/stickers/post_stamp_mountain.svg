@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128">
+  <rect x="16" y="16" width="96" height="96" fill="#d9e1e7" stroke="#5f6c79" stroke-width="4" stroke-dasharray="4 4"/>
+  <path d="M30 82l20-24 14 16 20-26 14 34z" fill="#60798f"/>
+  <text x="24" y="40" font-size="12" fill="#475a6c" font-family="serif">AIR</text>
+</svg>

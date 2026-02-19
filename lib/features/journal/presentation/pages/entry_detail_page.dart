@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -9,9 +11,13 @@ import '../../../../core/widgets/attachment_backdrop.dart';
 import '../../../../core/widgets/attachment_preview.dart';
 import '../../../../core/widgets/themed_paper.dart';
 import '../../data/models/journal_entry_model.dart';
+import '../../data/repositories/entry_decoration_repository_singleton.dart';
+import '../../domain/models/entry_sticker.dart';
 import '../bloc/journal_bloc.dart';
 import '../../../settings/presentation/bloc/settings_bloc.dart';
 import '../widgets/ai_summary_card.dart';
+import '../widgets/sticker_layer.dart';
+import '../widgets/sticker_picker_sheet.dart';
 import '../../../../core/services/ai_service.dart';
 import '../../../../di/injection.dart';
 
@@ -31,6 +37,41 @@ class EntryDetailPage extends StatefulWidget {
 class _EntryDetailPageState extends State<EntryDetailPage> {
   _EntryViewStyle _style = _EntryViewStyle.letter;
   bool _isSummarizing = false;
+  bool _isStickerEditMode = false;
+  final StickerLayerController _stickerController = StickerLayerController();
+  Timer? _stickerSaveDebounce;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadStickers();
+  }
+
+  @override
+  void dispose() {
+    _stickerSaveDebounce?.cancel();
+    _stickerController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadStickers() async {
+    final stickers = await entryDecorationRepository.getStickers(widget.entryId);
+    if (!mounted) return;
+    _stickerController.setStickers(stickers);
+  }
+
+  Future<void> _openStickerPicker() async {
+    final sticker = await showStickerPickerSheet(context);
+    if (!mounted || sticker == null) return;
+    _stickerController.addSticker(sticker.assetPath);
+  }
+
+  void _onStickersChanged(List<EntrySticker> stickers) {
+    _stickerSaveDebounce?.cancel();
+    _stickerSaveDebounce = Timer(const Duration(milliseconds: 300), () async {
+      await entryDecorationRepository.saveStickers(widget.entryId, stickers);
+    });
+  }
 
   Future<void> _summarizeEntry(JournalEntryModel entry) async {
     final aiService = getIt<AiService>();
@@ -201,7 +242,12 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
                                 ),
                               ),
                               onSelectionChanged: (selection) {
-                                setState(() => _style = selection.first);
+                                setState(() {
+                                  _style = selection.first;
+                                  if (_style == _EntryViewStyle.library) {
+                                    _isStickerEditMode = false;
+                                  }
+                                });
                               },
                             ),
                           ],
@@ -217,6 +263,9 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
                                     ? _LetterView(
                                       key: const ValueKey('letter'),
                                       entry: entry,
+                                      stickerController: _stickerController,
+                                      editable: _isStickerEditMode,
+                                      onStickersChanged: _onStickersChanged,
                                     )
                                     : _style == _EntryViewStyle.library
                                     ? _LibraryView(
@@ -226,6 +275,9 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
                                     : _NormalView(
                                       key: const ValueKey('normal'),
                                       entry: entry,
+                                      stickerController: _stickerController,
+                                      editable: _isStickerEditMode,
+                                      onStickersChanged: _onStickersChanged,
                                     ),
                           ),
                         ),
@@ -245,7 +297,7 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
                       IconButton(
                         onPressed:
                             () => context.push(
-                              '/add-entry?entryId=${widget.entryId}',
+                              '/home/add-entry?entryId=${widget.entryId}',
                             ),
                         icon: const Icon(Icons.edit_outlined),
                         tooltip: 'edit'.tr(),
@@ -255,6 +307,26 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
                         icon: const Icon(Icons.delete_outline),
                         tooltip: 'delete'.tr(),
                       ),
+                      if (_style != _EntryViewStyle.library)
+                        IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _isStickerEditMode = !_isStickerEditMode;
+                            });
+                          },
+                          icon: Icon(
+                            _isStickerEditMode
+                                ? Icons.check_circle_outline
+                                : Icons.edit_note_outlined,
+                          ),
+                          tooltip: 'sticker_edit_mode'.tr(),
+                        ),
+                      if (_style != _EntryViewStyle.library && _isStickerEditMode)
+                        IconButton(
+                          onPressed: _openStickerPicker,
+                          icon: const Icon(Icons.emoji_emotions_outlined),
+                          tooltip: 'add_sticker'.tr(),
+                        ),
                       const SizedBox(width: 4),
                     ],
           ),
@@ -425,22 +497,51 @@ class _Header extends StatelessWidget {
 }
 
 class _NormalView extends StatelessWidget {
-  const _NormalView({super.key, required this.entry});
+  const _NormalView({
+    super.key,
+    required this.entry,
+    required this.stickerController,
+    required this.editable,
+    required this.onStickersChanged,
+  });
 
   final JournalEntryModel entry;
+  final StickerLayerController stickerController;
+  final bool editable;
+  final ValueChanged<List<EntrySticker>> onStickersChanged;
 
   @override
   Widget build(BuildContext context) {
-    return _FullScreenSheet(
-      child: Text(entry.content, style: Theme.of(context).textTheme.bodyLarge),
+    return Stack(
+      children: [
+        _FullScreenSheet(
+          child: Text(entry.content, style: Theme.of(context).textTheme.bodyLarge),
+        ),
+        Positioned.fill(
+          child: StickerLayer(
+            controller: stickerController,
+            editable: editable,
+            onChanged: onStickersChanged,
+          ),
+        ),
+      ],
     );
   }
 }
 
 class _LetterView extends StatelessWidget {
-  const _LetterView({super.key, required this.entry});
+  const _LetterView({
+    super.key,
+    required this.entry,
+    required this.stickerController,
+    required this.editable,
+    required this.onStickersChanged,
+  });
 
   final JournalEntryModel entry;
+  final StickerLayerController stickerController;
+  final bool editable;
+  final ValueChanged<List<EntrySticker>> onStickersChanged;
 
   @override
   Widget build(BuildContext context) {
@@ -449,40 +550,51 @@ class _LetterView extends StatelessWidget {
     final signature =
         context.locale.languageCode == 'tr' ? 'Sevgiyle,' : 'With love,';
 
-    return _FullScreenSheet(
-      lined: true,
-      child: DefaultTextStyle.merge(
-        style: GoogleFonts.playfairDisplay(
-          textStyle: Theme.of(
-            context,
-          ).textTheme.bodyLarge?.copyWith(height: 1.7),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              salutation,
-              style: GoogleFonts.playfairDisplay(
-                textStyle: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-              ),
+    return Stack(
+      children: [
+        _FullScreenSheet(
+          lined: true,
+          child: DefaultTextStyle.merge(
+            style: GoogleFonts.playfairDisplay(
+              textStyle: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(height: 1.7),
             ),
-            const SizedBox(height: 12),
-            Text(entry.content),
-            const SizedBox(height: 18),
-            Text(
-              signature,
-              style: GoogleFonts.playfairDisplay(
-                textStyle: Theme.of(
-                  context,
-                ).textTheme.titleSmall?.copyWith(fontStyle: FontStyle.italic),
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  salutation,
+                  style: GoogleFonts.playfairDisplay(
+                    textStyle: Theme.of(
+                      context,
+                    ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(entry.content),
+                const SizedBox(height: 18),
+                Text(
+                  signature,
+                  style: GoogleFonts.playfairDisplay(
+                    textStyle: Theme.of(
+                      context,
+                    ).textTheme.titleSmall?.copyWith(fontStyle: FontStyle.italic),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
-      ),
+        Positioned.fill(
+          child: StickerLayer(
+            controller: stickerController,
+            editable: editable,
+            onChanged: onStickersChanged,
+          ),
+        ),
+      ],
     );
   }
 }

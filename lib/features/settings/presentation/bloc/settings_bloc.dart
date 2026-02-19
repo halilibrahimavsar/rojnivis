@@ -5,6 +5,7 @@ import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/theme/page_studio_models.dart';
 
 part 'settings_event.dart';
 part 'settings_state.dart';
@@ -20,6 +21,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<UpdateAttachmentBackdrop>(_onUpdateAttachmentBackdrop);
     on<UpdateNotebookCoverColor>(_onUpdateNotebookCoverColor);
     on<UpdateNotebookCoverTexture>(_onUpdateNotebookCoverTexture);
+    on<UpdatePageVisualFamily>(_onUpdatePageVisualFamily);
+    on<UpdateVintagePaperVariant>(_onUpdateVintagePaperVariant);
+    on<UpdateAnimationIntensity>(_onUpdateAnimationIntensity);
   }
 
   final SharedPreferences _prefs;
@@ -31,6 +35,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
   static const _attachmentBackdropKey = StorageKeys.attachmentBackdrop;
   static const _coverColorKey = StorageKeys.notebookCoverColor;
   static const _coverTextureKey = StorageKeys.notebookCoverTexture;
+  static const _pageVisualFamilyKey = StorageKeys.pageVisualFamily;
+  static const _vintagePaperVariantKey = StorageKeys.vintagePaperVariant;
+  static const _animationIntensityKey = StorageKeys.animationIntensity;
 
   Future<void> _onLoad(LoadSettings event, Emitter<SettingsState> emit) async {
     try {
@@ -50,6 +57,15 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       final notebookCoverTexture =
           _readString(_coverTextureKey) ??
           AppDefaults.defaultNotebookCoverTexture;
+      final pageVisualFamily =
+          _readString(_pageVisualFamilyKey) ??
+          AppDefaults.defaultPageVisualFamily;
+      final vintagePaperVariant =
+          _readString(_vintagePaperVariantKey) ??
+          AppDefaults.defaultVintagePaperVariant;
+      final animationIntensity =
+          _readString(_animationIntensityKey) ??
+          AppDefaults.defaultAnimationIntensity;
 
       final localeRaw =
           _readString(_localeKey) ??
@@ -66,6 +82,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           showAttachmentBackdrop: showAttachmentBackdrop,
           notebookCoverColor: notebookCoverColor,
           notebookCoverTexture: notebookCoverTexture,
+          pageVisualFamily: _sanitizePageVisualFamily(pageVisualFamily),
+          vintagePaperVariant: _sanitizeVintagePaperVariant(vintagePaperVariant),
+          animationIntensity: _sanitizeAnimationIntensity(animationIntensity),
         ),
       );
 
@@ -90,6 +109,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           showAttachmentBackdrop: AppDefaults.defaultAttachmentBackdrop,
           notebookCoverColor: AppDefaults.defaultNotebookCoverColor,
           notebookCoverTexture: AppDefaults.defaultNotebookCoverTexture,
+          pageVisualFamily: AppDefaults.defaultPageVisualFamily,
+          vintagePaperVariant: AppDefaults.defaultVintagePaperVariant,
+          animationIntensity: AppDefaults.defaultAnimationIntensity,
         ),
       );
     }
@@ -160,6 +182,36 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     emit(current.copyWith(notebookCoverTexture: event.texture));
   }
 
+  Future<void> _onUpdatePageVisualFamily(
+    UpdatePageVisualFamily event,
+    Emitter<SettingsState> emit,
+  ) async {
+    final current = _requireLoaded();
+    final normalized = _sanitizePageVisualFamily(event.pageVisualFamily);
+    await _prefs.setString(_pageVisualFamilyKey, normalized);
+    emit(current.copyWith(pageVisualFamily: normalized));
+  }
+
+  Future<void> _onUpdateVintagePaperVariant(
+    UpdateVintagePaperVariant event,
+    Emitter<SettingsState> emit,
+  ) async {
+    final current = _requireLoaded();
+    final normalized = _sanitizeVintagePaperVariant(event.vintagePaperVariant);
+    await _prefs.setString(_vintagePaperVariantKey, normalized);
+    emit(current.copyWith(vintagePaperVariant: normalized));
+  }
+
+  Future<void> _onUpdateAnimationIntensity(
+    UpdateAnimationIntensity event,
+    Emitter<SettingsState> emit,
+  ) async {
+    final current = _requireLoaded();
+    final normalized = _sanitizeAnimationIntensity(event.animationIntensity);
+    await _prefs.setString(_animationIntensityKey, normalized);
+    emit(current.copyWith(animationIntensity: normalized));
+  }
+
   SettingsLoaded _requireLoaded() {
     final state = this.state;
     if (state is SettingsLoaded) return state;
@@ -171,6 +223,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
       showAttachmentBackdrop: AppDefaults.defaultAttachmentBackdrop,
       notebookCoverColor: AppDefaults.defaultNotebookCoverColor,
       notebookCoverTexture: AppDefaults.defaultNotebookCoverTexture,
+      pageVisualFamily: AppDefaults.defaultPageVisualFamily,
+      vintagePaperVariant: AppDefaults.defaultVintagePaperVariant,
+      animationIntensity: AppDefaults.defaultAnimationIntensity,
     );
   }
 
@@ -240,5 +295,17 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     final value = _prefs.get(key);
     if (value is bool) return value;
     return null;
+  }
+
+  String _sanitizePageVisualFamily(String value) {
+    return PageVisualFamilyX.fromId(value).id;
+  }
+
+  String _sanitizeVintagePaperVariant(String value) {
+    return VintagePaperVariantX.fromId(value).id;
+  }
+
+  String _sanitizeAnimationIntensity(String value) {
+    return AnimationIntensityX.fromId(value).id;
   }
 }

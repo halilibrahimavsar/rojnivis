@@ -74,3 +74,29 @@ class UpdateNotebookCoverTexture extends SettingsEvent {
   List<Object?> get props => [texture];
 }
 
+class UpdatePageVisualFamily extends SettingsEvent {
+  final String pageVisualFamily;
+
+  const UpdatePageVisualFamily(this.pageVisualFamily);
+
+  @override
+  List<Object?> get props => [pageVisualFamily];
+}
+
+class UpdateVintagePaperVariant extends SettingsEvent {
+  final String vintagePaperVariant;
+
+  const UpdateVintagePaperVariant(this.vintagePaperVariant);
+
+  @override
+  List<Object?> get props => [vintagePaperVariant];
+}
+
+class UpdateAnimationIntensity extends SettingsEvent {
+  final String animationIntensity;
+
+  const UpdateAnimationIntensity(this.animationIntensity);
+
+  @override
+  List<Object?> get props => [animationIntensity];
+}

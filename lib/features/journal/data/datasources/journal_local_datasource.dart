@@ -1,6 +1,7 @@
 import 'package:hive/hive.dart';
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/constants/app_constants.dart';
 import '../models/journal_entry_model.dart';
 import '../../domain/models/filter_model.dart';
 
@@ -35,6 +36,7 @@ class JournalLocalDataSourceImpl implements JournalLocalDataSource {
   @override
   Future<void> deleteEntry(String entryId) async {
     await _box.delete(entryId);
+    await Hive.box<String>(StorageKeys.entryDecorationsBox).delete(entryId);
   }
 
   @override

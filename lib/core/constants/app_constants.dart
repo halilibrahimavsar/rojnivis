@@ -6,6 +6,8 @@ library;
 
 import 'package:flutter/material.dart';
 
+import '../theme/page_studio_models.dart';
+
 /// Animation and timing constants
 class AppDurations {
   const AppDurations._();
@@ -148,6 +150,10 @@ class AppDefaults {
   static const bool defaultAttachmentBackdrop = true;
   static const int defaultNotebookCoverColor = 0xFF2C3E50;
   static const String defaultNotebookCoverTexture = 'leather';
+  static const String defaultPageVisualFamily = PageVisualFamilyIds.classic;
+  static const String defaultVintagePaperVariant =
+      VintagePaperVariantIds.parchment;
+  static const String defaultAnimationIntensity = AnimationIntensityIds.subtle;
 
   /// Categories
   static const List<Map<String, dynamic>> defaultCategories = [
@@ -166,6 +172,7 @@ class StorageKeys {
   /// Hive box names
   static const String journalEntriesBox = 'journal_entries';
   static const String categoriesBox = 'categories';
+  static const String entryDecorationsBox = 'entry_decorations';
 
   /// SharedPreferences keys
   static const String themeMode = 'theme_mode';
@@ -175,6 +182,9 @@ class StorageKeys {
   static const String attachmentBackdrop = 'attachment_backdrop';
   static const String notebookCoverColor = 'notebook_cover_color';
   static const String notebookCoverTexture = 'notebook_cover_texture';
+  static const String pageVisualFamily = 'page_visual_family';
+  static const String vintagePaperVariant = 'vintage_paper_variant';
+  static const String animationIntensity = 'animation_intensity';
   static const String aiModel = 'ai_model';
 }
 

@@ -2,7 +2,7 @@ import 'package:get_it/get_it.dart';
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:unified_flutter_features/features/local_auth/data/local_auth_repository.dart';
-import 'package:unified_flutter_features/features/local_auth/data/shared_prefs_local_auth_repository.dart';
+import 'package:unified_flutter_features/features/local_auth/data/secure_local_auth_repository.dart';
 import 'package:unified_flutter_features/features/local_auth/presentation/bloc/login/local_auth_login_bloc.dart';
 import 'package:unified_flutter_features/features/local_auth/presentation/bloc/settings/local_auth_settings_bloc.dart';
 
@@ -31,7 +31,7 @@ abstract class ExternalDependenciesModule {
   // Local Auth Repository
   @lazySingleton
   LocalAuthRepository localAuthRepository(SharedPreferences prefs) {
-    return SharedPrefsLocalAuthRepository(prefs: prefs);
+    return SecureLocalAuthRepository(prefs: prefs);
   }
 
   // Local Auth Login Bloc

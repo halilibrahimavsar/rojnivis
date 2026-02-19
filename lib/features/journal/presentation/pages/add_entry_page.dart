@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'dart:ui' as ui;
 import 'package:easy_localization/easy_localization.dart';
@@ -5,11 +6,13 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/widgets/attachment_preview.dart';
+import '../../../../core/widgets/themed_paper.dart';
 import '../../../categories/data/models/category_model.dart';
 import '../../../categories/presentation/bloc/category_bloc.dart';
 import '../../../quick_questions/presentation/quick_question_card.dart';
@@ -18,7 +21,11 @@ import '../bloc/journal_bloc.dart';
 import '../widgets/audio_recorder_widget.dart';
 import '../widgets/sketch_canvas.dart';
 import '../../../../di/injection.dart';
+import '../../data/repositories/entry_decoration_repository_singleton.dart';
+import '../../domain/models/entry_sticker.dart';
 import '../widgets/ai_writing_sheet.dart';
+import '../widgets/sticker_layer.dart';
+import '../widgets/sticker_picker_sheet.dart';
 import '../../../../core/services/ai_service.dart';
 
 class AddEntryPage extends StatefulWidget {
@@ -40,12 +47,17 @@ class _AddEntryPageState extends State<AddEntryPage> {
   final List<String> _attachmentPaths = [];
 
   JournalEntryModel? _editingEntry;
+  late final String _workingEntryId;
+  final StickerLayerController _stickerController = StickerLayerController();
+  Timer? _stickerSaveDebounce;
   static const _compactDensity = VisualDensity(horizontal: -2, vertical: -2);
 
   @override
   void initState() {
     super.initState();
+    _workingEntryId = widget.entryId ?? const Uuid().v4();
     _hydrateIfEditing();
+    _loadStickers();
   }
 
   void _hydrateIfEditing() {
@@ -78,10 +90,18 @@ class _AddEntryPageState extends State<AddEntryPage> {
 
   @override
   void dispose() {
+    _stickerSaveDebounce?.cancel();
+    _stickerController.dispose();
     _titleController.dispose();
     _contentController.dispose();
     _tagsController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadStickers() async {
+    final stickers = await entryDecorationRepository.getStickers(_workingEntryId);
+    if (!mounted) return;
+    _stickerController.setStickers(stickers);
   }
 
   Future<void> _pickDateTime() async {
@@ -303,9 +323,11 @@ class _AddEntryPageState extends State<AddEntryPage> {
     }
 
     if (!mounted) return;
+    await _persistStickersNow();
+    if (!mounted) return;
 
     final entry = JournalEntryModel(
-      id: _editingEntry?.id ?? const Uuid().v4(),
+      id: _workingEntryId,
       title: _titleController.text.trim(),
       content: content,
       date: _selectedDate,
@@ -554,6 +576,34 @@ class _AddEntryPageState extends State<AddEntryPage> {
     );
   }
 
+  Future<void> _openStickerPicker() async {
+    final sticker = await showStickerPickerSheet(context);
+    if (!mounted || sticker == null) return;
+    _stickerController.addSticker(sticker.assetPath);
+  }
+
+  void _onStickerChanged(List<EntrySticker> stickers) {
+    _scheduleStickerSave(stickers);
+  }
+
+  void _scheduleStickerSave([List<EntrySticker>? stickers]) {
+    _stickerSaveDebounce?.cancel();
+    _stickerSaveDebounce = Timer(const Duration(milliseconds: 300), () async {
+      await entryDecorationRepository.saveStickers(
+        _workingEntryId,
+        stickers ?? _stickerController.stickers,
+      );
+    });
+  }
+
+  Future<void> _persistStickersNow() async {
+    _stickerSaveDebounce?.cancel();
+    await entryDecorationRepository.saveStickers(
+      _workingEntryId,
+      _stickerController.stickers,
+    );
+  }
+
   IconData _moodIcon(int index) {
     switch (index) {
       case 0:
@@ -601,16 +651,8 @@ class _AddEntryPageState extends State<AddEntryPage> {
       body: Stack(
         children: [
           // 1. Fullscreen Paper Background
-          Positioned.fill(
-            child: Container(
-              color: theme.scaffoldBackgroundColor,
-              child: CustomPaint(
-                painter: JournalPaperPainter(
-                  lineColor: colorScheme.outlineVariant.withValues(alpha: 0.3),
-                  marginColor: colorScheme.primary.withValues(alpha: 0.1),
-                ),
-              ),
-            ),
+          const Positioned.fill(
+            child: ThemedBackdrop(opacity: 1, blurSigma: 0, vignette: true),
           ),
 
           // 2. Main Content Area
@@ -628,40 +670,8 @@ class _AddEntryPageState extends State<AddEntryPage> {
                       children: [
                         _buildMetaSection(theme),
                         const SizedBox(height: 16),
-                        // Title Field
-                        TextField(
-                          controller: _titleController,
-                          style: theme.textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -0.5,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: 'title'.tr(),
-                            border: InputBorder.none,
-                            hintStyle: TextStyle(
-                              color: colorScheme.onSurface.withValues(
-                                alpha: 0.3,
-                              ),
-                            ),
-                          ),
-                          maxLines: null,
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Content Field
-                        TextField(
-                          controller: _contentController,
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            height: 1.6,
-                            fontSize: 18,
-                          ),
-                          decoration: InputDecoration(
-                            hintText: 'content'.tr(),
-                            border: InputBorder.none,
-                          ),
-                          maxLines: null,
-                        ),
-                        const SizedBox(height: 20),
+                        _buildDailyPage(theme),
+                        const SizedBox(height: 18),
                         _buildAttachmentsSection(theme),
                         const SizedBox(height: 140),
                       ],
@@ -799,6 +809,159 @@ class _AddEntryPageState extends State<AddEntryPage> {
           ],
         );
       },
+    );
+  }
+
+  Widget _buildDailyPage(ThemeData theme) {
+    final colors = theme.colorScheme;
+    final localeCode = context.locale.languageCode;
+    final titleHint =
+        localeCode == 'tr'
+            ? 'Bugunun sayfasina bir baslik ver...'
+            : 'Give today\'s page a title...';
+    final contentHint =
+        localeCode == 'tr'
+            ? 'Sevgili gunluk,\n\nBugun neler hissettigini, neler yasadigini ve aklinda kalan detaylari bu satirlara yaz...'
+            : 'Dear diary,\n\nWrite what you felt today, what happened, and the small details you want to remember...';
+
+    return ThemedPaper(
+      lined: true,
+      animated: true,
+      padding: EdgeInsets.zero,
+      borderRadius: const BorderRadius.all(Radius.circular(20)),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: 560),
+        child: Stack(
+          children: [
+            // Light page header tint for realistic paper variation.
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 0,
+              height: 88,
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      colors.surface.withValues(alpha: 0.32),
+                      colors.surface.withValues(alpha: 0.0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Positioned.fill(
+              child: StickerLayer(
+                controller: _stickerController,
+                editable: true,
+                onChanged: _onStickerChanged,
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 18, 18, 22),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      DateFormat.yMMMMd(context.locale.toString()).format(
+                        _selectedDate,
+                      ),
+                      style: theme.textTheme.labelMedium?.copyWith(
+                        color: colors.onSurfaceVariant.withValues(alpha: 0.8),
+                        fontStyle: FontStyle.italic,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  _buildWritingField(
+                    controller: _titleController,
+                    hint: titleHint,
+                    isTitle: true,
+                  ),
+                  const SizedBox(height: 10),
+                  Divider(
+                    height: 1,
+                    color: colors.outlineVariant.withValues(alpha: 0.45),
+                  ),
+                  const SizedBox(height: 10),
+                  _buildWritingField(
+                    controller: _contentController,
+                    hint: contentHint,
+                    isTitle: false,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildWritingField({
+    required TextEditingController controller,
+    required String hint,
+    required bool isTitle,
+  }) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
+    final inkColor = colors.onSurface.withValues(alpha: isTitle ? 0.92 : 0.9);
+
+    final textStyle =
+        isTitle
+            ? GoogleFonts.caveat(
+              textStyle: theme.textTheme.displaySmall?.copyWith(
+                color: inkColor,
+                fontSize: 46,
+                height: 1.05,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.2,
+                shadows: [
+                  Shadow(
+                    color: Colors.black.withValues(alpha: 0.09),
+                    blurRadius: 0.9,
+                    offset: const Offset(0.3, 0.6),
+                  ),
+                ],
+              ),
+            )
+            : GoogleFonts.patrickHand(
+              textStyle: theme.textTheme.bodyLarge?.copyWith(
+                color: inkColor,
+                fontSize: 28,
+                height: 1.45,
+                letterSpacing: 0.15,
+                shadows: [
+                  Shadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 0.8,
+                    offset: const Offset(0.3, 0.55),
+                  ),
+                ],
+              ),
+            );
+
+    return TextField(
+      controller: controller,
+      style: textStyle,
+      cursorColor: colors.primary.withValues(alpha: 0.85),
+      decoration: InputDecoration(
+        hintText: hint,
+        border: InputBorder.none,
+        isDense: true,
+        filled: false,
+        contentPadding: EdgeInsets.zero,
+        hintStyle: textStyle.copyWith(
+          color: inkColor.withValues(alpha: 0.34),
+          shadows: const [],
+        ),
+      ),
+      minLines: isTitle ? 1 : 18,
+      maxLines: null,
     );
   }
 
@@ -1039,6 +1202,11 @@ class _AddEntryPageState extends State<AddEntryPage> {
                 icon: Icons.style_outlined,
                 label: 'tags_label'.tr(),
                 onTap: _openTagsEditor,
+              ),
+              _trayAction(
+                icon: Icons.emoji_emotions_outlined,
+                label: 'stickers'.tr(),
+                onTap: _openStickerPicker,
               ),
               _trayAction(
                 icon: Icons.auto_awesome_rounded,

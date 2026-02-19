@@ -135,6 +135,17 @@ class SettingsPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               _Section(
+                title: 'page_studio'.tr(),
+                child: _SettingsButton(
+                  valid: true,
+                  icon: Icons.auto_stories_outlined,
+                  title: 'open_page_studio'.tr(),
+                  subtitle: 'open_page_studio_desc'.tr(),
+                  onTap: () => context.push('/home/settings/page-studio'),
+                ),
+              ),
+              const SizedBox(height: 12),
+              _Section(
                 title: 'notebook_customization'.tr(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
