@@ -1,7 +1,8 @@
 import 'dart:math';
-import 'dart:ui';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../theme/app_theme.dart';
 import '../theme/page_studio_models.dart';
@@ -64,6 +65,54 @@ class _ThemedBackdropState extends State<ThemedBackdrop>
     );
   }
 
+  Map<String, ui.Image> _cache = {};
+  bool _loading = false;
+  AppThemePreset? _lastPreset;
+
+  Future<void> _loadSprites(AppThemePreset preset) async {
+    if (_loading || _lastPreset == preset) return;
+    _loading = true;
+    _lastPreset = preset;
+
+    final paths = <String>[];
+    switch (preset) {
+      case AppThemePreset.snowing:
+        paths.add('assets/images/particles/snowflake.png');
+      case AppThemePreset.raining:
+      case AppThemePreset.storm:
+        paths.add('assets/images/particles/raindrop.png');
+      case AppThemePreset.autumn:
+      case AppThemePreset.nature:
+      case AppThemePreset.darkNature:
+      case AppThemePreset.forest:
+        paths.add('assets/images/particles/leaf_autumn.png');
+        paths.add('assets/images/particles/leaf_green.png');
+      case AppThemePreset.spring:
+        paths.add('assets/images/particles/petal.png');
+      default:
+        break;
+    }
+
+    final newCache = <String, ui.Image>{};
+    for (final path in paths) {
+      try {
+        final data = await rootBundle.load(path);
+        final codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
+        final frame = await codec.getNextFrame();
+        newCache[path] = frame.image;
+      } catch (e) {
+        debugPrint('Failed to load sprite: $path');
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _cache = newCache;
+        _loading = false;
+      });
+    }
+  }
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -124,6 +173,10 @@ class _ThemedBackdropState extends State<ThemedBackdrop>
     final spec = _paperSpecFor(preset, isDark);
     final vintageSpec = _vintagePaperSpecFor(variant, isDark);
 
+    if (_lastPreset != preset) {
+      _loadSprites(preset);
+    }
+
     return IgnorePointer(
       child: AnimatedBuilder(
         animation: _controller,
@@ -146,6 +199,8 @@ class _ThemedBackdropState extends State<ThemedBackdrop>
                   ),
                 ),
               ),
+              if (visualFamily != PageVisualFamily.vintage)
+                _buildBackgroundImage(preset, t, isBackdrop: true),
               Positioned.fill(
                 child: Opacity(
                   opacity: _paperTextureOpacity(
@@ -169,7 +224,11 @@ class _ThemedBackdropState extends State<ThemedBackdrop>
                               progress: t,
                               intensity: intensity,
                             )
-                            : _PaperEffectPainter(spec: spec, progress: t),
+                            : _PaperEffectPainter(
+                              spec: spec,
+                              progress: t,
+                              sprites: _cache,
+                            ),
                   ),
                 ),
               ),
@@ -196,7 +255,7 @@ class _ThemedBackdropState extends State<ThemedBackdrop>
           final layered =
               widget.blurSigma > 0
                   ? BackdropFilter(
-                    filter: ImageFilter.blur(
+                    filter: ui.ImageFilter.blur(
                       sigmaX: widget.blurSigma,
                       sigmaY: widget.blurSigma,
                     ),
@@ -224,6 +283,54 @@ class _ThemedPaperState extends State<ThemedPaper>
       vsync: this,
       duration: const Duration(seconds: 18),
     );
+  }
+
+  Map<String, ui.Image> _cache = {};
+  bool _loading = false;
+  AppThemePreset? _lastPreset;
+
+  Future<void> _loadSprites(AppThemePreset preset) async {
+    if (_loading || _lastPreset == preset) return;
+    _loading = true;
+    _lastPreset = preset;
+
+    final paths = <String>[];
+    switch (preset) {
+      case AppThemePreset.snowing:
+        paths.add('assets/images/particles/snowflake.png');
+      case AppThemePreset.raining:
+      case AppThemePreset.storm:
+        paths.add('assets/images/particles/raindrop.png');
+      case AppThemePreset.autumn:
+      case AppThemePreset.nature:
+      case AppThemePreset.darkNature:
+      case AppThemePreset.forest:
+        paths.add('assets/images/particles/leaf_autumn.png');
+        paths.add('assets/images/particles/leaf_green.png');
+      case AppThemePreset.spring:
+        paths.add('assets/images/particles/petal.png');
+      default:
+        break;
+    }
+
+    final newCache = <String, ui.Image>{};
+    for (final path in paths) {
+      try {
+        final data = await rootBundle.load(path);
+        final codec = await ui.instantiateImageCodec(data.buffer.asUint8List());
+        final frame = await codec.getNextFrame();
+        newCache[path] = frame.image;
+      } catch (e) {
+        debugPrint('Failed to load sprite: $path');
+      }
+    }
+
+    if (mounted) {
+      setState(() {
+        _cache = newCache;
+        _loading = false;
+      });
+    }
   }
 
   @override
@@ -286,6 +393,10 @@ class _ThemedPaperState extends State<ThemedPaper>
     final spec = _paperSpecFor(preset, isDark);
     final vintageSpec = _vintagePaperSpecFor(variant, isDark);
 
+    if (_lastPreset != preset) {
+      _loadSprites(preset);
+    }
+
     final shadowColor =
         isDark
             ? Colors.black.withValues(alpha: 0.45)
@@ -336,6 +447,8 @@ class _ThemedPaperState extends State<ThemedPaper>
                     ),
                   ),
                 ),
+                if (visualFamily != PageVisualFamily.vintage)
+                  _buildBackgroundImage(preset, t, isBackdrop: false),
                 Positioned.fill(
                   child: Opacity(
                     opacity: _paperTextureOpacity(
@@ -360,7 +473,11 @@ class _ThemedPaperState extends State<ThemedPaper>
                                 intensity: intensity,
                                 drawLines: widget.lined,
                               )
-                              : _PaperEffectPainter(spec: spec, progress: t),
+                              : _PaperEffectPainter(
+                                spec: spec,
+                                progress: t,
+                                sprites: _cache,
+                              ),
                     ),
                   ),
                 ),
@@ -380,7 +497,25 @@ class _ThemedPaperState extends State<ThemedPaper>
   }
 }
 
-enum _PaperMotif { none, hearts, waves, petals, leaves, sun, grid, bubbles }
+enum _PaperMotif {
+  none,
+  hearts,
+  waves,
+  petals,
+  leaves,
+  sun,
+  grid,
+  bubbles,
+  fog,
+  stars,
+  fireflies,
+  aurora,
+  storm,
+  nebula,
+  raining,
+  snowing,
+  sunny,
+}
 
 class _PaperSpec {
   const _PaperSpec({
@@ -585,6 +720,182 @@ _PaperSpec _paperSpecFor(AppThemePreset preset, bool isDark) {
                 : Colors.black.withValues(alpha: 0.05),
         motif: _PaperMotif.none,
       );
+    case AppThemePreset.nightmare:
+      return _PaperSpec(
+        base: const Color(0xFF0F0505),
+        gradient: const [
+          Color(0xFF0F0505),
+          Color(0xFF1A0505),
+          Color(0xFF2B0A0A),
+        ],
+        accent: const Color(0xFF8B0000), // Dark Red
+        accent2: const Color(0xFF4A0404), // Blood Red
+        lineColor: Colors.white.withValues(alpha: 0.04),
+        motif: _PaperMotif.fog,
+      );
+    case AppThemePreset.nightblue:
+      return _PaperSpec(
+        base: const Color(0xFF02040A),
+        gradient: const [
+          Color(0xFF02040A),
+          Color(0xFF0A1020),
+          Color(0xFF152040),
+        ],
+        accent: const Color(0xFFE6E6FA), // Lavender stars
+        accent2: const Color(0xFF4169E1), // Royal Blue glow
+        lineColor: Colors.white.withValues(alpha: 0.05),
+        motif: _PaperMotif.stars,
+      );
+    case AppThemePreset.sunrise:
+      return _PaperSpec(
+        base: isDark ? const Color(0xFF2D1B1E) : const Color(0xFFFFF9F5),
+        gradient:
+            isDark
+                ? const [
+                  Color(0xFF2D1B1E),
+                  Color(0xFF4A2C30),
+                  Color(0xFF633A33),
+                ]
+                : const [
+                  Color(0xFFFFF9F5),
+                  Color(0xFFFFECE6),
+                  Color(0xFFFFDAB9),
+                ],
+        accent: const Color(0xFFFF9A8B),
+        accent2: const Color(0xFFFFD700),
+        lineColor:
+            isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.black.withValues(alpha: 0.05),
+        motif: _PaperMotif.sun,
+      );
+    case AppThemePreset.nature:
+      return _PaperSpec(
+        base: isDark ? const Color(0xFF1B261D) : const Color(0xFFF9FFF6),
+        gradient:
+            isDark
+                ? const [
+                  Color(0xFF1B261D),
+                  Color(0xFF28382B),
+                  Color(0xFF364A38),
+                ]
+                : const [
+                  Color(0xFFF9FFF6),
+                  Color(0xFFEDF7EB),
+                  Color(0xFFDCEDD9),
+                ],
+        accent: const Color(0xFF558B2F),
+        accent2: const Color(0xFF8BC34A),
+        lineColor:
+            isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.black.withValues(alpha: 0.05),
+        motif: _PaperMotif.leaves,
+      );
+    case AppThemePreset.darkNature:
+      return _PaperSpec(
+        base: const Color(0xFF001512),
+        gradient: const [
+          Color(0xFF001512),
+          Color(0xFF00221E),
+          Color(0xFF00332D),
+        ],
+        accent: const Color(0xFF1DE9B6), // Teal accent
+        accent2: const Color(0xFFB2FF59), // Firefly glow
+        lineColor: Colors.white.withValues(alpha: 0.05),
+        motif: _PaperMotif.fireflies,
+      );
+
+    case AppThemePreset.aurora:
+      return _PaperSpec(
+        base: const Color(0xFF061A14),
+        gradient: const [
+          Color(0xFF061A14),
+          Color(0xFF0F2E23),
+          Color(0xFF162030), // Fade to night sky
+        ],
+        accent: const Color(0xFF00E676), // Green Aurora
+        accent2: const Color(0xFF651FFF), // Purple Aurora
+        lineColor: Colors.white.withValues(alpha: 0.05),
+        motif: _PaperMotif.aurora,
+      );
+
+    case AppThemePreset.storm:
+      return _PaperSpec(
+        base: const Color(0xFF121416),
+        gradient: const [
+          Color(0xFF101416), // Dark Grey
+          Color(0xFF1C2226),
+          Color(0xFF263238),
+        ],
+        accent: const Color(0xFF546E7A), // Cloud Grey
+        accent2: const Color(0xFFFFD600), // Lightning
+        lineColor: Colors.white.withValues(alpha: 0.04),
+        motif: _PaperMotif.storm,
+      );
+
+    case AppThemePreset.nebula:
+      return _PaperSpec(
+        base: const Color(0xFF120316),
+        gradient: const [
+          Color(0xFF120316),
+          Color(0xFF200A26),
+          Color(0xFF100010),
+        ],
+        accent: const Color(0xFF9C27B0), // Purple Gas
+        accent2: const Color(0xFFFF4081), // Pink Gas
+        lineColor: Colors.white.withValues(alpha: 0.05),
+        motif: _PaperMotif.nebula,
+      );
+
+    case AppThemePreset.raining:
+      return _PaperSpec(
+        base: const Color(0xFF151B1E),
+        gradient: const [
+          Color(0xFF151B1E),
+          Color(0xFF20262A),
+          Color(0xFF2C353B),
+        ],
+        accent: const Color(0xFF90A4AE), // Rain grey
+        accent2: const Color(0xFFB0BEC5), // Ripple light
+        lineColor: Colors.white.withValues(alpha: 0.05),
+        motif: _PaperMotif.raining,
+      );
+
+    case AppThemePreset.snowing:
+      return _PaperSpec(
+        base: const Color(0xFF0F171C),
+        gradient: const [
+          Color(0xFF0F171C),
+          Color(0xFF162026),
+          Color(0xFF222D35),
+        ],
+        accent: const Color(0xFFE1F5FE), // Snow white/blue
+        accent2: const Color(0xFF81D4FA), // Ice blue
+        lineColor: Colors.white.withValues(alpha: 0.05),
+        motif: _PaperMotif.snowing,
+      );
+
+    case AppThemePreset.sunny:
+      return _PaperSpec(
+        base: isDark ? const Color(0xFF3E2723) : const Color(0xFFFFFDE7),
+        gradient:
+            isDark
+                ? const [Color(0xFF3E2723), Color(0xFF4E342E)]
+                : const [
+                  Color(0xFFFFFDE7),
+                  Color(0xFFFFF9C4),
+                  Color(0xFFFFF59D),
+                ],
+        accent: const Color(0xFFFFC107), // Sun Amber
+        accent2: const Color(0xFFFF9800), // Sun Orange
+        lineColor:
+            isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.black.withValues(alpha: 0.05),
+        motif: _PaperMotif.sunny,
+      );
+
     case AppThemePreset.defaultPreset:
       return _PaperSpec(
         base: isDark ? const Color(0xFF141326) : const Color(0xFFFCFBFF),
@@ -623,6 +934,55 @@ Gradient _buildGradient(_PaperSpec spec, double t) {
     end: Alignment(0.9 - drift, 1.0),
     colors: spec.gradient,
     stops: stops,
+  );
+}
+
+String? _bgImageFor(AppThemePreset preset) {
+  switch (preset) {
+    case AppThemePreset.aurora:
+      return 'assets/images/backgrounds/aurora.png';
+    case AppThemePreset.storm:
+      return 'assets/images/backgrounds/storm.png';
+    case AppThemePreset.nebula:
+      return 'assets/images/backgrounds/nebula.png';
+    case AppThemePreset.raining:
+      return 'assets/images/backgrounds/raining.png';
+    case AppThemePreset.snowing:
+      return 'assets/images/backgrounds/snowing.png';
+    case AppThemePreset.sunny:
+      return 'assets/images/backgrounds/sunny.png';
+    default:
+      return null;
+  }
+}
+
+Widget _buildBackgroundImage(
+  AppThemePreset preset,
+  double t, {
+  required bool isBackdrop,
+}) {
+  final path = _bgImageFor(preset);
+  if (path == null) return const SizedBox.shrink();
+
+  // Subtle Ken Burns motion
+  final scale = 1.1 + sin(t * pi * 2) * 0.04;
+  final panX = cos(t * pi * 2) * 15.0;
+  final panY = sin(t * pi * 2) * 10.0;
+
+  return Positioned.fill(
+    child: ClipRect(
+      child: Transform(
+        transform:
+            Matrix4.identity()
+              ..scale(scale)
+              ..translate(panX, panY),
+        alignment: Alignment.center,
+        child: Opacity(
+          opacity: isBackdrop ? 0.7 : 0.4,
+          child: Image.asset(path, fit: BoxFit.cover),
+        ),
+      ),
+    ),
   );
 }
 
@@ -936,10 +1296,15 @@ class _VintagePaperPainter extends CustomPainter {
 }
 
 class _PaperEffectPainter extends CustomPainter {
-  _PaperEffectPainter({required this.spec, required this.progress});
+  _PaperEffectPainter({
+    required this.spec,
+    required this.progress,
+    this.sprites,
+  });
 
   final _PaperSpec spec;
   final double progress;
+  final Map<String, ui.Image>? sprites;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -965,8 +1330,505 @@ class _PaperEffectPainter extends CustomPainter {
       case _PaperMotif.bubbles:
         _drawRealisticBubbles(canvas, size);
         break;
+      case _PaperMotif.fog:
+        _drawRealisticFog(canvas, size);
+        break;
+      case _PaperMotif.stars:
+        _drawRealisticStars(canvas, size);
+        break;
+      case _PaperMotif.fireflies:
+        _drawRealisticFireflies(canvas, size);
+        break;
+      case _PaperMotif.aurora:
+        _drawRealisticAurora(canvas, size);
+        break;
+      case _PaperMotif.storm:
+        _drawRealisticStorm(canvas, size);
+        break;
+      case _PaperMotif.nebula:
+        _drawRealisticNebula(canvas, size);
+        break;
+      case _PaperMotif.raining:
+        _drawRealisticRain(canvas, size);
+        break;
+      case _PaperMotif.snowing:
+        _drawRealisticSnow(canvas, size);
+        break;
+      case _PaperMotif.sunny:
+        _drawRealisticSunny(canvas, size);
+        break;
       case _PaperMotif.none:
         break;
+    }
+  }
+
+  // ── Rain: Heavy rain + ripples ──
+  void _drawRealisticRain(Canvas canvas, Size size) {
+    final rng = Random(1337);
+    final rainPaint =
+        Paint()
+          ..color = spec.accent.withValues(alpha: 0.15)
+          ..strokeWidth = 1.0;
+
+    // Falling rain — varied depth for parallax
+    final sprite = sprites?['assets/images/particles/raindrop.png'];
+
+    for (int i = 0; i < 100; i++) {
+      final depth = rng.nextDouble();
+      final x = rng.nextDouble() * size.width;
+      final speed = 1.5 + depth;
+      final y =
+          (rng.nextDouble() + progress * speed) % 1.2 * size.height -
+          size.height * 0.1;
+      final length = 12.0 + 18.0 * depth;
+      final alpha = 0.08 + 0.16 * depth;
+
+      if (sprite != null) {
+        final rect = Rect.fromLTWH(x, y, 2.0 + 2.0 * depth, length);
+        canvas.drawImageRect(
+          sprite,
+          Rect.fromLTWH(
+            0,
+            0,
+            sprite.width.toDouble(),
+            sprite.height.toDouble(),
+          ),
+          rect,
+          Paint()..color = Colors.white.withValues(alpha: alpha),
+        );
+      } else {
+        final stroke = 0.5 + 1.0 * depth;
+        rainPaint
+          ..color = spec.accent.withValues(alpha: alpha)
+          ..strokeWidth = stroke;
+        canvas.drawLine(Offset(x, y), Offset(x - 2, y + length), rainPaint);
+      }
+    }
+
+    // Ripples on "ground" (bottom of screen or random puddles)
+    final ripplePaint =
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.0;
+
+    for (int i = 0; i < 6; i++) {
+      final t = (progress + i / 6.0) % 1.0;
+      final x = size.width * (0.1 + 0.8 * rng.nextDouble());
+      final y = size.height * (0.3 + 0.6 * rng.nextDouble());
+      final radius = 20 * t;
+      final alpha = 0.3 * (1 - t);
+
+      ripplePaint.color = spec.accent2.withValues(alpha: alpha);
+      // Draw crushed oval for perspective explanation
+      canvas.drawOval(
+        Rect.fromCenter(
+          center: Offset(x, y),
+          width: radius * 3,
+          height: radius,
+        ),
+        ripplePaint,
+      );
+    }
+  }
+
+  // ── Snow: Falling soft flakes ──
+  void _drawRealisticSnow(Canvas canvas, Size size) {
+    final snowPaint = Paint()..color = spec.accent;
+    final rng = Random(404);
+
+    final sprite = sprites?['assets/images/particles/snowflake.png'];
+
+    for (int i = 0; i < 70; i++) {
+      final xSeed = rng.nextDouble();
+      final ySeed = rng.nextDouble();
+      final sizeFactor = rng.nextDouble();
+
+      final t = progress * (0.04 + 0.08 * sizeFactor);
+      final y = (ySeed + t) % 1.1 * size.height - 10;
+      final sway = sin(t * pi * 3 + i) * 18 * sizeFactor;
+      final x = xSeed * size.width + sway;
+
+      final radius = 1.0 + 3.0 * sizeFactor;
+      final alpha = 0.3 + 0.7 * sizeFactor;
+
+      if (sprite != null) {
+        final size = (2.0 + 6.0 * sizeFactor) * 2;
+        final rotation = progress * pi * (0.1 + rng.nextDouble() * 0.2) + i;
+        canvas.save();
+        canvas.translate(x, y);
+        canvas.rotate(rotation);
+        canvas.drawImageRect(
+          sprite,
+          Rect.fromLTWH(
+            0,
+            0,
+            sprite.width.toDouble(),
+            sprite.height.toDouble(),
+          ),
+          Rect.fromCenter(center: Offset.zero, width: size, height: size),
+          Paint()..color = Colors.white.withValues(alpha: alpha),
+        );
+        canvas.restore();
+      } else {
+        snowPaint
+          ..color = spec.accent.withValues(alpha: alpha)
+          ..maskFilter =
+              sizeFactor > 0.7
+                  ? const MaskFilter.blur(BlurStyle.normal, 2)
+                  : null;
+        canvas.drawCircle(Offset(x, y), radius, snowPaint);
+      }
+    }
+  }
+
+  // ── Sunny: Bright sun + lens flare ──
+  void _drawRealisticSunny(Canvas canvas, Size size) {
+    final sunCenter = Offset(size.width * 0.85, size.height * 0.15);
+    final sunRadius = size.shortestSide * 0.12;
+
+    // Multi-ring sun glow
+    for (int i = 0; i < 4; i++) {
+      final r = sunRadius * (2.0 + i);
+      final paint =
+          Paint()
+            ..shader = RadialGradient(
+              colors: [spec.accent.withValues(alpha: 0.12), Colors.transparent],
+            ).createShader(Rect.fromCircle(center: sunCenter, radius: r));
+      canvas.drawCircle(sunCenter, r, paint);
+    }
+
+    // Sun core
+    canvas.drawCircle(sunCenter, sunRadius, Paint()..color = spec.accent);
+    canvas.drawCircle(
+      sunCenter,
+      sunRadius * 0.7,
+      Paint()..color = Colors.white.withValues(alpha: 0.6),
+    );
+
+    // Animated rays
+    final rayPaint =
+        Paint()
+          ..color = spec.accent.withValues(alpha: 0.15)
+          ..strokeWidth = 2;
+    for (int i = 0; i < 12; i++) {
+      final angle = i * (pi * 2 / 12) + progress * 0.5;
+      final p1 = Offset(
+        sunCenter.dx + cos(angle) * sunRadius * 1.4,
+        sunCenter.dy + sin(angle) * sunRadius * 1.4,
+      );
+      final p2 = Offset(
+        sunCenter.dx + cos(angle) * sunRadius * 3.0,
+        sunCenter.dy + sin(angle) * sunRadius * 3.0,
+      );
+      canvas.drawLine(p1, p2, rayPaint);
+    }
+
+    // Lens flare (circles towards center of screen)
+    final centerScreen = Offset(size.width / 2, size.height / 2);
+    final dir = centerScreen - sunCenter;
+    final dist = dir.distance;
+    final unit = dir / dist;
+
+    final flarePaint =
+        Paint()..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+
+    void drawFlare(double percent, double r, Color c) {
+      final pos = sunCenter + unit * (dist * percent);
+      canvas.drawCircle(pos, r, flarePaint..color = c.withValues(alpha: 0.1));
+    }
+
+    drawFlare(0.3, 8, spec.accent2);
+    drawFlare(0.5, 25, spec.accent.withValues(alpha: 0.15));
+    drawFlare(0.8, 4, Colors.white);
+    drawFlare(1.1, 35, spec.accent2);
+  }
+
+  // ── Aurora: waving light curtains ──
+  void _drawRealisticAurora(Canvas canvas, Size size) {
+    _drawAuroraCurtain(
+      canvas,
+      size,
+      color: spec.accent.withValues(alpha: 0.25),
+      heightFactor: 0.3,
+      freq: 1.0,
+      speed: 0.5,
+      offset: 0,
+    );
+    _drawAuroraCurtain(
+      canvas,
+      size,
+      color: spec.accent2.withValues(alpha: 0.20),
+      heightFactor: 0.45,
+      freq: 1.5,
+      speed: 0.7,
+      offset: 100,
+    );
+    // Stars in background
+    _drawRealisticStars(canvas, size); // Reuse star painter
+  }
+
+  void _drawAuroraCurtain(
+    Canvas canvas,
+    Size size, {
+    required Color color,
+    required double heightFactor,
+    required double freq,
+    required double speed,
+    required double offset,
+  }) {
+    final path = Path();
+    final yBase = size.height * heightFactor;
+
+    path.moveTo(0, size.height);
+    path.lineTo(0, yBase);
+
+    for (double x = 0; x <= size.width; x += 20) {
+      final noise = _SimpleNoise.eval(
+        x * 0.005 * freq + offset,
+        progress * speed,
+      );
+      final y = yBase + noise * 60;
+      path.lineTo(x, y);
+    }
+
+    path.lineTo(size.width, size.height);
+    path.close();
+
+    final paint =
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [color, color.withValues(alpha: 0)],
+            stops: const [0.0, 0.8],
+          ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    canvas.drawPath(
+      path,
+      paint..maskFilter = const MaskFilter.blur(BlurStyle.normal, 25),
+    );
+  }
+
+  // ── Storm: dark rolling clouds + lightning ──
+  void _drawRealisticStorm(Canvas canvas, Size size) {
+    // Rain (subtle)
+    final rng = Random(123 + (progress * 100).toInt()); // Jittery rain
+    final rainPaint =
+        Paint()
+          ..color = Colors.white.withValues(alpha: 0.05)
+          ..strokeWidth = 1.0;
+
+    for (int i = 0; i < 40; i++) {
+      final x = rng.nextDouble() * size.width;
+      final y = rng.nextDouble() * size.height;
+      canvas.drawLine(Offset(x, y), Offset(x - 5, y + 15), rainPaint);
+    }
+
+    // Lightning
+    // Use a hash of progress to act as a sporadic timer
+    // We want a flash every ~3-5 seconds roughly.
+    // Normalized progress 0..1 loops. Let's assume loop duration is 10s or similar.
+    final flashVal = sin(progress * pi * 8) + sin(progress * pi * 23);
+    final isFlash = flashVal > 1.8; // Rare spike
+
+    if (isFlash) {
+      // Screen flash
+      canvas.drawRect(
+        Offset.zero & size,
+        Paint()..color = Colors.white.withValues(alpha: 0.1),
+      );
+
+      // Lightning bolt
+      final boltPath = Path();
+      double lx = size.width * (0.2 + 0.6 * rng.nextDouble());
+      double ly = 0;
+      boltPath.moveTo(lx, ly);
+      while (ly < size.height * 0.8) {
+        lx += (rng.nextDouble() - 0.5) * 40;
+        ly += 10 + rng.nextDouble() * 30;
+        boltPath.lineTo(lx, ly);
+      }
+      final boltPaint =
+          Paint()
+            ..color = spec.accent2
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2
+            ..maskFilter = const MaskFilter.blur(
+              BlurStyle.solid,
+              4,
+            ); // Glowy bolt
+      canvas.drawPath(boltPath, boltPaint);
+    }
+
+    // Clouds
+    final cloudPaint =
+        Paint()..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30);
+    for (int i = 0; i < 5; i++) {
+      final cx = size.width * (0.2 * i + 0.1);
+      final cy = size.height * 0.15;
+      final drift = sin(progress * pi * 0.5 + i) * 20;
+      cloudPaint.color = spec.accent.withValues(alpha: 0.3);
+      canvas.drawCircle(Offset(cx + drift, cy), 80, cloudPaint);
+    }
+  }
+
+  // ── Nebula: cosmic gas clouds ──
+  void _drawRealisticNebula(Canvas canvas, Size size) {
+    final gasPaint =
+        Paint()..maskFilter = const MaskFilter.blur(BlurStyle.normal, 60);
+
+    // Layer 1: Purple gas
+    for (int i = 0; i < 4; i++) {
+      final t = progress * 0.2 + i * 10;
+      final x = size.width * (0.5 + 0.4 * _SimpleNoise.eval(t, 0));
+      final y = size.height * (0.5 + 0.4 * _SimpleNoise.eval(0, t));
+      gasPaint.color = spec.accent.withValues(alpha: 0.15);
+      canvas.drawCircle(Offset(x, y), 120 + 40 * sin(t), gasPaint);
+    }
+
+    // Layer 2: Pink gas
+    for (int i = 0; i < 4; i++) {
+      final t = progress * 0.3 + i * 20 + 100;
+      final x = size.width * (0.5 + 0.3 * _SimpleNoise.eval(t, 20));
+      final y = size.height * (0.5 + 0.3 * _SimpleNoise.eval(20, t));
+      gasPaint.color = spec.accent2.withValues(alpha: 0.12);
+      canvas.drawCircle(Offset(x, y), 100 + 30 * cos(t), gasPaint);
+    }
+
+    // Stars overlay
+    _drawRealisticStars(canvas, size);
+  }
+
+  // ── Nightmare: swirling dark fog ──
+  void _drawRealisticFog(Canvas canvas, Size size) {
+    final fogPaint =
+        Paint()..maskFilter = const MaskFilter.blur(BlurStyle.normal, 40);
+
+    for (int i = 0; i < 6; i++) {
+      final t = (progress + i / 6) % 1.0;
+      final x = size.width * (0.2 + 0.6 * sin(t * pi * 2));
+      final y = size.height * (0.2 + 0.6 * cos(t * pi * 3));
+      final radius = size.width * 0.4 + sin(t * pi) * 50;
+
+      fogPaint.color = spec.accent.withValues(alpha: 0.08 * (1 - t) + 0.02);
+      canvas.drawCircle(Offset(x, y), radius, fogPaint);
+
+      fogPaint.color = spec.accent2.withValues(alpha: 0.06 * t + 0.02);
+      canvas.drawCircle(
+        Offset(size.width - x, size.height - y),
+        radius * 0.8,
+        fogPaint,
+      );
+    }
+  }
+
+  // ── Nightblue: twinkling stars ──
+  void _drawRealisticStars(Canvas canvas, Size size) {
+    final starPaint = Paint()..style = PaintingStyle.fill;
+    final rng = Random(99);
+
+    // Deep space nebula glow
+    final glowPaint =
+        Paint()..maskFilter = const MaskFilter.blur(BlurStyle.normal, 60);
+    glowPaint.color = spec.accent2.withValues(alpha: 0.08);
+    canvas.drawCircle(
+      Offset(size.width * 0.8, size.height * 0.2),
+      150,
+      glowPaint,
+    );
+    canvas.drawCircle(
+      Offset(size.width * 0.2, size.height * 0.8),
+      200,
+      glowPaint,
+    );
+
+    // Stars
+    for (int i = 0; i < 50; i++) {
+      final x = rng.nextDouble() * size.width;
+      final y = rng.nextDouble() * size.height;
+      final starSize = rng.nextDouble() * 2.5 + 0.5;
+
+      // Twinkle effect
+      final twinkleSpeed = rng.nextDouble() * 5 + 2;
+      final brightness =
+          0.4 + 0.6 * sin(progress * twinkleSpeed + rng.nextDouble() * pi);
+
+      starPaint.color = spec.accent.withValues(alpha: brightness);
+      canvas.drawCircle(Offset(x, y), starSize, starPaint);
+
+      // Soft glow halo for brighter stars
+      if (starSize > 1.8) {
+        final haloPaint =
+            Paint()
+              ..color = spec.accent.withValues(alpha: brightness * 0.15)
+              ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+        canvas.drawCircle(Offset(x, y), starSize * 2.5, haloPaint);
+      }
+
+      // Cross flair for larger stars
+      if (starSize > 2.0 && brightness > 0.8) {
+        starPaint.color = spec.accent.withValues(alpha: brightness * 0.4);
+        canvas.drawLine(
+          Offset(x - 5, y),
+          Offset(x + 5, y),
+          starPaint..strokeWidth = 0.5,
+        );
+        canvas.drawLine(
+          Offset(x, y - 5),
+          Offset(x, y + 5),
+          starPaint..strokeWidth = 0.5,
+        );
+      }
+    }
+
+    // Shooting star (occasional)
+    final shootingStarProgress = (progress * 0.3) % 1.0;
+    if (shootingStarProgress > 0.85) {
+      final t = (shootingStarProgress - 0.85) / 0.15;
+      final sx = size.width * 0.8 - t * 200;
+      final sy = size.height * 0.1 + t * 150;
+      final tailPaint =
+          Paint()
+            ..strokeWidth = 2
+            ..shader = LinearGradient(
+              colors: [
+                Colors.white.withValues(alpha: 0),
+                Colors.white.withValues(alpha: 0.8),
+              ],
+            ).createShader(
+              Rect.fromPoints(Offset(sx + 40, sy - 30), Offset(sx, sy)),
+            );
+      canvas.drawLine(Offset(sx + 40, sy - 30), Offset(sx, sy), tailPaint);
+    }
+  }
+
+  // ── Dark Nature: fireflies ──
+  void _drawRealisticFireflies(Canvas canvas, Size size) {
+    final glowPaint =
+        Paint()..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+    final corePaint = Paint()..style = PaintingStyle.fill;
+
+    final rng = Random(77);
+    for (int i = 0; i < 15; i++) {
+      // Organic movement path
+      final t = (progress + i / 15.0) % 1.0;
+      final seedX = rng.nextDouble();
+      final seedY = rng.nextDouble();
+
+      // Lissajous curve movement
+      final x = size.width * (seedX + 0.1 * sin(t * pi * 4 + i));
+      final y = size.height * (seedY + 0.1 * cos(t * pi * 3 + i));
+
+      // Pulse
+      final pulse = 0.5 + 0.5 * sin(t * pi * 8 + i);
+
+      // Glow
+      glowPaint.color = spec.accent2.withValues(alpha: 0.15 * pulse);
+      canvas.drawCircle(Offset(x, y), 6 + 4 * pulse, glowPaint);
+
+      // Core
+      corePaint.color = spec.accent2.withValues(alpha: 0.6 + 0.4 * pulse);
+      canvas.drawCircle(Offset(x, y), 1.5, corePaint);
     }
   }
 
@@ -1040,8 +1902,9 @@ class _PaperEffectPainter extends CustomPainter {
             ..color = Colors.white.withValues(alpha: alpha * 0.5)
             ..style = PaintingStyle.stroke
             ..strokeWidth = 1.0 + layerT;
+
       final foamPath = Path();
-      foamPath.moveTo(0, baseY);
+      foamPath.moveTo(0, baseY - 2);
       for (double x = 0; x <= size.width; x += 4) {
         final y1 = sin((x / size.width) * pi * freq + phase) * amplitude;
         final y2 =
@@ -1158,27 +2021,57 @@ class _PaperEffectPainter extends CustomPainter {
 
     // Floating realistic leaves
     final rng = Random(11);
+    final spriteGreen = sprites?['assets/images/particles/leaf_green.png'];
+    final spriteOrange = sprites?['assets/images/particles/leaf_autumn.png'];
+
     for (int i = 0; i < 16; i++) {
       final x = rng.nextDouble();
       final y = rng.nextDouble();
-      final speed = lerpDouble(0.015, 0.05, rng.nextDouble())!;
+      final speed = ui.lerpDouble(0.015, 0.05, rng.nextDouble())!;
       final sway = sin(progress * pi * 2 * (0.5 + rng.nextDouble()) + i) * 0.03;
       final dy = (y + progress * speed) % 1.2 - 0.1;
       final dx = x + sway;
-      final leafSize = lerpDouble(10, 22, rng.nextDouble())!;
+      final leafSize = ui.lerpDouble(12, 28, rng.nextDouble())!;
       final angle = progress * pi * 2 * (0.2 + rng.nextDouble() * 0.3);
-      // Multi-toned leaf color
-      final leafColor =
-          i.isEven
-              ? spec.accent.withValues(alpha: 0.14 + rng.nextDouble() * 0.06)
-              : spec.accent2.withValues(alpha: 0.12 + rng.nextDouble() * 0.06);
-      _paintRealisticLeaf(
-        canvas,
-        Offset(dx * size.width, dy * size.height),
-        leafSize,
-        angle,
-        leafColor,
-      );
+
+      final sprite = i.isEven ? spriteGreen : spriteOrange;
+
+      if (sprite != null) {
+        canvas.save();
+        canvas.translate(dx * size.width, dy * size.height);
+        canvas.rotate(angle);
+        canvas.drawImageRect(
+          sprite,
+          Rect.fromLTWH(
+            0,
+            0,
+            sprite.width.toDouble(),
+            sprite.height.toDouble(),
+          ),
+          Rect.fromCenter(
+            center: Offset.zero,
+            width: leafSize,
+            height: leafSize,
+          ),
+          Paint()..color = Colors.white.withValues(alpha: 0.9),
+        );
+        canvas.restore();
+      } else {
+        // Multi-toned leaf color
+        final leafColor =
+            i.isEven
+                ? spec.accent.withValues(alpha: 0.14 + rng.nextDouble() * 0.06)
+                : spec.accent2.withValues(
+                  alpha: 0.12 + rng.nextDouble() * 0.06,
+                );
+        _paintRealisticLeaf(
+          canvas,
+          Offset(dx * size.width, dy * size.height),
+          leafSize,
+          angle,
+          leafColor,
+        );
+      }
     }
   }
 
@@ -1205,24 +2098,52 @@ class _PaperEffectPainter extends CustomPainter {
 
     // Falling petals with realistic shape
     final petalRng = Random(7);
+    final sprite = sprites?['assets/images/particles/petal.png'];
+
     for (int i = 0; i < 20; i++) {
       final x = petalRng.nextDouble();
       final y = petalRng.nextDouble();
-      final speed = lerpDouble(0.02, 0.06, petalRng.nextDouble())!;
+      final speed = ui.lerpDouble(0.02, 0.06, petalRng.nextDouble())!;
       final sway =
           sin(progress * pi * 2 * (0.6 + petalRng.nextDouble()) + i) * 0.025;
       final dy = (y + progress * speed) % 1.2 - 0.1;
       final dx = x + sway;
-      final petalSize = lerpDouble(6, 16, petalRng.nextDouble())!;
+      final petalSize = ui.lerpDouble(8, 20, petalRng.nextDouble())!;
       final angle = progress * pi * 2 * (0.3 + petalRng.nextDouble() * 0.4);
-      final alpha = 0.10 + petalRng.nextDouble() * 0.10;
-      _paintCherryPetal(
-        canvas,
-        Offset(dx * size.width, dy * size.height),
-        petalSize,
-        angle,
-        spec.accent.withValues(alpha: alpha),
-      );
+      final alpha = 0.15 + petalRng.nextDouble() * 0.15;
+
+      if (sprite != null) {
+        canvas.save();
+        canvas.translate(dx * size.width, dy * size.height);
+        canvas.rotate(angle);
+        canvas.drawImageRect(
+          sprite,
+          Rect.fromLTWH(
+            0,
+            0,
+            sprite.width.toDouble(),
+            sprite.height.toDouble(),
+          ),
+          Rect.fromCenter(
+            center: Offset.zero,
+            width: petalSize,
+            height: petalSize,
+          ),
+          Paint()
+            ..color = Colors.white.withValues(
+              alpha: (alpha * 6.0).clamp(0.0, 1.0),
+            ),
+        );
+        canvas.restore();
+      } else {
+        _paintCherryPetal(
+          canvas,
+          Offset(dx * size.width, dy * size.height),
+          petalSize,
+          angle,
+          spec.accent.withValues(alpha: alpha),
+        );
+      }
     }
   }
 
@@ -1251,11 +2172,11 @@ class _PaperEffectPainter extends CustomPainter {
     for (int i = 0; i < 14; i++) {
       final x = heartRng.nextDouble();
       final y = heartRng.nextDouble();
-      final speed = lerpDouble(0.02, 0.08, heartRng.nextDouble())!;
+      final speed = ui.lerpDouble(0.02, 0.08, heartRng.nextDouble())!;
       final drift = heartRng.nextDouble();
       final dy = (y - progress * speed + 1.2) % 1.2 - 0.1;
       final dx = x + sin((progress + drift) * pi * 2) * 0.02;
-      final sizeFactor = lerpDouble(8, 20, heartRng.nextDouble())!;
+      final sizeFactor = ui.lerpDouble(8, 20, heartRng.nextDouble())!;
       final alpha = 0.06 + heartRng.nextDouble() * 0.10;
       // Heart with glow halo
       final center = Offset(dx * size.width, dy * size.height);
@@ -1320,7 +2241,7 @@ class _PaperEffectPainter extends CustomPainter {
       final rawY = rng.nextDouble();
       final y =
           ((rawY + progress * 0.06) % 1.1) * size.height - size.height * 0.05;
-      final radius = lerpDouble(14, 38, rng.nextDouble())!;
+      final radius = ui.lerpDouble(14, 38, rng.nextDouble())!;
       final center = Offset(x, y);
 
       // Bubble body
@@ -1390,26 +2311,36 @@ class _PaperEffectPainter extends CustomPainter {
     Offset center,
     double size,
     double angle,
-    Color color,
-  ) {
+    Color color, {
+    double? blur,
+  }) {
     canvas.save();
     canvas.translate(center.dx, center.dy);
     canvas.rotate(angle);
+
+    final paint = Paint()..color = color;
+    if (blur != null) {
+      paint.maskFilter = MaskFilter.blur(BlurStyle.normal, blur);
+    }
+
     // Leaf body
     final body =
         Path()
           ..moveTo(0, 0)
           ..quadraticBezierTo(size * 0.5, -size * 0.9, size * 1.1, 0)
           ..quadraticBezierTo(size * 0.5, size * 0.9, 0, 0);
-    canvas.drawPath(body, Paint()..color = color);
+    canvas.drawPath(body, paint);
+
     // Center vein
-    canvas.drawLine(
-      Offset.zero,
-      Offset(size * 1.1, 0),
-      Paint()
-        ..color = color.withValues(alpha: (color.a * 1.4).clamp(0.0, 1.0))
-        ..strokeWidth = 0.6,
-    );
+    final veinPaint =
+        Paint()
+          ..color = color.withValues(alpha: (color.a * 1.4).clamp(0.0, 1.0))
+          ..strokeWidth = 0.6;
+    if (blur != null) {
+      veinPaint.maskFilter = MaskFilter.blur(BlurStyle.normal, blur * 0.5);
+    }
+
+    canvas.drawLine(Offset.zero, Offset(size * 1.1, 0), veinPaint);
     canvas.restore();
   }
 
@@ -1445,6 +2376,13 @@ class _PaperEffectPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant _PaperEffectPainter oldDelegate) {
     return oldDelegate.progress != progress || oldDelegate.spec != spec;
+  }
+}
+
+class _SimpleNoise {
+  // Simple pseudo-noise using sin summation
+  static double eval(double x, double y) {
+    return sin(x) + sin(y) * 0.5 + sin(x * 2.1 + y * 1.4) * 0.25;
   }
 }
 

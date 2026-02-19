@@ -216,6 +216,17 @@ class ThemePresets {
   static const String forest = 'forest';
   static const String spring = 'spring';
   static const String autumn = 'autumn';
+  static const String nightmare = 'nightmare';
+  static const String nightblue = 'nightblue';
+  static const String sunrise = 'sunrise';
+  static const String nature = 'nature';
+  static const String darkNature = 'dark_nature';
+  static const String aurora = 'aurora';
+  static const String storm = 'storm';
+  static const String nebula = 'nebula';
+  static const String raining = 'raining';
+  static const String snowing = 'snowing';
+  static const String sunny = 'sunny';
 }
 
 /// Hive type IDs for adapters

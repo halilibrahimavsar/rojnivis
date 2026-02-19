@@ -15,6 +15,17 @@ enum AppThemePreset {
   forest,
   spring,
   autumn,
+  nightmare,
+  nightblue,
+  sunrise,
+  nature,
+  darkNature,
+  aurora,
+  storm,
+  nebula,
+  raining,
+  snowing,
+  sunny,
 }
 
 extension AppThemePresetX on AppThemePreset {
@@ -40,6 +51,28 @@ extension AppThemePresetX on AppThemePreset {
         return ThemePresets.spring;
       case AppThemePreset.autumn:
         return ThemePresets.autumn;
+      case AppThemePreset.nightmare:
+        return ThemePresets.nightmare;
+      case AppThemePreset.nightblue:
+        return ThemePresets.nightblue;
+      case AppThemePreset.sunrise:
+        return ThemePresets.sunrise;
+      case AppThemePreset.nature:
+        return ThemePresets.nature;
+      case AppThemePreset.darkNature:
+        return ThemePresets.darkNature;
+      case AppThemePreset.aurora:
+        return ThemePresets.aurora;
+      case AppThemePreset.storm:
+        return ThemePresets.storm;
+      case AppThemePreset.nebula:
+        return ThemePresets.nebula;
+      case AppThemePreset.raining:
+        return ThemePresets.raining;
+      case AppThemePreset.snowing:
+        return ThemePresets.snowing;
+      case AppThemePreset.sunny:
+        return ThemePresets.sunny;
     }
   }
 
@@ -63,6 +96,28 @@ extension AppThemePresetX on AppThemePreset {
         return AppThemePreset.spring;
       case ThemePresets.autumn:
         return AppThemePreset.autumn;
+      case ThemePresets.nightmare:
+        return AppThemePreset.nightmare;
+      case ThemePresets.nightblue:
+        return AppThemePreset.nightblue;
+      case ThemePresets.sunrise:
+        return AppThemePreset.sunrise;
+      case ThemePresets.nature:
+        return AppThemePreset.nature;
+      case ThemePresets.darkNature:
+        return AppThemePreset.darkNature;
+      case ThemePresets.aurora:
+        return AppThemePreset.aurora;
+      case ThemePresets.storm:
+        return AppThemePreset.storm;
+      case ThemePresets.nebula:
+        return AppThemePreset.nebula;
+      case ThemePresets.raining:
+        return AppThemePreset.raining;
+      case ThemePresets.snowing:
+        return AppThemePreset.snowing;
+      case ThemePresets.sunny:
+        return AppThemePreset.sunny;
       case ThemePresets.defaultPreset:
       default:
         return AppThemePreset.defaultPreset;
@@ -149,6 +204,61 @@ class AppTheme {
       preset: AppThemePreset.neomorphic,
       labelKey: 'theme_neomorphic',
       previewColor: _paletteFor(AppThemePreset.neomorphic).seed,
+    ),
+    ThemePresetOption(
+      preset: AppThemePreset.nightmare,
+      labelKey: 'theme_nightmare',
+      previewColor: _paletteFor(AppThemePreset.nightmare).seed,
+    ),
+    ThemePresetOption(
+      preset: AppThemePreset.nightblue,
+      labelKey: 'theme_nightblue',
+      previewColor: _paletteFor(AppThemePreset.nightblue).seed,
+    ),
+    ThemePresetOption(
+      preset: AppThemePreset.sunrise,
+      labelKey: 'theme_sunrise',
+      previewColor: _paletteFor(AppThemePreset.sunrise).seed,
+    ),
+    ThemePresetOption(
+      preset: AppThemePreset.nature,
+      labelKey: 'theme_nature',
+      previewColor: _paletteFor(AppThemePreset.nature).seed,
+    ),
+    ThemePresetOption(
+      preset: AppThemePreset.darkNature,
+      labelKey: 'theme_dark_nature',
+      previewColor: _paletteFor(AppThemePreset.darkNature).seed,
+    ),
+    ThemePresetOption(
+      preset: AppThemePreset.aurora,
+      labelKey: 'theme_aurora',
+      previewColor: _paletteFor(AppThemePreset.aurora).seed,
+    ),
+    ThemePresetOption(
+      preset: AppThemePreset.storm,
+      labelKey: 'theme_storm',
+      previewColor: _paletteFor(AppThemePreset.storm).seed,
+    ),
+    ThemePresetOption(
+      preset: AppThemePreset.nebula,
+      labelKey: 'theme_nebula',
+      previewColor: _paletteFor(AppThemePreset.nebula).seed,
+    ),
+    ThemePresetOption(
+      preset: AppThemePreset.raining,
+      labelKey: 'theme_raining',
+      previewColor: _paletteFor(AppThemePreset.raining).seed,
+    ),
+    ThemePresetOption(
+      preset: AppThemePreset.snowing,
+      labelKey: 'theme_snowing',
+      previewColor: _paletteFor(AppThemePreset.snowing).seed,
+    ),
+    ThemePresetOption(
+      preset: AppThemePreset.sunny,
+      labelKey: 'theme_sunny',
+      previewColor: _paletteFor(AppThemePreset.sunny).seed,
     ),
   ]);
 
@@ -536,6 +646,116 @@ class AppTheme {
           backgroundDark: Color(0xFF1A1A2E),
           surfaceDark: Color(0xFF16213E),
         );
+      case AppThemePreset.nightmare:
+        return const _ThemePalette(
+          seed: Color(0xFF8B0000), // Dark Red
+          secondary: Color(0xFF4B0082), // Indigo
+          tertiary: Color(0xFFFF4500), // Orange Red
+          backgroundLight: Color(0xFFF0F0F0), // Light Grey (Unlikely used)
+          surfaceLight: Color(0xFFFFFFFF),
+          backgroundDark: Color(0xFF0F0505), // Very Dark Red/Black
+          surfaceDark: Color(0xFF1A0A0A),
+        );
+      case AppThemePreset.nightblue:
+        return const _ThemePalette(
+          seed: Color(0xFF191970), // Midnight Blue
+          secondary: Color(0xFF4169E1), // Royal Blue
+          tertiary: Color(0xFFE6E6FA), // Lavender
+          backgroundLight: Color(0xFFF0F8FF),
+          surfaceLight: Color(0xFFFFFFFF),
+          backgroundDark: Color(0xFF02040A), // Almost Black Blue
+          surfaceDark: Color(0xFF0A1020),
+        );
+      case AppThemePreset.sunrise:
+        return const _ThemePalette(
+          seed: Color(0xFFFF9A8B), // Soft Pink/Orange
+          secondary: Color(0xFFFFD700), // Gold
+          tertiary: Color(0xFFFF6B6B), // Coral
+          backgroundLight: Color(0xFFFFF9F5),
+          surfaceLight: Color(0xFFFFFFFF),
+          backgroundDark: Color(0xFF2D1B1E), // Dark Warm Brown
+          surfaceDark: Color(0xFF3B2529),
+        );
+      case AppThemePreset.nature:
+        return const _ThemePalette(
+          seed: Color(0xFF558B2F), // Light Olive Green
+          secondary: Color(0xFF8BC34A), // Light Green
+          tertiary: Color(0xFFFFEB3B), // Yellow
+          backgroundLight: Color(0xFFF9FFF6),
+          surfaceLight: Color(0xFFFFFFFF),
+          backgroundDark: Color(0xFF1B261D),
+          surfaceDark: Color(0xFF243026),
+        );
+      case AppThemePreset.darkNature:
+        return const _ThemePalette(
+          seed: Color(0xFF004D40), // Teal Green
+          secondary: Color(0xFF00695C),
+          tertiary: Color(0xFF1DE9B6), // Accent Teal
+          backgroundLight: Color(0xFFE0F2F1),
+          surfaceLight: Color(0xFFFFFFFF),
+          backgroundDark: Color(0xFF001512), // Very Dark Teal
+          surfaceDark: Color(0xFF00221E),
+        );
+      case AppThemePreset.aurora:
+        return const _ThemePalette(
+          seed: Color(0xFF00E676), // Bright Green
+          secondary: Color(0xFF651FFF), // Deep Purple
+          tertiary: Color(0xFF00B0FF), // Light Blue
+          backgroundLight: Color(0xFFF0FDF4),
+          surfaceLight: Color(0xFFFFFFFF),
+          backgroundDark: Color(0xFF061A14), // Dark Green/Black
+          surfaceDark: Color(0xFF0A201A),
+        );
+      case AppThemePreset.storm:
+        return const _ThemePalette(
+          seed: Color(0xFF455A64), // Blue Grey
+          secondary: Color(0xFFCFD8DC), // Light Grey
+          tertiary: Color(0xFFFFD600), // Lightning Yellow
+          backgroundLight: Color(0xFFF5F5F5),
+          surfaceLight: Color(0xFFFFFFFF),
+          backgroundDark: Color(0xFF101416), // Dark Grey
+          surfaceDark: Color(0xFF1C2226),
+        );
+      case AppThemePreset.nebula:
+        return const _ThemePalette(
+          seed: Color(0xFF9C27B0), // Purple
+          secondary: Color(0xFFFF4081), // Pink
+          tertiary: Color(0xFF7C4DFF), // Deep Purple
+          backgroundLight: Color(0xFFFDF0F6),
+          surfaceLight: Color(0xFFFFFFFF),
+          backgroundDark: Color(0xFF120316), // Dark Purple/Black
+          surfaceDark: Color(0xFF200A26),
+        );
+      case AppThemePreset.raining:
+        return const _ThemePalette(
+          seed: Color(0xFF546E7A), // Blue Grey
+          secondary: Color(0xFF78909C),
+          tertiary: Color(0xFFB0BEC5),
+          backgroundLight: Color(0xFFECEFF1),
+          surfaceLight: Color(0xFFFFFFFF),
+          backgroundDark: Color(0xFF263238), // Dark Blue Grey
+          surfaceDark: Color(0xFF37474F),
+        );
+      case AppThemePreset.snowing:
+        return const _ThemePalette(
+          seed: Color(0xFFB3E5FC), // Light Blue
+          secondary: Color(0xFF81D4FA),
+          tertiary: Color(0xFFE1F5FE),
+          backgroundLight: Color(0xFFF9FDFF), // Almost white blue
+          surfaceLight: Color(0xFFFFFFFF),
+          backgroundDark: Color(0xFF1E2F38), // Dark Winter Blue
+          surfaceDark: Color(0xFF263D47),
+        );
+      case AppThemePreset.sunny:
+        return const _ThemePalette(
+          seed: Color(0xFFFFC107), // Amber
+          secondary: Color(0xFFFF9800), // Orange
+          tertiary: Color(0xFF29B6F6), // Sky Blue
+          backgroundLight: Color(0xFFFFFDE7), // Light Yellow
+          surfaceLight: Color(0xFFFFFFFF),
+          backgroundDark: Color(0xFF3E2723), // Warm Dark Brown
+          surfaceDark: Color(0xFF4E342E),
+        );
     }
   }
 
@@ -562,6 +782,28 @@ class AppTheme {
           return const Color(0xFF1A1C1F);
         case AppThemePreset.defaultPreset:
           return const Color(0xFF1B1D2C);
+        case AppThemePreset.nightmare:
+          return const Color(0xFF250E0E);
+        case AppThemePreset.nightblue:
+          return const Color(0xFF050A19);
+        case AppThemePreset.sunrise:
+          return const Color(0xFF331E18);
+        case AppThemePreset.nature:
+          return const Color(0xFF142116);
+        case AppThemePreset.darkNature:
+          return const Color(0xFF021412);
+        case AppThemePreset.aurora:
+          return const Color(0xFF0A1F18);
+        case AppThemePreset.storm:
+          return const Color(0xFF181C1E);
+        case AppThemePreset.nebula:
+          return const Color(0xFF180A20);
+        case AppThemePreset.raining:
+          return const Color(0xFF151B1E);
+        case AppThemePreset.snowing:
+          return const Color(0xFF0F171C);
+        case AppThemePreset.sunny:
+          return const Color(0xFF261917);
       }
     }
 
@@ -586,6 +828,28 @@ class AppTheme {
         return const Color(0xFFE3E5E8);
       case AppThemePreset.defaultPreset:
         return const Color(0xFFDFE1E8);
+      case AppThemePreset.nightmare:
+        return const Color(0xFF362B2B); // Darkish Red tint
+      case AppThemePreset.nightblue:
+        return const Color(0xFF1A233A);
+      case AppThemePreset.sunrise:
+        return const Color(0xFFFFE8D6);
+      case AppThemePreset.nature:
+        return const Color(0xFFE8F5E9);
+      case AppThemePreset.darkNature:
+        return const Color(0xFF00251F); // Dark Green tint
+      case AppThemePreset.aurora:
+        return const Color(0xFFE0F2F1);
+      case AppThemePreset.storm:
+        return const Color(0xFFECEFF1);
+      case AppThemePreset.nebula:
+        return const Color(0xFFF3E5F5);
+      case AppThemePreset.raining:
+        return const Color(0xFFE0E0E0);
+      case AppThemePreset.snowing:
+        return const Color(0xFFE1F5FE);
+      case AppThemePreset.sunny:
+        return const Color(0xFFFFF9C4);
     }
   }
 }

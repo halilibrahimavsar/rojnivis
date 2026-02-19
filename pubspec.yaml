@@ -88,6 +88,8 @@ flutter:
   assets:
     - assets/translations/
     - assets/images/
+    - assets/images/backgrounds/
+    - assets/images/particles/
     - assets/icons/
     - assets/stickers/
     - assets/sounds/
