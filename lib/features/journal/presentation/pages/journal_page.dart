@@ -61,6 +61,7 @@ class _JournalPageState extends State<JournalPage> {
       child: Scaffold(
         body: ThemedPaper(
           lined: true,
+          applyPageStudio: true,
           child: CustomScrollView(
             slivers: [
               SliverAppBar.large(

@@ -21,6 +21,7 @@ class AiSummaryCard extends StatelessWidget {
 
     return ThemedPaper(
       padding: const EdgeInsets.all(16),
+      applyPageStudio: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

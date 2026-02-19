@@ -17,7 +17,8 @@ class AiWritingSheet extends StatefulWidget {
   State<AiWritingSheet> createState() => _AiWritingSheetState();
 }
 
-class _AiWritingSheetState extends State<AiWritingSheet> with SingleTickerProviderStateMixin {
+class _AiWritingSheetState extends State<AiWritingSheet>
+    with SingleTickerProviderStateMixin {
   String _displayedText = "";
   String _fullText = "";
   bool _isTyping = false;
@@ -34,7 +35,7 @@ class _AiWritingSheetState extends State<AiWritingSheet> with SingleTickerProvid
       _isTyping = true;
       _hasError = false;
     });
-    
+
     try {
       _fullText = await widget.suggestionFuture;
       _startTypewriter();
@@ -69,6 +70,7 @@ class _AiWritingSheetState extends State<AiWritingSheet> with SingleTickerProvid
 
     return ThemedPaper(
       padding: const EdgeInsets.all(24),
+      applyPageStudio: true,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -99,7 +101,9 @@ class _AiWritingSheetState extends State<AiWritingSheet> with SingleTickerProvid
             constraints: const BoxConstraints(maxHeight: 200),
             child: SingleChildScrollView(
               child: Text(
-                _displayedText.isEmpty && !_hasError && !_isTyping ? "..." : _displayedText,
+                _displayedText.isEmpty && !_hasError && !_isTyping
+                    ? "..."
+                    : _displayedText,
                 style: const TextStyle(
                   fontFamily: 'Caveat',
                   fontSize: 18,
@@ -126,12 +130,13 @@ class _AiWritingSheetState extends State<AiWritingSheet> with SingleTickerProvid
               ),
               const SizedBox(width: 8),
               ElevatedButton(
-                onPressed: _isTyping || _displayedText.isEmpty 
-                  ? null 
-                  : () {
-                    widget.onAccept(_fullText);
-                    Navigator.pop(context);
-                  },
+                onPressed:
+                    _isTyping || _displayedText.isEmpty
+                        ? null
+                        : () {
+                          widget.onAccept(_fullText);
+                          Navigator.pop(context);
+                        },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: colorScheme.primary,
                   foregroundColor: colorScheme.onPrimary,

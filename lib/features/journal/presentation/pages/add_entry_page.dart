@@ -99,7 +99,9 @@ class _AddEntryPageState extends State<AddEntryPage> {
   }
 
   Future<void> _loadStickers() async {
-    final stickers = await entryDecorationRepository.getStickers(_workingEntryId);
+    final stickers = await entryDecorationRepository.getStickers(
+      _workingEntryId,
+    );
     if (!mounted) return;
     _stickerController.setStickers(stickers);
   }
@@ -652,7 +654,12 @@ class _AddEntryPageState extends State<AddEntryPage> {
         children: [
           // 1. Fullscreen Paper Background
           const Positioned.fill(
-            child: ThemedBackdrop(opacity: 1, blurSigma: 0, vignette: true),
+            child: ThemedBackdrop(
+              opacity: 1,
+              blurSigma: 0,
+              vignette: true,
+              applyPageStudio: true,
+            ),
           ),
 
           // 2. Main Content Area
@@ -792,7 +799,9 @@ class _AddEntryPageState extends State<AddEntryPage> {
                 materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 labelPadding: const EdgeInsets.symmetric(horizontal: 6),
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                backgroundColor: colors.surfaceContainerHighest.withValues(alpha: 0.6),
+                backgroundColor: colors.surfaceContainerHighest.withValues(
+                  alpha: 0.6,
+                ),
                 side: BorderSide(
                   color: colors.outlineVariant.withValues(alpha: 0.6),
                 ),
@@ -827,6 +836,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
     return ThemedPaper(
       lined: true,
       animated: true,
+      applyPageStudio: true,
       padding: EdgeInsets.zero,
       borderRadius: const BorderRadius.all(Radius.circular(20)),
       child: ConstrainedBox(
@@ -867,9 +877,9 @@ class _AddEntryPageState extends State<AddEntryPage> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: Text(
-                      DateFormat.yMMMMd(context.locale.toString()).format(
-                        _selectedDate,
-                      ),
+                      DateFormat.yMMMMd(
+                        context.locale.toString(),
+                      ).format(_selectedDate),
                       style: theme.textTheme.labelMedium?.copyWith(
                         color: colors.onSurfaceVariant.withValues(alpha: 0.8),
                         fontStyle: FontStyle.italic,
@@ -916,10 +926,10 @@ class _AddEntryPageState extends State<AddEntryPage> {
             ? GoogleFonts.caveat(
               textStyle: theme.textTheme.displaySmall?.copyWith(
                 color: inkColor,
-                fontSize: 46,
-                height: 1.05,
+                fontSize: 42,
+                height: 1.08,
                 fontWeight: FontWeight.w700,
-                letterSpacing: 0.2,
+                letterSpacing: 0.1,
                 shadows: [
                   Shadow(
                     color: Colors.black.withValues(alpha: 0.09),
@@ -932,9 +942,10 @@ class _AddEntryPageState extends State<AddEntryPage> {
             : GoogleFonts.patrickHand(
               textStyle: theme.textTheme.bodyLarge?.copyWith(
                 color: inkColor,
-                fontSize: 28,
-                height: 1.45,
-                letterSpacing: 0.15,
+                // Match ruled-paper step (~28px) so handwriting fits lines.
+                fontSize: 20,
+                height: 1.4,
+                letterSpacing: 0.05,
                 shadows: [
                   Shadow(
                     color: Colors.black.withValues(alpha: 0.08),
@@ -952,6 +963,11 @@ class _AddEntryPageState extends State<AddEntryPage> {
       decoration: InputDecoration(
         hintText: hint,
         border: InputBorder.none,
+        enabledBorder: InputBorder.none,
+        focusedBorder: InputBorder.none,
+        disabledBorder: InputBorder.none,
+        errorBorder: InputBorder.none,
+        focusedErrorBorder: InputBorder.none,
         isDense: true,
         filled: false,
         contentPadding: EdgeInsets.zero,
@@ -1060,7 +1076,9 @@ class _AddEntryPageState extends State<AddEntryPage> {
   Widget _buildAttachmentTile(ThemeData theme, String path) {
     final colors = theme.colorScheme;
     final isImage = isImagePath(path);
-    final previewBackground = colors.surfaceContainerHighest.withValues(alpha: 0.5);
+    final previewBackground = colors.surfaceContainerHighest.withValues(
+      alpha: 0.5,
+    );
     return Material(
       color: Colors.transparent,
       child: InkWell(

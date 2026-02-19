@@ -72,8 +72,8 @@ class SketchStroke {
     this.opacity = 1.0,
     List<Offset>? points,
     List<double>? velocities,
-  })  : points = points ?? [],
-        velocities = velocities ?? [];
+  }) : points = points ?? [],
+       velocities = velocities ?? [];
 }
 
 // ─────────────────────────────────────────────────────────────────
@@ -274,6 +274,7 @@ class _SketchCanvasState extends State<SketchCanvas>
           const Positioned.fill(
             child: ThemedPaper(
               lined: true,
+              applyPageStudio: true,
               child: SizedBox.shrink(),
             ),
           ),
@@ -290,9 +291,7 @@ class _SketchCanvasState extends State<SketchCanvas>
           ),
         ],
       ),
-      bottomNavigationBar: SafeArea(
-        child: _buildPremiumToolbar(colorScheme),
-      ),
+      bottomNavigationBar: SafeArea(child: _buildPremiumToolbar(colorScheme)),
     );
   }
 
@@ -323,50 +322,55 @@ class _SketchCanvasState extends State<SketchCanvas>
             padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: PenType.values.map((pen) {
-                final isSelected = _penType == pen;
-                return GestureDetector(
-                  onTap: () => setState(() => _penType = pen),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? colorScheme.primaryContainer
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          pen.icon,
-                          size: 22,
-                          color: isSelected
-                              ? colorScheme.primary
-                              : colorScheme.onSurfaceVariant,
+              children:
+                  PenType.values.map((pen) {
+                    final isSelected = _penType == pen;
+                    return GestureDetector(
+                      onTap: () => setState(() => _penType = pen),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 8,
                         ),
-                        const SizedBox(height: 2),
-                        Text(
-                          pen.label,
-                          style: TextStyle(
-                            fontSize: 9,
-                            fontWeight: isSelected
-                                ? FontWeight.w700
-                                : FontWeight.w500,
-                            color: isSelected
-                                ? colorScheme.primary
-                                : colorScheme.onSurfaceVariant,
-                          ),
+                        decoration: BoxDecoration(
+                          color:
+                              isSelected
+                                  ? colorScheme.primaryContainer
+                                  : Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              pen.icon,
+                              size: 22,
+                              color:
+                                  isSelected
+                                      ? colorScheme.primary
+                                      : colorScheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              pen.label,
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight:
+                                    isSelected
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                color:
+                                    isSelected
+                                        ? colorScheme.primary
+                                        : colorScheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }).toList(),
             ),
           ),
 
@@ -398,19 +402,21 @@ class _SketchCanvasState extends State<SketchCanvas>
                               color: c,
                               shape: BoxShape.circle,
                               border: Border.all(
-                                color: isSelected
-                                    ? colorScheme.primary
-                                    : Colors.transparent,
+                                color:
+                                    isSelected
+                                        ? colorScheme.primary
+                                        : Colors.transparent,
                                 width: 2.5,
                               ),
-                              boxShadow: isSelected
-                                  ? [
-                                      BoxShadow(
-                                        color: c.withValues(alpha: 0.4),
-                                        blurRadius: 8,
-                                      ),
-                                    ]
-                                  : null,
+                              boxShadow:
+                                  isSelected
+                                      ? [
+                                        BoxShadow(
+                                          color: c.withValues(alpha: 0.4),
+                                          blurRadius: 8,
+                                        ),
+                                      ]
+                                      : null,
                             ),
                           ),
                         );
@@ -535,19 +541,21 @@ class _PremiumStrokePainter extends CustomPainter {
     if (points.length < 2) return;
 
     for (int i = 0; i < points.length - 1; i++) {
-      final velocity = i < stroke.velocities.length
-          ? stroke.velocities[i]
-          : 0.0;
+      final velocity =
+          i < stroke.velocities.length ? stroke.velocities[i] : 0.0;
 
       // Slower = thicker (ink pools), faster = thinner
-      final width = (stroke.baseWidth * 1.5 - velocity * 0.15)
-          .clamp(stroke.baseWidth * 0.4, stroke.baseWidth * 2.0);
+      final width = (stroke.baseWidth * 1.5 - velocity * 0.15).clamp(
+        stroke.baseWidth * 0.4,
+        stroke.baseWidth * 2.0,
+      );
 
-      final paint = Paint()
-        ..color = stroke.color.withValues(alpha: stroke.opacity)
-        ..strokeWidth = width
-        ..strokeCap = StrokeCap.round
-        ..style = PaintingStyle.stroke;
+      final paint =
+          Paint()
+            ..color = stroke.color.withValues(alpha: stroke.opacity)
+            ..strokeWidth = width
+            ..strokeCap = StrokeCap.round
+            ..style = PaintingStyle.stroke;
 
       // Use quadratic bezier for smoother lines
       if (i < points.length - 2) {
@@ -555,9 +563,10 @@ class _PremiumStrokePainter extends CustomPainter {
         final p1 = points[i + 1];
         final mid = Offset((p0.dx + p1.dx) / 2, (p0.dy + p1.dy) / 2);
 
-        final path = Path()
-          ..moveTo(p0.dx, p0.dy)
-          ..quadraticBezierTo(p0.dx, p0.dy, mid.dx, mid.dy);
+        final path =
+            Path()
+              ..moveTo(p0.dx, p0.dy)
+              ..quadraticBezierTo(p0.dx, p0.dy, mid.dx, mid.dy);
         canvas.drawPath(path, paint);
       } else {
         canvas.drawLine(points[i], points[i + 1], paint);
@@ -570,9 +579,7 @@ class _PremiumStrokePainter extends CustomPainter {
         points.first,
         stroke.baseWidth * 0.6,
         Paint()
-          ..color = stroke.color.withValues(
-            alpha: stroke.opacity * 0.4,
-          )
+          ..color = stroke.color.withValues(alpha: stroke.opacity * 0.4)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2),
       );
     }
@@ -583,11 +590,12 @@ class _PremiumStrokePainter extends CustomPainter {
     final random = math.Random(stroke.hashCode);
 
     for (int i = 0; i < stroke.points.length - 1; i++) {
-      final velocity = i < stroke.velocities.length
-          ? stroke.velocities[i]
-          : 0.0;
-      final width = (stroke.baseWidth - velocity * 0.1)
-          .clamp(stroke.baseWidth * 0.5, stroke.baseWidth * 1.2);
+      final velocity =
+          i < stroke.velocities.length ? stroke.velocities[i] : 0.0;
+      final width = (stroke.baseWidth - velocity * 0.1).clamp(
+        stroke.baseWidth * 0.5,
+        stroke.baseWidth * 1.2,
+      );
 
       // Draw 2-3 slightly offset lines for texture
       for (var layer = 0; layer < 3; layer++) {
@@ -595,11 +603,12 @@ class _PremiumStrokePainter extends CustomPainter {
         final jy = (random.nextDouble() - 0.5) * 1.2;
         final alpha = stroke.opacity * (0.3 + random.nextDouble() * 0.4);
 
-        final paint = Paint()
-          ..color = stroke.color.withValues(alpha: alpha)
-          ..strokeWidth = width * (0.3 + random.nextDouble() * 0.4)
-          ..strokeCap = StrokeCap.round
-          ..style = PaintingStyle.stroke;
+        final paint =
+            Paint()
+              ..color = stroke.color.withValues(alpha: alpha)
+              ..strokeWidth = width * (0.3 + random.nextDouble() * 0.4)
+              ..strokeCap = StrokeCap.round
+              ..style = PaintingStyle.stroke;
 
         canvas.drawLine(
           stroke.points[i] + Offset(jx, jy),

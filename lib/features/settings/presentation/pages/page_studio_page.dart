@@ -21,8 +21,12 @@ class PageStudioPage extends StatelessWidget {
           }
 
           final visualFamily = PageVisualFamilyX.fromId(state.pageVisualFamily);
-          final variant = VintagePaperVariantX.fromId(state.vintagePaperVariant);
-          final intensity = AnimationIntensityX.fromId(state.animationIntensity);
+          final variant = VintagePaperVariantX.fromId(
+            state.vintagePaperVariant,
+          );
+          final intensity = AnimationIntensityX.fromId(
+            state.animationIntensity,
+          );
 
           return ListView(
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
@@ -55,8 +59,8 @@ class PageStudioPage extends StatelessWidget {
                       selected: {visualFamily},
                       onSelectionChanged: (selection) {
                         context.read<SettingsBloc>().add(
-                              UpdatePageVisualFamily(selection.first.id),
-                            );
+                          UpdatePageVisualFamily(selection.first.id),
+                        );
                       },
                     ),
                   ],
@@ -136,8 +140,8 @@ class PageStudioPage extends StatelessWidget {
                       selected: {intensity},
                       onSelectionChanged: (selection) {
                         context.read<SettingsBloc>().add(
-                              UpdateAnimationIntensity(selection.first.id),
-                            );
+                          UpdateAnimationIntensity(selection.first.id),
+                        );
                       },
                     ),
                   ],
@@ -158,15 +162,14 @@ class PageStudioPage extends StatelessWidget {
                     const SizedBox(height: 12),
                     ThemedPaper(
                       lined: true,
+                      applyPageStudio: true,
                       minHeight: 180,
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             'preview_title'.tr(),
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleLarge
+                            style: Theme.of(context).textTheme.titleLarge
                                 ?.copyWith(fontWeight: FontWeight.w800),
                           ),
                           const SizedBox(height: 8),
@@ -197,13 +200,14 @@ class PageStudioPage extends StatelessWidget {
     return ChoiceChip(
       label: Text(label),
       selected: selected == variant,
-      onSelected: !enabled
-          ? null
-          : (_) {
-              context
-                  .read<SettingsBloc>()
-                  .add(UpdateVintagePaperVariant(variant.id));
-            },
+      onSelected:
+          !enabled
+              ? null
+              : (_) {
+                context.read<SettingsBloc>().add(
+                  UpdateVintagePaperVariant(variant.id),
+                );
+              },
     );
   }
 }

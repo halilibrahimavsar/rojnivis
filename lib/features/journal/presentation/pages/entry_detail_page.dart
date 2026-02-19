@@ -55,7 +55,9 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
   }
 
   Future<void> _loadStickers() async {
-    final stickers = await entryDecorationRepository.getStickers(widget.entryId);
+    final stickers = await entryDecorationRepository.getStickers(
+      widget.entryId,
+    );
     if (!mounted) return;
     _stickerController.setStickers(stickers);
   }
@@ -76,9 +78,9 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
   Future<void> _summarizeEntry(JournalEntryModel entry) async {
     final aiService = getIt<AiService>();
     if (!aiService.isConfigured) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('ai_not_configured'.tr())),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('ai_not_configured'.tr())));
       return;
     }
 
@@ -93,7 +95,7 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-           SnackBar(content: Text('Failed to generate summary: $e')),
+          SnackBar(content: Text('Failed to generate summary: $e')),
         );
       }
     } finally {
@@ -195,16 +197,24 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
                                 onRefresh: () => _summarizeEntry(entry!),
                               ),
                             ] else if (getIt<AiService>().isConfigured) ...[
-                               const SizedBox(height: 8),
-                               Align(
-                                 alignment: Alignment.centerLeft,
-                                 child: TextButton.icon(
-                                   onPressed: () => _summarizeEntry(entry!),
-                                   icon: const Icon(Icons.auto_awesome, size: 14),
-                                   label: Text('summarize'.tr(), style: const TextStyle(fontSize: 12)),
-                                   style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
-                                 ),
-                               ),
+                              const SizedBox(height: 8),
+                              Align(
+                                alignment: Alignment.centerLeft,
+                                child: TextButton.icon(
+                                  onPressed: () => _summarizeEntry(entry!),
+                                  icon: const Icon(
+                                    Icons.auto_awesome,
+                                    size: 14,
+                                  ),
+                                  label: Text(
+                                    'summarize'.tr(),
+                                    style: const TextStyle(fontSize: 12),
+                                  ),
+                                  style: TextButton.styleFrom(
+                                    visualDensity: VisualDensity.compact,
+                                  ),
+                                ),
+                              ),
                             ],
                             const SizedBox(height: 12),
                             SegmentedButton<_EntryViewStyle>(
@@ -321,7 +331,8 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
                           ),
                           tooltip: 'sticker_edit_mode'.tr(),
                         ),
-                      if (_style != _EntryViewStyle.library && _isStickerEditMode)
+                      if (_style != _EntryViewStyle.library &&
+                          _isStickerEditMode)
                         IconButton(
                           onPressed: _openStickerPicker,
                           icon: const Icon(Icons.emoji_emotions_outlined),
@@ -333,7 +344,11 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
           body: Stack(
             children: [
               const Positioned.fill(
-                child: ThemedBackdrop(blurSigma: 6, opacity: 0.95),
+                child: ThemedBackdrop(
+                  blurSigma: 6,
+                  opacity: 0.95,
+                  applyPageStudio: true,
+                ),
               ),
               if (backdropPath != null) AttachmentBackdrop(path: backdropPath),
               bodyContent,
@@ -515,7 +530,10 @@ class _NormalView extends StatelessWidget {
     return Stack(
       children: [
         _FullScreenSheet(
-          child: Text(entry.content, style: Theme.of(context).textTheme.bodyLarge),
+          child: Text(
+            entry.content,
+            style: Theme.of(context).textTheme.bodyLarge,
+          ),
         ),
         Positioned.fill(
           child: StickerLayer(
@@ -567,9 +585,8 @@ class _LetterView extends StatelessWidget {
                 Text(
                   salutation,
                   style: GoogleFonts.playfairDisplay(
-                    textStyle: Theme.of(
-                      context,
-                    ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+                    textStyle: Theme.of(context).textTheme.titleMedium
+                        ?.copyWith(fontWeight: FontWeight.w700),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -578,9 +595,9 @@ class _LetterView extends StatelessWidget {
                 Text(
                   signature,
                   style: GoogleFonts.playfairDisplay(
-                    textStyle: Theme.of(
-                      context,
-                    ).textTheme.titleSmall?.copyWith(fontStyle: FontStyle.italic),
+                    textStyle: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontStyle: FontStyle.italic,
+                    ),
                   ),
                 ),
               ],
@@ -748,10 +765,7 @@ class _LibraryTile extends StatelessWidget {
 }
 
 class _FullScreenSheet extends StatelessWidget {
-  const _FullScreenSheet({
-    required this.child,
-    this.lined = false,
-  });
+  const _FullScreenSheet({required this.child, this.lined = false});
 
   final Widget child;
   final bool lined;
@@ -761,10 +775,13 @@ class _FullScreenSheet extends StatelessWidget {
     const padding = EdgeInsets.fromLTRB(18, 18, 18, 20);
     return LayoutBuilder(
       builder: (context, constraints) {
-        final minInnerHeight = (constraints.maxHeight - padding.vertical)
-            .clamp(0.0, double.infinity);
+        final minInnerHeight = (constraints.maxHeight - padding.vertical).clamp(
+          0.0,
+          double.infinity,
+        );
         return ThemedPaper(
           lined: lined,
+          applyPageStudio: true,
           minHeight: constraints.maxHeight,
           padding: padding,
           child: SingleChildScrollView(

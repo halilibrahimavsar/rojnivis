@@ -15,6 +15,7 @@ class ThemedPaper extends StatefulWidget {
     this.lined = false,
     this.animated = true,
     this.minHeight,
+    this.applyPageStudio = false,
   });
 
   final Widget child;
@@ -23,6 +24,7 @@ class ThemedPaper extends StatefulWidget {
   final bool lined;
   final bool animated;
   final double? minHeight;
+  final bool applyPageStudio;
 
   @override
   State<ThemedPaper> createState() => _ThemedPaperState();
@@ -35,12 +37,14 @@ class ThemedBackdrop extends StatefulWidget {
     this.opacity = 0.9,
     this.blurSigma = 0,
     this.vignette = true,
+    this.applyPageStudio = false,
   });
 
   final bool animated;
   final double opacity;
   final double blurSigma;
   final bool vignette;
+  final bool applyPageStudio;
 
   @override
   State<ThemedBackdrop> createState() => _ThemedBackdropState();
@@ -73,9 +77,11 @@ class _ThemedBackdropState extends State<ThemedBackdrop>
   }
 
   void _syncAnimationState() {
-    final intensity =
-        Theme.of(context).extension<AppThemeStyle>()?.animationIntensity ??
-        AnimationIntensity.subtle;
+    final effectiveIntensity =
+        widget.applyPageStudio
+            ? Theme.of(context).extension<AppThemeStyle>()?.animationIntensity
+            : null;
+    final intensity = effectiveIntensity ?? AnimationIntensity.subtle;
     _controller.duration = switch (intensity) {
       AnimationIntensity.off => const Duration(seconds: 24),
       AnimationIntensity.subtle => const Duration(seconds: 26),
@@ -102,10 +108,18 @@ class _ThemedBackdropState extends State<ThemedBackdrop>
   Widget build(BuildContext context) {
     final style = Theme.of(context).extension<AppThemeStyle>();
     final preset = style?.preset ?? AppThemePreset.defaultPreset;
-    final visualFamily = style?.pageVisualFamily ?? PageVisualFamily.classic;
+    final visualFamily =
+        widget.applyPageStudio
+            ? style?.pageVisualFamily ?? PageVisualFamily.classic
+            : PageVisualFamily.classic;
     final variant =
-        style?.vintagePaperVariant ?? VintagePaperVariant.parchment;
-    final intensity = style?.animationIntensity ?? AnimationIntensity.subtle;
+        widget.applyPageStudio
+            ? style?.vintagePaperVariant ?? VintagePaperVariant.parchment
+            : VintagePaperVariant.parchment;
+    final intensity =
+        widget.applyPageStudio
+            ? style?.animationIntensity ?? AnimationIntensity.subtle
+            : AnimationIntensity.subtle;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final spec = _paperSpecFor(preset, isDark);
     final vintageSpec = _vintagePaperSpecFor(variant, isDark);
@@ -114,9 +128,8 @@ class _ThemedBackdropState extends State<ThemedBackdrop>
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
-          final t = widget.animated && intensity.isAnimated
-              ? _controller.value
-              : 0.0;
+          final t =
+              widget.animated && intensity.isAnimated ? _controller.value : 0.0;
           final content = Stack(
             children: [
               Positioned.fill(
@@ -130,6 +143,19 @@ class _ThemedBackdropState extends State<ThemedBackdrop>
                         visualFamily == PageVisualFamily.vintage
                             ? _buildVintageGradient(vintageSpec, t, intensity)
                             : _buildGradient(spec, t),
+                  ),
+                ),
+              ),
+              Positioned.fill(
+                child: Opacity(
+                  opacity: _paperTextureOpacity(
+                    visualFamily: visualFamily,
+                    isDark: isDark,
+                  ),
+                  child: const Image(
+                    image: AssetImage('assets/images/paper_texture.jpg'),
+                    fit: BoxFit.cover,
+                    filterQuality: FilterQuality.low,
                   ),
                 ),
               ),
@@ -213,9 +239,11 @@ class _ThemedPaperState extends State<ThemedPaper>
   }
 
   void _syncAnimationState() {
-    final intensity =
-        Theme.of(context).extension<AppThemeStyle>()?.animationIntensity ??
-        AnimationIntensity.subtle;
+    final effectiveIntensity =
+        widget.applyPageStudio
+            ? Theme.of(context).extension<AppThemeStyle>()?.animationIntensity
+            : null;
+    final intensity = effectiveIntensity ?? AnimationIntensity.subtle;
     _controller.duration = switch (intensity) {
       AnimationIntensity.off => const Duration(seconds: 22),
       AnimationIntensity.subtle => const Duration(seconds: 22),
@@ -242,10 +270,18 @@ class _ThemedPaperState extends State<ThemedPaper>
   Widget build(BuildContext context) {
     final style = Theme.of(context).extension<AppThemeStyle>();
     final preset = style?.preset ?? AppThemePreset.defaultPreset;
-    final visualFamily = style?.pageVisualFamily ?? PageVisualFamily.classic;
+    final visualFamily =
+        widget.applyPageStudio
+            ? style?.pageVisualFamily ?? PageVisualFamily.classic
+            : PageVisualFamily.classic;
     final variant =
-        style?.vintagePaperVariant ?? VintagePaperVariant.parchment;
-    final intensity = style?.animationIntensity ?? AnimationIntensity.subtle;
+        widget.applyPageStudio
+            ? style?.vintagePaperVariant ?? VintagePaperVariant.parchment
+            : VintagePaperVariant.parchment;
+    final intensity =
+        widget.applyPageStudio
+            ? style?.animationIntensity ?? AnimationIntensity.subtle
+            : AnimationIntensity.subtle;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final spec = _paperSpecFor(preset, isDark);
     final vintageSpec = _vintagePaperSpecFor(variant, isDark);
@@ -280,9 +316,10 @@ class _ThemedPaperState extends State<ThemedPaper>
           animation: _controller,
           child: content,
           builder: (context, child) {
-            final t = widget.animated && intensity.isAnimated
-                ? _controller.value
-                : 0.0;
+            final t =
+                widget.animated && intensity.isAnimated
+                    ? _controller.value
+                    : 0.0;
             return Stack(
               children: [
                 Positioned.fill(
@@ -296,6 +333,19 @@ class _ThemedPaperState extends State<ThemedPaper>
                           visualFamily == PageVisualFamily.vintage
                               ? _buildVintageGradient(vintageSpec, t, intensity)
                               : _buildGradient(spec, t),
+                    ),
+                  ),
+                ),
+                Positioned.fill(
+                  child: Opacity(
+                    opacity: _paperTextureOpacity(
+                      visualFamily: visualFamily,
+                      isDark: isDark,
+                    ),
+                    child: const Image(
+                      image: AssetImage('assets/images/paper_texture.jpg'),
+                      fit: BoxFit.cover,
+                      filterQuality: FilterQuality.low,
                     ),
                   ),
                 ),
@@ -521,6 +571,16 @@ Gradient _buildGradient(_PaperSpec spec, double t) {
   );
 }
 
+double _paperTextureOpacity({
+  required PageVisualFamily visualFamily,
+  required bool isDark,
+}) {
+  if (visualFamily == PageVisualFamily.vintage) {
+    return isDark ? 0.08 : 0.14;
+  }
+  return isDark ? 0.04 : 0.09;
+}
+
 class _VintagePaperSpec {
   const _VintagePaperSpec({
     required this.base,
@@ -669,8 +729,12 @@ class _VintageBackdropPainter extends CustomPainter {
     for (int i = 0; i < density; i++) {
       final px = _noise(i * 17, 0.41) * size.width;
       final py = _noise(i * 31, 0.97) * size.height;
-      final dx = sin(drift + i * 0.3) * (intensity == AnimationIntensity.cinematic ? 10 : 5);
-      final dy = cos(drift * 0.75 + i * 0.2) * (intensity == AnimationIntensity.cinematic ? 5 : 2);
+      final dx =
+          sin(drift + i * 0.3) *
+          (intensity == AnimationIntensity.cinematic ? 10 : 5);
+      final dy =
+          cos(drift * 0.75 + i * 0.2) *
+          (intensity == AnimationIntensity.cinematic ? 5 : 2);
       dustPaint.color = Colors.white.withValues(
         alpha: intensity == AnimationIntensity.cinematic ? 0.065 : 0.04,
       );
@@ -738,10 +802,7 @@ class _VintagePaperPainter extends CustomPainter {
           ..shader = RadialGradient(
             center: const Alignment(0, -0.1),
             radius: 1.12,
-            colors: [
-              Colors.transparent,
-              spec.edgeTint.withValues(alpha: 0.18),
-            ],
+            colors: [Colors.transparent, spec.edgeTint.withValues(alpha: 0.18)],
           ).createShader(Offset.zero & size);
     canvas.drawRect(Offset.zero & size, edgeOverlay);
 
@@ -749,9 +810,10 @@ class _VintagePaperPainter extends CustomPainter {
         Paint()
           ..color = spec.edgeTint.withValues(alpha: 0.08)
           ..strokeWidth = 1.2;
-    final foldShift = intensity == AnimationIntensity.cinematic
-        ? sin(progress * pi * 2) * 1.2
-        : 0.0;
+    final foldShift =
+        intensity == AnimationIntensity.cinematic
+            ? sin(progress * pi * 2) * 1.2
+            : 0.0;
     final foldX = size.width * 0.32 + foldShift;
     canvas.drawLine(Offset(foldX, 0), Offset(foldX, size.height), foldPaint);
 
@@ -794,16 +856,13 @@ class _VintagePaperPainter extends CustomPainter {
     ];
 
     for (final c in accents) {
-      final stem = Path()
-        ..moveTo(c.dx - 10, c.dy + 16)
-        ..quadraticBezierTo(c.dx, c.dy + 6, c.dx + 14, c.dy + 22);
+      final stem =
+          Path()
+            ..moveTo(c.dx - 10, c.dy + 16)
+            ..quadraticBezierTo(c.dx, c.dy + 6, c.dx + 14, c.dy + 22);
       canvas.drawPath(stem, stems);
       canvas.drawCircle(c, 5.5, petals);
-      canvas.drawCircle(
-        Offset(c.dx + 6, c.dy - 4),
-        3.5,
-        petals,
-      );
+      canvas.drawCircle(Offset(c.dx + 6, c.dy - 4), 3.5, petals);
     }
   }
 

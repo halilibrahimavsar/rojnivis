@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../constants/app_constants.dart';
 import 'page_studio_models.dart';
 
-
 enum AppThemePreset {
   defaultPreset,
   love,
@@ -201,7 +200,7 @@ class AppTheme {
   }) {
     final preset = AppThemePresetX.fromId(presetId);
     final palette = _paletteFor(preset);
-    final useVintage = pageVisualFamily == PageVisualFamily.vintage;
+    final realismTint = _realismTintFor(preset, brightness);
 
     final baseScheme = ColorScheme.fromSeed(
       seedColor: palette.seed,
@@ -217,22 +216,20 @@ class AppTheme {
             ? palette.surfaceLight
             : palette.surfaceDark;
 
-    if (useVintage) {
-      final vintage = _vintagePaletteFor(vintagePaperVariant, brightness);
-      background = vintage.background;
-      surface = vintage.surface;
-    }
-
-    final colorScheme = baseScheme.copyWith(
-      surface: surface,
-      surfaceContainerHighest:
-          useVintage
-              ? Color.alphaBlend(
-                const Color(0xFF6D4C41).withValues(alpha: 0.10),
-                surface,
-              )
-              : null,
+    background = Color.alphaBlend(
+      realismTint.withValues(
+        alpha: brightness == Brightness.light ? 0.08 : 0.12,
+      ),
+      background,
     );
+    surface = Color.alphaBlend(
+      realismTint.withValues(
+        alpha: brightness == Brightness.light ? 0.05 : 0.09,
+      ),
+      surface,
+    );
+
+    final colorScheme = baseScheme.copyWith(surface: surface);
 
     final baseTextTheme = getTextTheme(fontFamily);
     final textTheme = _tuneTextTheme(
@@ -254,15 +251,12 @@ class AppTheme {
                   .withValues(alpha: 0.16),
               colorScheme.surface,
             )
-            : useVintage
-            ? Color.alphaBlend(
-              (brightness == Brightness.light
-                      ? const Color(0xFFAD8756)
-                      : const Color(0xFFD6B88A))
-                  .withValues(alpha: brightness == Brightness.light ? 0.08 : 0.06),
+            : Color.alphaBlend(
+              realismTint.withValues(
+                alpha: brightness == Brightness.light ? 0.06 : 0.08,
+              ),
               colorScheme.surface,
-            )
-            : colorScheme.surface;
+            );
 
     final cardTheme = CardTheme(
       elevation: isNeomorphic ? 0 : 2,
@@ -270,13 +264,16 @@ class AppTheme {
           brightness == Brightness.light
               ? Colors.black.withValues(alpha: 0.05)
               : Colors.black.withValues(alpha: 0.2),
-      color: cardColor.withValues(alpha: 0.94), // Slightly translucent to see texture
+      color: cardColor.withValues(
+        alpha: 0.94,
+      ), // Slightly translucent to see texture
       shape: RoundedRectangleBorder(
         borderRadius: radius,
         side: BorderSide(
-          color: brightness == Brightness.light 
-              ? Colors.black.withValues(alpha: 0.03)
-              : Colors.white.withValues(alpha: 0.03),
+          color:
+              brightness == Brightness.light
+                  ? Colors.black.withValues(alpha: 0.03)
+                  : Colors.white.withValues(alpha: 0.03),
           width: 0.5,
         ),
       ),
@@ -542,46 +539,53 @@ class AppTheme {
     }
   }
 
-  static _VintagePalette _vintagePaletteFor(
-    VintagePaperVariant variant,
-    Brightness brightness,
-  ) {
+  static Color _realismTintFor(AppThemePreset preset, Brightness brightness) {
     if (brightness == Brightness.dark) {
-      switch (variant) {
-        case VintagePaperVariant.sepiaDiary:
-          return const _VintagePalette(
-            background: Color(0xFF1D1712),
-            surface: Color(0xFF2A221B),
-          );
-        case VintagePaperVariant.pressedFloral:
-          return const _VintagePalette(
-            background: Color(0xFF19160F),
-            surface: Color(0xFF262117),
-          );
-        case VintagePaperVariant.parchment:
-          return const _VintagePalette(
-            background: Color(0xFF18140F),
-            surface: Color(0xFF241E16),
-          );
+      switch (preset) {
+        case AppThemePreset.love:
+          return const Color(0xFF2A171A);
+        case AppThemePreset.ocean:
+          return const Color(0xFF122334);
+        case AppThemePreset.forest:
+          return const Color(0xFF132115);
+        case AppThemePreset.sunset:
+          return const Color(0xFF2B1A13);
+        case AppThemePreset.spring:
+          return const Color(0xFF1A2319);
+        case AppThemePreset.autumn:
+          return const Color(0xFF2A1D13);
+        case AppThemePreset.futuristic:
+          return const Color(0xFF0F1A27);
+        case AppThemePreset.glass:
+          return const Color(0xFF142234);
+        case AppThemePreset.neomorphic:
+          return const Color(0xFF1A1C1F);
+        case AppThemePreset.defaultPreset:
+          return const Color(0xFF1B1D2C);
       }
     }
 
-    switch (variant) {
-      case VintagePaperVariant.sepiaDiary:
-        return const _VintagePalette(
-          background: Color(0xFFF3E8D8),
-          surface: Color(0xFFF8EDDD),
-        );
-      case VintagePaperVariant.pressedFloral:
-        return const _VintagePalette(
-          background: Color(0xFFF2E9D8),
-          surface: Color(0xFFF7EEDD),
-        );
-      case VintagePaperVariant.parchment:
-        return const _VintagePalette(
-          background: Color(0xFFF1E6D0),
-          surface: Color(0xFFF8ECD7),
-        );
+    switch (preset) {
+      case AppThemePreset.love:
+        return const Color(0xFFE9D6D8);
+      case AppThemePreset.ocean:
+        return const Color(0xFFD6E6F0);
+      case AppThemePreset.forest:
+        return const Color(0xFFDCE8D8);
+      case AppThemePreset.sunset:
+        return const Color(0xFFEEDCCF);
+      case AppThemePreset.spring:
+        return const Color(0xFFDEEBDD);
+      case AppThemePreset.autumn:
+        return const Color(0xFFE9DDCF);
+      case AppThemePreset.futuristic:
+        return const Color(0xFFD8E0EA);
+      case AppThemePreset.glass:
+        return const Color(0xFFDCE5F2);
+      case AppThemePreset.neomorphic:
+        return const Color(0xFFE3E5E8);
+      case AppThemePreset.defaultPreset:
+        return const Color(0xFFDFE1E8);
     }
   }
 }
@@ -604,13 +608,6 @@ class _ThemePalette {
   final Color surfaceLight;
   final Color backgroundDark;
   final Color surfaceDark;
-}
-
-class _VintagePalette {
-  const _VintagePalette({required this.background, required this.surface});
-
-  final Color background;
-  final Color surface;
 }
 
 @immutable
@@ -654,8 +651,7 @@ class AppThemeStyle extends ThemeExtension<AppThemeStyle> {
     if (other is! AppThemeStyle) return this;
     return AppThemeStyle(
       preset: t < 0.5 ? preset : other.preset,
-      pageVisualFamily:
-          t < 0.5 ? pageVisualFamily : other.pageVisualFamily,
+      pageVisualFamily: t < 0.5 ? pageVisualFamily : other.pageVisualFamily,
       vintagePaperVariant:
           t < 0.5 ? vintagePaperVariant : other.vintagePaperVariant,
       animationIntensity:
