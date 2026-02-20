@@ -56,6 +56,11 @@ class _ThemedBackdropState extends State<ThemedBackdrop>
   late final AnimationController _controller;
   bool _isRepeating = false;
 
+  // Interactivity
+  double _pointerX = -100;
+  double _pointerY = -100;
+  bool _isPointerDown = false;
+
   @override
   void initState() {
     super.initState();
@@ -83,12 +88,24 @@ class _ThemedBackdropState extends State<ThemedBackdrop>
         paths.add('assets/images/particles/raindrop.png');
       case AppThemePreset.autumn:
       case AppThemePreset.nature:
-      case AppThemePreset.darkNature:
       case AppThemePreset.forest:
         paths.add('assets/images/particles/leaf_autumn.png');
         paths.add('assets/images/particles/leaf_green.png');
+      case AppThemePreset.darkNature:
+        paths.add('assets/images/particles/leaf_autumn.png');
+        paths.add('assets/images/particles/leaf_green.png');
+        paths.add('assets/images/particles/firefly.png');
       case AppThemePreset.spring:
         paths.add('assets/images/particles/petal.png');
+      case AppThemePreset.love:
+        paths.add('assets/images/particles/heart.png');
+      case AppThemePreset.glass:
+        paths.add('assets/images/particles/bubble.png');
+      case AppThemePreset.nightblue:
+      case AppThemePreset.nebula:
+        paths.add('assets/images/particles/star.png');
+      case AppThemePreset.nightmare:
+        paths.add('assets/images/particles/smoke.png');
       default:
         break;
     }
@@ -177,95 +194,134 @@ class _ThemedBackdropState extends State<ThemedBackdrop>
       _loadSprites(preset);
     }
 
-    return IgnorePointer(
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, child) {
-          final t =
-              widget.animated && intensity.isAnimated ? _controller.value : 0.0;
-          final content = Stack(
-            children: [
-              Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color:
-                        visualFamily == PageVisualFamily.vintage
-                            ? vintageSpec.base
-                            : spec.base,
-                    gradient:
-                        visualFamily == PageVisualFamily.vintage
-                            ? _buildVintageGradient(vintageSpec, t, intensity)
-                            : _buildGradient(spec, t),
-                  ),
-                ),
-              ),
-              if (visualFamily != PageVisualFamily.vintage)
-                _buildBackgroundImage(preset, t, isBackdrop: true),
-              Positioned.fill(
-                child: Opacity(
-                  opacity: _paperTextureOpacity(
-                    visualFamily: visualFamily,
-                    isDark: isDark,
-                  ),
-                  child: const Image(
-                    image: AssetImage('assets/images/paper_texture.jpg'),
-                    fit: BoxFit.cover,
-                    filterQuality: FilterQuality.low,
-                  ),
-                ),
-              ),
-              Positioned.fill(
-                child: RepaintBoundary(
-                  child: CustomPaint(
-                    painter:
-                        visualFamily == PageVisualFamily.vintage
-                            ? _VintageBackdropPainter(
-                              spec: vintageSpec,
-                              progress: t,
-                              intensity: intensity,
-                            )
-                            : _PaperEffectPainter(
-                              spec: spec,
-                              progress: t,
-                              sprites: _cache,
-                            ),
-                  ),
-                ),
-              ),
-              if (widget.vignette)
+    return MouseRegion(
+      onHover: (e) {
+        if (mounted) {
+          setState(() {
+            _pointerX = e.localPosition.dx;
+            _pointerY = e.localPosition.dy;
+          });
+        }
+      },
+      onExit: (_) {
+        if (mounted) {
+          setState(() {
+            _pointerX = -100;
+            _pointerY = -100;
+            _isPointerDown = false;
+          });
+        }
+      },
+      child: GestureDetector(
+        onPanUpdate: (e) {
+          if (mounted) {
+            setState(() {
+              _pointerX = e.localPosition.dx;
+              _pointerY = e.localPosition.dy;
+              _isPointerDown = true;
+            });
+          }
+        },
+        onPanEnd: (_) {
+          if (mounted) setState(() => _isPointerDown = false);
+        },
+        onPanCancel: () {
+          if (mounted) setState(() => _isPointerDown = false);
+        },
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            final t =
+                widget.animated && intensity.isAnimated
+                    ? _controller.value
+                    : 0.0;
+            final content = Stack(
+              children: [
                 Positioned.fill(
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      gradient: RadialGradient(
-                        center: const Alignment(0, -0.2),
-                        radius: 1.1,
-                        colors: [
-                          Colors.transparent,
-                          (isDark ? Colors.black : Colors.black).withValues(
-                            alpha: isDark ? 0.35 : 0.12,
-                          ),
-                        ],
-                      ),
+                      color:
+                          visualFamily == PageVisualFamily.vintage
+                              ? vintageSpec.base
+                              : spec.base,
+                      gradient:
+                          visualFamily == PageVisualFamily.vintage
+                              ? _buildVintageGradient(vintageSpec, t, intensity)
+                              : _buildGradient(spec, t),
                     ),
                   ),
                 ),
-            ],
-          );
-
-          final layered =
-              widget.blurSigma > 0
-                  ? BackdropFilter(
-                    filter: ui.ImageFilter.blur(
-                      sigmaX: widget.blurSigma,
-                      sigmaY: widget.blurSigma,
+                if (visualFamily != PageVisualFamily.vintage)
+                  _buildBackgroundImage(preset, t, isBackdrop: true),
+                Positioned.fill(
+                  child: Opacity(
+                    opacity: _paperTextureOpacity(
+                      visualFamily: visualFamily,
+                      isDark: isDark,
                     ),
-                    child: content,
-                  )
-                  : content;
+                    child: const Image(
+                      image: AssetImage('assets/images/paper_texture.jpg'),
+                      fit: BoxFit.cover,
+                      filterQuality: FilterQuality.low,
+                    ),
+                  ),
+                ),
+                Positioned.fill(
+                  child: RepaintBoundary(
+                    child: CustomPaint(
+                      painter:
+                          visualFamily == PageVisualFamily.vintage
+                              ? _VintageBackdropPainter(
+                                spec: vintageSpec,
+                                progress: t,
+                                intensity: intensity,
+                              )
+                              : _PaperEffectPainter(
+                                spec: spec,
+                                progress: t,
+                                sprites: _cache,
+                                pointerX: _pointerX,
+                                pointerY: _pointerY,
+                                isPointerDown: _isPointerDown,
+                              ),
+                    ),
+                  ),
+                ),
+                if (widget.vignette)
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: RadialGradient(
+                          center: const Alignment(0, -0.2),
+                          radius: 1.1,
+                          colors: [
+                            Colors.transparent,
+                            (isDark ? Colors.black : Colors.black).withValues(
+                              alpha: isDark ? 0.35 : 0.12,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            );
 
-          if (widget.opacity >= 0.999) return layered;
-          return Opacity(opacity: widget.opacity, child: layered);
-        },
+            final layered =
+                widget.blurSigma > 0
+                    ? BackdropFilter(
+                      filter: ui.ImageFilter.blur(
+                        sigmaX: widget.blurSigma,
+                        sigmaY: widget.blurSigma,
+                      ),
+                      child: content,
+                    )
+                    : content;
+
+            if (widget.opacity >= 0.999) return layered;
+            return Opacity(opacity: widget.opacity, child: layered);
+          },
+        ),
       ),
     );
   }
@@ -275,6 +331,11 @@ class _ThemedPaperState extends State<ThemedPaper>
     with SingleTickerProviderStateMixin {
   late final AnimationController _controller;
   bool _isRepeating = false;
+
+  // Interactivity
+  double _pointerX = -100;
+  double _pointerY = -100;
+  bool _isPointerDown = false;
 
   @override
   void initState() {
@@ -303,12 +364,24 @@ class _ThemedPaperState extends State<ThemedPaper>
         paths.add('assets/images/particles/raindrop.png');
       case AppThemePreset.autumn:
       case AppThemePreset.nature:
-      case AppThemePreset.darkNature:
       case AppThemePreset.forest:
         paths.add('assets/images/particles/leaf_autumn.png');
         paths.add('assets/images/particles/leaf_green.png');
+      case AppThemePreset.darkNature:
+        paths.add('assets/images/particles/leaf_autumn.png');
+        paths.add('assets/images/particles/leaf_green.png');
+        paths.add('assets/images/particles/firefly.png');
       case AppThemePreset.spring:
         paths.add('assets/images/particles/petal.png');
+      case AppThemePreset.love:
+        paths.add('assets/images/particles/heart.png');
+      case AppThemePreset.glass:
+        paths.add('assets/images/particles/bubble.png');
+      case AppThemePreset.nightblue:
+      case AppThemePreset.nebula:
+        paths.add('assets/images/particles/star.png');
+      case AppThemePreset.nightmare:
+        paths.add('assets/images/particles/smoke.png');
       default:
         break;
     }
@@ -423,74 +496,115 @@ class _ThemedPaperState extends State<ThemedPaper>
       ),
       child: ClipRRect(
         borderRadius: widget.borderRadius,
-        child: AnimatedBuilder(
-          animation: _controller,
-          child: content,
-          builder: (context, child) {
-            final t =
-                widget.animated && intensity.isAnimated
-                    ? _controller.value
-                    : 0.0;
-            return Stack(
-              children: [
-                Positioned.fill(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color:
-                          visualFamily == PageVisualFamily.vintage
-                              ? vintageSpec.base
-                              : spec.base,
-                      gradient:
-                          visualFamily == PageVisualFamily.vintage
-                              ? _buildVintageGradient(vintageSpec, t, intensity)
-                              : _buildGradient(spec, t),
-                    ),
-                  ),
-                ),
-                if (visualFamily != PageVisualFamily.vintage)
-                  _buildBackgroundImage(preset, t, isBackdrop: false),
-                Positioned.fill(
-                  child: Opacity(
-                    opacity: _paperTextureOpacity(
-                      visualFamily: visualFamily,
-                      isDark: isDark,
-                    ),
-                    child: const Image(
-                      image: AssetImage('assets/images/paper_texture.jpg'),
-                      fit: BoxFit.cover,
-                      filterQuality: FilterQuality.low,
-                    ),
-                  ),
-                ),
-                Positioned.fill(
-                  child: RepaintBoundary(
-                    child: CustomPaint(
-                      painter:
-                          visualFamily == PageVisualFamily.vintage
-                              ? _VintagePaperPainter(
-                                spec: vintageSpec,
-                                progress: t,
-                                intensity: intensity,
-                                drawLines: widget.lined,
-                              )
-                              : _PaperEffectPainter(
-                                spec: spec,
-                                progress: t,
-                                sprites: _cache,
-                              ),
-                    ),
-                  ),
-                ),
-                if (widget.lined && visualFamily != PageVisualFamily.vintage)
-                  Positioned.fill(
-                    child: CustomPaint(
-                      painter: _PaperLinesPainter(lineColor: spec.lineColor),
-                    ),
-                  ),
-                child!,
-              ],
-            );
+        child: Listener(
+          behavior: HitTestBehavior.translucent,
+          onPointerDown: (e) {
+            if (mounted) {
+              setState(() {
+                _isPointerDown = true;
+                _pointerX = e.localPosition.dx;
+                _pointerY = e.localPosition.dy;
+              });
+            }
           },
+          onPointerMove: (e) {
+            if (mounted) {
+              setState(() {
+                _pointerX = e.localPosition.dx;
+                _pointerY = e.localPosition.dy;
+              });
+            }
+          },
+          onPointerUp: (_) {
+            if (mounted) setState(() => _isPointerDown = false);
+          },
+          onPointerCancel: (_) {
+            if (mounted) setState(() => _isPointerDown = false);
+          },
+          onPointerHover: (e) {
+            if (mounted) {
+              setState(() {
+                _pointerX = e.localPosition.dx;
+                _pointerY = e.localPosition.dy;
+              });
+            }
+          },
+          child: AnimatedBuilder(
+            animation: _controller,
+            child: content,
+            builder: (context, child) {
+              final t =
+                  widget.animated && intensity.isAnimated
+                      ? _controller.value
+                      : 0.0;
+              return Stack(
+                children: [
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color:
+                            visualFamily == PageVisualFamily.vintage
+                                ? vintageSpec.base
+                                : spec.base,
+                        gradient:
+                            visualFamily == PageVisualFamily.vintage
+                                ? _buildVintageGradient(
+                                  vintageSpec,
+                                  t,
+                                  intensity,
+                                )
+                                : _buildGradient(spec, t),
+                      ),
+                    ),
+                  ),
+                  if (visualFamily != PageVisualFamily.vintage)
+                    _buildBackgroundImage(preset, t, isBackdrop: false),
+                  Positioned.fill(
+                    child: Opacity(
+                      opacity: _paperTextureOpacity(
+                        visualFamily: visualFamily,
+                        isDark: isDark,
+                      ),
+                      child: const Image(
+                        image: AssetImage('assets/images/paper_texture.jpg'),
+                        fit: BoxFit.cover,
+                        filterQuality: FilterQuality.low,
+                      ),
+                    ),
+                  ),
+                  Positioned.fill(
+                    child: RepaintBoundary(
+                      child: CustomPaint(
+                        painter:
+                            visualFamily == PageVisualFamily.vintage
+                                ? _VintagePaperPainter(
+                                  spec: vintageSpec,
+                                  progress: t,
+                                  intensity: intensity,
+                                  drawLines: widget.lined,
+                                )
+                                : _PaperEffectPainter(
+                                  spec: spec,
+                                  progress: t,
+                                  sprites: _cache,
+                                  pointerX: _pointerX,
+                                  pointerY: _pointerY,
+                                  isPointerDown: _isPointerDown,
+                                ),
+                      ),
+                    ),
+                  ),
+                  if (widget.lined && visualFamily != PageVisualFamily.vintage)
+                    Positioned.fill(
+                      child: CustomPaint(
+                        painter: _PaperLinesPainter(lineColor: spec.lineColor),
+                      ),
+                    ),
+                  child!,
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
@@ -706,20 +820,7 @@ _PaperSpec _paperSpecFor(AppThemePreset preset, bool isDark) {
         motif: _PaperMotif.bubbles,
       );
     case AppThemePreset.neomorphic:
-      return _PaperSpec(
-        base: isDark ? const Color(0xFF171A1F) : const Color(0xFFF2F4F6),
-        gradient:
-            isDark
-                ? const [Color(0xFF171A1F), Color(0xFF1E232A)]
-                : const [Color(0xFFF2F4F6), Color(0xFFE1E6EA)],
-        accent: const Color(0xFFB2BEC3),
-        accent2: const Color(0xFF6C5CE7),
-        lineColor:
-            isDark
-                ? Colors.white.withValues(alpha: 0.04)
-                : Colors.black.withValues(alpha: 0.05),
-        motif: _PaperMotif.none,
-      );
+      return _paperSpecFor(AppThemePreset.defaultPreset, isDark);
     case AppThemePreset.nightmare:
       return _PaperSpec(
         base: const Color(0xFF0F0505),
@@ -938,22 +1039,28 @@ Gradient _buildGradient(_PaperSpec spec, double t) {
 }
 
 String? _bgImageFor(AppThemePreset preset) {
-  switch (preset) {
-    case AppThemePreset.aurora:
-      return 'assets/images/backgrounds/aurora.png';
-    case AppThemePreset.storm:
-      return 'assets/images/backgrounds/storm.png';
-    case AppThemePreset.nebula:
-      return 'assets/images/backgrounds/nebula.png';
-    case AppThemePreset.raining:
-      return 'assets/images/backgrounds/raining.png';
-    case AppThemePreset.snowing:
-      return 'assets/images/backgrounds/snowing.png';
-    case AppThemePreset.sunny:
-      return 'assets/images/backgrounds/sunny.png';
-    default:
-      return null;
-  }
+  return switch (preset) {
+    AppThemePreset.aurora => 'assets/images/backgrounds/aurora.png',
+    AppThemePreset.storm => 'assets/images/backgrounds/storm.png',
+    AppThemePreset.nebula => 'assets/images/backgrounds/nebula.png',
+    AppThemePreset.raining => 'assets/images/backgrounds/raining.png',
+    AppThemePreset.snowing => 'assets/images/backgrounds/snowing.png',
+    AppThemePreset.sunny => 'assets/images/backgrounds/sunny.png',
+    AppThemePreset.nightblue => 'assets/images/backgrounds/nightblue.png',
+    AppThemePreset.darkNature => 'assets/images/backgrounds/darknature.png',
+    AppThemePreset.autumn => 'assets/images/backgrounds/autumn.png',
+    AppThemePreset.spring => 'assets/images/backgrounds/spring.png',
+    AppThemePreset.ocean => 'assets/images/backgrounds/ocean.png',
+    AppThemePreset.love => 'assets/images/backgrounds/love.png',
+    AppThemePreset.nightmare => 'assets/images/backgrounds/nightmare.png',
+    AppThemePreset.sunset => 'assets/images/backgrounds/sunset.png',
+    AppThemePreset.forest => 'assets/images/backgrounds/forest.png',
+    AppThemePreset.futuristic => 'assets/images/backgrounds/futuristic.png',
+    AppThemePreset.glass => 'assets/images/backgrounds/glass.png',
+    AppThemePreset.nature => 'assets/images/backgrounds/nature.png',
+    AppThemePreset.sunrise => 'assets/images/backgrounds/sunset.png',
+    _ => null,
+  };
 }
 
 Widget _buildBackgroundImage(
@@ -968,6 +1075,7 @@ Widget _buildBackgroundImage(
   final scale = 1.1 + sin(t * pi * 2) * 0.04;
   final panX = cos(t * pi * 2) * 15.0;
   final panY = sin(t * pi * 2) * 10.0;
+  final skewX = sin(t * pi * 4) * 0.015;
 
   return Positioned.fill(
     child: ClipRect(
@@ -977,9 +1085,13 @@ Widget _buildBackgroundImage(
               ..scale(scale)
               ..translate(panX, panY),
         alignment: Alignment.center,
-        child: Opacity(
-          opacity: isBackdrop ? 0.7 : 0.4,
-          child: Image.asset(path, fit: BoxFit.cover),
+        child: Transform(
+          transform: Matrix4.skewX(skewX),
+          alignment: Alignment.bottomCenter,
+          child: Opacity(
+            opacity: isBackdrop ? 0.7 : 0.4,
+            child: Image.asset(path, fit: BoxFit.cover),
+          ),
         ),
       ),
     ),
@@ -1300,11 +1412,17 @@ class _PaperEffectPainter extends CustomPainter {
     required this.spec,
     required this.progress,
     this.sprites,
+    this.pointerX = -100,
+    this.pointerY = -100,
+    this.isPointerDown = false,
   });
 
   final _PaperSpec spec;
   final double progress;
   final Map<String, ui.Image>? sprites;
+  final double pointerX;
+  final double pointerY;
+  final bool isPointerDown;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -1360,6 +1478,37 @@ class _PaperEffectPainter extends CustomPainter {
       case _PaperMotif.none:
         break;
     }
+
+    // Always draw swaying plants for nature-themed presets
+    if (spec.motif == _PaperMotif.leaves ||
+        spec.motif == _PaperMotif.fireflies ||
+        spec.motif == _PaperMotif.petals ||
+        spec.motif == _PaperMotif.raining) {
+      _drawSwayingPlants(canvas, size);
+    }
+
+    // ** Antigravity's Added Perk: Magic Shine particles on touch! **
+    if (isPointerDown) {
+      _drawMagicShine(canvas, size);
+    }
+  }
+
+  void _drawMagicShine(Canvas canvas, Size size) {
+    final rng = Random(DateTime.now().millisecondsSinceEpoch ~/ 100);
+    final paint =
+        Paint()..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
+    for (int i = 0; i < 8; i++) {
+      final t = (progress * 2.0 + i / 8) % 1.0;
+      final angle = (i / 8) * pi * 2 + progress * pi;
+      // Use rng for subtle jitter
+      final jitter = (rng.nextDouble() - 0.5) * 5.0;
+      final dist = 10.0 + 40.0 * t + jitter;
+      final px = pointerX + cos(angle) * dist;
+      final py = pointerY + sin(angle) * dist;
+      final s = 2.0 * (1.0 - t);
+      paint.color = spec.accent2.withValues(alpha: 0.4 * (1.0 - t));
+      canvas.drawCircle(Offset(px, py), s, paint);
+    }
   }
 
   // ── Rain: Heavy rain + ripples ──
@@ -1373,18 +1522,36 @@ class _PaperEffectPainter extends CustomPainter {
     // Falling rain — varied depth for parallax
     final sprite = sprites?['assets/images/particles/raindrop.png'];
 
-    for (int i = 0; i < 100; i++) {
+    for (int i = 0; i < 160; i++) {
       final depth = rng.nextDouble();
-      final x = rng.nextDouble() * size.width;
-      final speed = 1.5 + depth;
-      final y =
+      final xBase = rng.nextDouble() * size.width;
+      final speed = 1.5 + (depth * 4.0); // Faster close rain
+      final yBase =
           (rng.nextDouble() + progress * speed) % 1.2 * size.height -
           size.height * 0.1;
-      final length = 12.0 + 18.0 * depth;
-      final alpha = 0.08 + 0.16 * depth;
+
+      double x = xBase;
+      double y = yBase;
+
+      // ** Interaction: Rain parts around finger **
+      if (isPointerDown) {
+        final dx = x - pointerX;
+        final dy = y - pointerY;
+        final dist = sqrt(dx * dx + dy * dy);
+        final affectRadius = 130.0;
+        if (dist < affectRadius && dist > 0.1) {
+          final force = (affectRadius - dist) / affectRadius;
+          x += (dx / dist) * force * 60.0;
+        }
+      }
+
+      // 3D Depth effects: closer is bigger, longer, and brighter
+      final length = 15.0 + 35.0 * depth;
+      final alpha = 0.05 + 0.35 * depth;
+      final stroke = 0.5 + 2.5 * depth;
 
       if (sprite != null) {
-        final rect = Rect.fromLTWH(x, y, 2.0 + 2.0 * depth, length);
+        final rect = Rect.fromLTWH(x, y, stroke, length);
         canvas.drawImageRect(
           sprite,
           Rect.fromLTWH(
@@ -1397,10 +1564,10 @@ class _PaperEffectPainter extends CustomPainter {
           Paint()..color = Colors.white.withValues(alpha: alpha),
         );
       } else {
-        final stroke = 0.5 + 1.0 * depth;
         rainPaint
           ..color = spec.accent.withValues(alpha: alpha)
           ..strokeWidth = stroke;
+        // Tilted rain
         canvas.drawLine(Offset(x, y), Offset(x - 2, y + length), rainPaint);
       }
     }
@@ -1438,21 +1605,38 @@ class _PaperEffectPainter extends CustomPainter {
 
     final sprite = sprites?['assets/images/particles/snowflake.png'];
 
-    for (int i = 0; i < 70; i++) {
+    for (int i = 0; i < 120; i++) {
       final xSeed = rng.nextDouble();
       final ySeed = rng.nextDouble();
       final sizeFactor = rng.nextDouble();
 
       final t = progress * (0.04 + 0.08 * sizeFactor);
-      final y = (ySeed + t) % 1.1 * size.height - 10;
+      final yBase = (ySeed + t) % 1.1 * size.height - 10;
       final sway = sin(t * pi * 3 + i) * 18 * sizeFactor;
-      final x = xSeed * size.width + sway;
+      final xBase = xSeed * size.width + sway;
+
+      double x = xBase;
+      double y = yBase;
+      double alphaScale = 1.0;
+
+      // ** Interaction: Snow blows away from touch **
+      if (isPointerDown) {
+        final dx = x - pointerX;
+        final dy = y - pointerY;
+        final dist = sqrt(dx * dx + dy * dy);
+        if (dist < 100) {
+          final force = (100 - dist) / 100;
+          x += (dx / dist) * force * 40;
+          y += (dy / dist) * force * 40;
+          alphaScale = 0.3 + 0.7 * (dist / 100);
+        }
+      }
 
       final radius = 1.0 + 3.0 * sizeFactor;
-      final alpha = 0.3 + 0.7 * sizeFactor;
+      final alpha = (0.3 + 0.7 * sizeFactor) * alphaScale;
 
       if (sprite != null) {
-        final size = (2.0 + 6.0 * sizeFactor) * 2;
+        final fSize = (2.0 + 6.0 * sizeFactor) * 2;
         final rotation = progress * pi * (0.1 + rng.nextDouble() * 0.2) + i;
         canvas.save();
         canvas.translate(x, y);
@@ -1465,7 +1649,7 @@ class _PaperEffectPainter extends CustomPainter {
             sprite.width.toDouble(),
             sprite.height.toDouble(),
           ),
-          Rect.fromCenter(center: Offset.zero, width: size, height: size),
+          Rect.fromCenter(center: Offset.zero, width: fSize, height: fSize),
           Paint()..color = Colors.white.withValues(alpha: alpha),
         );
         canvas.restore();
@@ -1523,11 +1707,13 @@ class _PaperEffectPainter extends CustomPainter {
       canvas.drawLine(p1, p2, rayPaint);
     }
 
-    // Lens flare (circles towards center of screen)
+    // Lens flare chase
     final centerScreen = Offset(size.width / 2, size.height / 2);
-    final dir = centerScreen - sunCenter;
+    final target = isPointerDown ? Offset(pointerX, pointerY) : centerScreen;
+
+    final dir = target - sunCenter;
     final dist = dir.distance;
-    final unit = dir / dist;
+    final unit = dist > 0.1 ? dir / dist : Offset.zero;
 
     final flarePaint =
         Paint()..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
@@ -1537,10 +1723,10 @@ class _PaperEffectPainter extends CustomPainter {
       canvas.drawCircle(pos, r, flarePaint..color = c.withValues(alpha: 0.1));
     }
 
-    drawFlare(0.3, 8, spec.accent2);
+    drawFlare(0.3, 8 * (isPointerDown ? 1.5 : 1.0), spec.accent2);
     drawFlare(0.5, 25, spec.accent.withValues(alpha: 0.15));
     drawFlare(0.8, 4, Colors.white);
-    drawFlare(1.1, 35, spec.accent2);
+    drawFlare(1.1, 35 * (isPointerDown ? 1.2 : 1.0), spec.accent2);
   }
 
   // ── Aurora: waving light curtains ──
@@ -1583,10 +1769,20 @@ class _PaperEffectPainter extends CustomPainter {
     path.lineTo(0, yBase);
 
     for (double x = 0; x <= size.width; x += 20) {
-      final noise = _SimpleNoise.eval(
+      double noise = _SimpleNoise.eval(
         x * 0.005 * freq + offset,
         progress * speed,
       );
+
+      // ** Interaction: Plasma disturbance **
+      if (isPointerDown) {
+        final dist = (x - pointerX).abs();
+        if (dist < 150) {
+          final ripple = sin(dist * 0.05 - progress * 10) * (150 - dist) * 0.4;
+          noise += ripple * 0.015;
+        }
+      }
+
       final y = yBase + noise * 60;
       path.lineTo(x, y);
     }
@@ -1640,7 +1836,11 @@ class _PaperEffectPainter extends CustomPainter {
 
       // Lightning bolt
       final boltPath = Path();
-      double lx = size.width * (0.2 + 0.6 * rng.nextDouble());
+      // ** Interaction: Lightning Rod **
+      double lx =
+          isPointerDown
+              ? pointerX + (rng.nextDouble() - 0.5) * 100
+              : size.width * (0.2 + 0.6 * rng.nextDouble());
       double ly = 0;
       boltPath.moveTo(lx, ly);
       while (ly < size.height * 0.8) {
@@ -1680,8 +1880,20 @@ class _PaperEffectPainter extends CustomPainter {
     // Layer 1: Purple gas
     for (int i = 0; i < 4; i++) {
       final t = progress * 0.2 + i * 10;
-      final x = size.width * (0.5 + 0.4 * _SimpleNoise.eval(t, 0));
-      final y = size.height * (0.5 + 0.4 * _SimpleNoise.eval(0, t));
+      double x = size.width * (0.5 + 0.4 * _SimpleNoise.eval(t, 0));
+      double y = size.height * (0.5 + 0.4 * _SimpleNoise.eval(0, t));
+
+      if (isPointerDown) {
+        final dx = x - pointerX;
+        final dy = y - pointerY;
+        final dist = sqrt(dx * dx + dy * dy);
+        if (dist < 300) {
+          final s = (300 - dist) / 300;
+          x += -dy / dist * s * 100;
+          y += dx / dist * s * 100;
+        }
+      }
+
       gasPaint.color = spec.accent.withValues(alpha: 0.15);
       canvas.drawCircle(Offset(x, y), 120 + 40 * sin(t), gasPaint);
     }
@@ -1689,8 +1901,20 @@ class _PaperEffectPainter extends CustomPainter {
     // Layer 2: Pink gas
     for (int i = 0; i < 4; i++) {
       final t = progress * 0.3 + i * 20 + 100;
-      final x = size.width * (0.5 + 0.3 * _SimpleNoise.eval(t, 20));
-      final y = size.height * (0.5 + 0.3 * _SimpleNoise.eval(20, t));
+      double x = size.width * (0.5 + 0.3 * _SimpleNoise.eval(t, 20));
+      double y = size.height * (0.5 + 0.3 * _SimpleNoise.eval(20, t));
+
+      if (isPointerDown) {
+        final dx = x - pointerX;
+        final dy = y - pointerY;
+        final dist = sqrt(dx * dx + dy * dy);
+        if (dist < 300) {
+          final s = (300 - dist) / 300;
+          x += dy / dist * s * 80;
+          y += -dx / dist * s * 80;
+        }
+      }
+
       gasPaint.color = spec.accent2.withValues(alpha: 0.12);
       canvas.drawCircle(Offset(x, y), 100 + 30 * cos(t), gasPaint);
     }
@@ -1701,24 +1925,57 @@ class _PaperEffectPainter extends CustomPainter {
 
   // ── Nightmare: swirling dark fog ──
   void _drawRealisticFog(Canvas canvas, Size size) {
-    final fogPaint =
-        Paint()..maskFilter = const MaskFilter.blur(BlurStyle.normal, 40);
+    final sprite = sprites?['assets/images/particles/smoke.png'];
 
-    for (int i = 0; i < 6; i++) {
-      final t = (progress + i / 6) % 1.0;
-      final x = size.width * (0.2 + 0.6 * sin(t * pi * 2));
-      final y = size.height * (0.2 + 0.6 * cos(t * pi * 3));
-      final radius = size.width * 0.4 + sin(t * pi) * 50;
+    for (int i = 0; i < 12; i++) {
+      final t = (progress * 0.4 + i / 12) % 1.0;
+      double x = size.width * (0.5 + 0.5 * sin(t * pi * 2 + i));
+      double y = size.height * (0.6 + 0.3 * cos(t * pi * 1.5 + i));
 
-      fogPaint.color = spec.accent.withValues(alpha: 0.08 * (1 - t) + 0.02);
-      canvas.drawCircle(Offset(x, y), radius, fogPaint);
+      // ** Interaction: Finger parting the smoke **
+      if (isPointerDown) {
+        final dx = x - pointerX;
+        final dy = y - pointerY;
+        final dist = sqrt(dx * dx + dy * dy);
+        final clearRadius = 250.0; // Radius to clear smoke
 
-      fogPaint.color = spec.accent2.withValues(alpha: 0.06 * t + 0.02);
-      canvas.drawCircle(
-        Offset(size.width - x, size.height - y),
-        radius * 0.8,
-        fogPaint,
-      );
+        if (dist < clearRadius && dist > 0.01) {
+          // Push smoke heavily outwards, inverse to distance
+          final pushForce = (clearRadius - dist) / clearRadius;
+          // Scale affects how 'heavy' the puff feels
+          x += (dx / dist) * pushForce * 150.0;
+          y += (dy / dist) * pushForce * 150.0;
+        }
+      }
+
+      final scale = 1.0 + t;
+      final alpha = 0.05 * (1.0 - t).clamp(0, 1) + 0.02;
+
+      if (sprite != null) {
+        final drawW = size.width * 1.2 * scale;
+        final drawH = size.height * 0.8 * scale;
+        canvas.save();
+        canvas.translate(x, y);
+        canvas.rotate(t * 0.5);
+        canvas.drawImageRect(
+          sprite,
+          Rect.fromLTWH(
+            0,
+            0,
+            sprite.width.toDouble(),
+            sprite.height.toDouble(),
+          ),
+          Rect.fromCenter(center: Offset.zero, width: drawW, height: drawH),
+          Paint()..color = Colors.white.withValues(alpha: alpha),
+        );
+        canvas.restore();
+      } else {
+        final fogPaint =
+            Paint()..maskFilter = const MaskFilter.blur(BlurStyle.normal, 40);
+        final radius = size.width * 0.4 + sin(t * pi) * 50;
+        fogPaint.color = spec.accent.withValues(alpha: alpha);
+        canvas.drawCircle(Offset(x, y), radius, fogPaint);
+      }
     }
   }
 
@@ -1743,41 +2000,70 @@ class _PaperEffectPainter extends CustomPainter {
     );
 
     // Stars
-    for (int i = 0; i < 50; i++) {
-      final x = rng.nextDouble() * size.width;
-      final y = rng.nextDouble() * size.height;
-      final starSize = rng.nextDouble() * 2.5 + 0.5;
+    final sprite = sprites?['assets/images/particles/star.png'];
+
+    for (int i = 0; i < 100; i++) {
+      double x = rng.nextDouble() * size.width;
+      double y = rng.nextDouble() * size.height;
+      final starSizeBase = rng.nextDouble() * 2.5 + 0.5;
 
       // Twinkle effect
       final twinkleSpeed = rng.nextDouble() * 5 + 2;
-      final brightness =
-          0.4 + 0.6 * sin(progress * twinkleSpeed + rng.nextDouble() * pi);
+      double brightness =
+          0.3 + 0.7 * sin(progress * twinkleSpeed + rng.nextDouble() * pi);
 
-      starPaint.color = spec.accent.withValues(alpha: brightness);
-      canvas.drawCircle(Offset(x, y), starSize, starPaint);
-
-      // Soft glow halo for brighter stars
-      if (starSize > 1.8) {
-        final haloPaint =
-            Paint()
-              ..color = spec.accent.withValues(alpha: brightness * 0.15)
-              ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
-        canvas.drawCircle(Offset(x, y), starSize * 2.5, haloPaint);
+      // ** Interaction: Constellation Pulse **
+      if (isPointerDown) {
+        final dx = x - pointerX;
+        final dy = y - pointerY;
+        final dist = sqrt(dx * dx + dy * dy);
+        if (dist < 140) {
+          final s = (140 - dist) / 140;
+          brightness = (brightness + s).clamp(0, 1.2);
+          // Stars nudge slightly towards finger
+          x -= dx * s * 0.15;
+          y -= dy * s * 0.15;
+        }
       }
 
-      // Cross flair for larger stars
-      if (starSize > 2.0 && brightness > 0.8) {
-        starPaint.color = spec.accent.withValues(alpha: brightness * 0.4);
-        canvas.drawLine(
-          Offset(x - 5, y),
-          Offset(x + 5, y),
-          starPaint..strokeWidth = 0.5,
+      if (sprite != null) {
+        final drawSize =
+            starSizeBase * (2.0 + (starSizeBase > 2.0 ? 2.0 : 0.0));
+        canvas.save();
+        canvas.translate(x, y);
+        // Larger stars rotate slightly
+        if (starSizeBase > 2.0) {
+          canvas.rotate(progress * 0.1 + i);
+        }
+        canvas.drawImageRect(
+          sprite,
+          Rect.fromLTWH(
+            0,
+            0,
+            sprite.width.toDouble(),
+            sprite.height.toDouble(),
+          ),
+          Rect.fromCenter(
+            center: Offset.zero,
+            width: drawSize,
+            height: drawSize,
+          ),
+          Paint()
+            ..color = Colors.white.withValues(alpha: brightness.clamp(0, 1)),
         );
-        canvas.drawLine(
-          Offset(x, y - 5),
-          Offset(x, y + 5),
-          starPaint..strokeWidth = 0.5,
-        );
+        canvas.restore();
+      } else {
+        starPaint.color = spec.accent.withValues(alpha: brightness);
+        canvas.drawCircle(Offset(x, y), starSizeBase, starPaint);
+
+        // Soft glow halo for brighter stars
+        if (starSizeBase > 1.8) {
+          final haloPaint =
+              Paint()
+                ..color = spec.accent.withValues(alpha: brightness * 0.15)
+                ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+          canvas.drawCircle(Offset(x, y), starSizeBase * 2.5, haloPaint);
+        }
       }
     }
 
@@ -1809,6 +2095,8 @@ class _PaperEffectPainter extends CustomPainter {
     final corePaint = Paint()..style = PaintingStyle.fill;
 
     final rng = Random(77);
+    final sprite = sprites?['assets/images/particles/firefly.png'];
+
     for (int i = 0; i < 15; i++) {
       // Organic movement path
       final t = (progress + i / 15.0) % 1.0;
@@ -1816,19 +2104,52 @@ class _PaperEffectPainter extends CustomPainter {
       final seedY = rng.nextDouble();
 
       // Lissajous curve movement
-      final x = size.width * (seedX + 0.1 * sin(t * pi * 4 + i));
-      final y = size.height * (seedY + 0.1 * cos(t * pi * 3 + i));
+      double x = size.width * (seedX + 0.1 * sin(t * pi * 4 + i));
+      double y = size.height * (seedY + 0.1 * cos(t * pi * 3 + i));
+
+      // ** Interaction: Fireflies flee from finger! **
+      if (isPointerDown) {
+        final dx = x - pointerX;
+        final dy = y - pointerY;
+        final dist = sqrt(dx * dx + dy * dy);
+        final runRadius = 150.0; // Distance at which they start fleeing
+
+        if (dist < runRadius && dist > 0.01) {
+          // Push them away, inversely proportional to distance
+          final pushForce = (runRadius - dist) / runRadius;
+          x += (dx / dist) * pushForce * 80.0;
+          y += (dy / dist) * pushForce * 80.0;
+        }
+      }
 
       // Pulse
       final pulse = 0.5 + 0.5 * sin(t * pi * 8 + i);
 
-      // Glow
-      glowPaint.color = spec.accent2.withValues(alpha: 0.15 * pulse);
-      canvas.drawCircle(Offset(x, y), 6 + 4 * pulse, glowPaint);
+      if (sprite != null) {
+        final fSize = 12.0 + 8.0 * pulse;
+        canvas.save();
+        canvas.translate(x, y);
+        canvas.drawImageRect(
+          sprite,
+          Rect.fromLTWH(
+            0,
+            0,
+            sprite.width.toDouble(),
+            sprite.height.toDouble(),
+          ),
+          Rect.fromCenter(center: Offset.zero, width: fSize, height: fSize),
+          Paint()..color = Colors.white.withValues(alpha: (0.4 + 0.6 * pulse)),
+        );
+        canvas.restore();
+      } else {
+        // Glow
+        glowPaint.color = spec.accent2.withValues(alpha: 0.15 * pulse);
+        canvas.drawCircle(Offset(x, y), 6 + 4 * pulse, glowPaint);
 
-      // Core
-      corePaint.color = spec.accent2.withValues(alpha: 0.6 + 0.4 * pulse);
-      canvas.drawCircle(Offset(x, y), 1.5, corePaint);
+        // Core
+        corePaint.color = spec.accent2.withValues(alpha: 0.6 + 0.4 * pulse);
+        canvas.drawCircle(Offset(x, y), 1.5, corePaint);
+      }
     }
   }
 
@@ -1881,11 +2202,21 @@ class _PaperEffectPainter extends CustomPainter {
       wavePath.moveTo(-10, size.height);
       wavePath.lineTo(-10, baseY);
       for (double x = -10; x <= size.width + 10; x += 4) {
-        final y1 = sin((x / size.width) * pi * freq + phase) * amplitude;
+        double y1 = sin((x / size.width) * pi * freq + phase) * amplitude;
         final y2 =
             sin((x / size.width) * pi * (freq * 1.3) + phase * 0.7) *
             amplitude *
             0.4;
+
+        // ** Interaction: Ripple Engine **
+        if (isPointerDown) {
+          final dist = (x - pointerX).abs();
+          if (dist < 120) {
+            final rip = sin(dist * 0.1 - progress * 15) * (120 - dist) * 0.25;
+            y1 += rip;
+          }
+        }
+
         wavePath.lineTo(x, baseY + y1 + y2);
       }
       wavePath.lineTo(size.width + 10, size.height);
@@ -2024,7 +2355,7 @@ class _PaperEffectPainter extends CustomPainter {
     final spriteGreen = sprites?['assets/images/particles/leaf_green.png'];
     final spriteOrange = sprites?['assets/images/particles/leaf_autumn.png'];
 
-    for (int i = 0; i < 16; i++) {
+    for (int i = 0; i < 30; i++) {
       final x = rng.nextDouble();
       final y = rng.nextDouble();
       final speed = ui.lerpDouble(0.015, 0.05, rng.nextDouble())!;
@@ -2032,13 +2363,39 @@ class _PaperEffectPainter extends CustomPainter {
       final dy = (y + progress * speed) % 1.2 - 0.1;
       final dx = x + sway;
       final leafSize = ui.lerpDouble(12, 28, rng.nextDouble())!;
-      final angle = progress * pi * 2 * (0.2 + rng.nextDouble() * 0.3);
+
+      // Calculate screen positions
+      double screenX = dx * size.width;
+      double screenY = dy * size.height;
+      double angle = progress * pi * 2 * (0.2 + rng.nextDouble() * 0.3);
+
+      // ** Interaction: Leaves swirl around the finger! **
+      if (isPointerDown) {
+        final pdx = screenX - pointerX;
+        final pdy = screenY - pointerY;
+        final dist = sqrt(pdx * pdx + pdy * pdy);
+        final affectRadius = 200.0;
+
+        if (dist < affectRadius && dist > 0.01) {
+          final force = (affectRadius - dist) / affectRadius;
+          // Add outward push + a tangential swirl force
+          final pushX = (pdx / dist);
+          final pushY = (pdy / dist);
+          final swirlX = -pushY; // Tangent X
+          // Mix them
+          screenX += (pushX * 50.0 + swirlX * 100.0) * force;
+          screenY += (pushY * 50.0) * force;
+
+          // Spin them rapidly when hit
+          angle += force * 4.0;
+        }
+      }
 
       final sprite = i.isEven ? spriteGreen : spriteOrange;
 
       if (sprite != null) {
         canvas.save();
-        canvas.translate(dx * size.width, dy * size.height);
+        canvas.translate(screenX, screenY);
         canvas.rotate(angle);
         canvas.drawImageRect(
           sprite,
@@ -2066,7 +2423,7 @@ class _PaperEffectPainter extends CustomPainter {
                 );
         _paintRealisticLeaf(
           canvas,
-          Offset(dx * size.width, dy * size.height),
+          Offset(screenX, screenY),
           leafSize,
           angle,
           leafColor,
@@ -2100,7 +2457,7 @@ class _PaperEffectPainter extends CustomPainter {
     final petalRng = Random(7);
     final sprite = sprites?['assets/images/particles/petal.png'];
 
-    for (int i = 0; i < 20; i++) {
+    for (int i = 0; i < 40; i++) {
       final x = petalRng.nextDouble();
       final y = petalRng.nextDouble();
       final speed = ui.lerpDouble(0.02, 0.06, petalRng.nextDouble())!;
@@ -2109,12 +2466,36 @@ class _PaperEffectPainter extends CustomPainter {
       final dy = (y + progress * speed) % 1.2 - 0.1;
       final dx = x + sway;
       final petalSize = ui.lerpDouble(8, 20, petalRng.nextDouble())!;
-      final angle = progress * pi * 2 * (0.3 + petalRng.nextDouble() * 0.4);
+
+      double screenX = dx * size.width;
+      double screenY = dy * size.height;
+      double angle = progress * pi * 2 * (0.3 + petalRng.nextDouble() * 0.4);
       final alpha = 0.15 + petalRng.nextDouble() * 0.15;
+
+      // ** Interaction: Spring blossoms swirl! **
+      if (isPointerDown) {
+        final pdx = screenX - pointerX;
+        final pdy = screenY - pointerY;
+        final dist = sqrt(pdx * pdx + pdy * pdy);
+        final affectRadius = 160.0;
+
+        if (dist < affectRadius && dist > 0.01) {
+          final force = (affectRadius - dist) / affectRadius;
+          final pushX = (pdx / dist);
+          final pushY = (pdy / dist);
+          final swirlX = -pushY;
+          final swirlY = pushX;
+
+          // Petals are lighter than leaves, so they swirl more aggressively
+          screenX += (pushX * 30.0 + swirlX * 120.0) * force;
+          screenY += (pushY * 30.0 + swirlY * 40.0) * force;
+          angle += force * 5.0;
+        }
+      }
 
       if (sprite != null) {
         canvas.save();
-        canvas.translate(dx * size.width, dy * size.height);
+        canvas.translate(screenX, screenY);
         canvas.rotate(angle);
         canvas.drawImageRect(
           sprite,
@@ -2138,7 +2519,7 @@ class _PaperEffectPainter extends CustomPainter {
       } else {
         _paintCherryPetal(
           canvas,
-          Offset(dx * size.width, dy * size.height),
+          Offset(screenX, screenY),
           petalSize,
           angle,
           spec.accent.withValues(alpha: alpha),
@@ -2169,7 +2550,9 @@ class _PaperEffectPainter extends CustomPainter {
 
     // Floating hearts with soft edges
     final heartRng = Random(42);
-    for (int i = 0; i < 14; i++) {
+    final sprite = sprites?['assets/images/particles/heart.png'];
+
+    for (int i = 0; i < 24; i++) {
       final x = heartRng.nextDouble();
       final y = heartRng.nextDouble();
       final speed = ui.lerpDouble(0.02, 0.08, heartRng.nextDouble())!;
@@ -2177,23 +2560,67 @@ class _PaperEffectPainter extends CustomPainter {
       final dy = (y - progress * speed + 1.2) % 1.2 - 0.1;
       final dx = x + sin((progress + drift) * pi * 2) * 0.02;
       final sizeFactor = ui.lerpDouble(8, 20, heartRng.nextDouble())!;
-      final alpha = 0.06 + heartRng.nextDouble() * 0.10;
-      // Heart with glow halo
-      final center = Offset(dx * size.width, dy * size.height);
-      _paintHeart(
-        canvas,
-        center,
-        sizeFactor + 4,
-        Paint()
-          ..color = spec.accent.withValues(alpha: alpha * 0.3)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
-      );
-      _paintHeart(
-        canvas,
-        center,
-        sizeFactor,
-        Paint()..color = spec.accent.withValues(alpha: alpha),
-      );
+
+      double screenX = dx * size.width;
+      double screenY = dy * size.height;
+      double alpha = 0.06 + heartRng.nextDouble() * 0.10;
+
+      // ** Interaction: Affection Attraction **
+      if (isPointerDown) {
+        final pdx = screenX - pointerX;
+        final pdy = screenY - pointerY;
+        final dist = sqrt(pdx * pdx + pdy * pdy);
+        if (dist < 200) {
+          final s = (200 - dist) / 200;
+          // Drift towards finger
+          screenX -= pdx * s * 0.3;
+          screenY -= pdy * s * 0.3;
+          alpha = (alpha + s * 0.2).clamp(0, 1);
+        }
+      }
+
+      final center = Offset(screenX, screenY);
+
+      if (sprite != null) {
+        final drawSize = sizeFactor * 2.2;
+        final angle = sin(progress * pi + i) * 0.2;
+        canvas.save();
+        canvas.translate(center.dx, center.dy);
+        canvas.rotate(angle);
+        canvas.drawImageRect(
+          sprite,
+          Rect.fromLTWH(
+            0,
+            0,
+            sprite.width.toDouble(),
+            sprite.height.toDouble(),
+          ),
+          Rect.fromCenter(
+            center: Offset.zero,
+            width: drawSize,
+            height: drawSize,
+          ),
+          Paint()
+            ..color = Colors.white.withValues(alpha: (alpha * 5.0).clamp(0, 1)),
+        );
+        canvas.restore();
+      } else {
+        // Heart with glow halo fallback
+        _paintHeart(
+          canvas,
+          center,
+          sizeFactor + 4,
+          Paint()
+            ..color = spec.accent.withValues(alpha: alpha * 0.3)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+        );
+        _paintHeart(
+          canvas,
+          center,
+          sizeFactor,
+          Paint()..color = spec.accent.withValues(alpha: alpha),
+        );
+      }
     }
   }
 
@@ -2214,10 +2641,40 @@ class _PaperEffectPainter extends CustomPainter {
           ..strokeWidth = 0.8;
     const step = 48.0;
     for (double x = 0; x <= size.width; x += step) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
+      final path = Path();
+      path.moveTo(x, 0);
+      for (double y = 0; y <= size.height; y += 10) {
+        double dx = x;
+        if (isPointerDown) {
+          final pdx = dx - pointerX;
+          final pdy = y - pointerY;
+          final dist = sqrt(pdx * pdx + pdy * pdy);
+          if (dist < 150) {
+            final s = (150 - dist) / 150;
+            dx += pdx * s * 0.4; // Magnetic push
+          }
+        }
+        path.lineTo(dx, y);
+      }
+      canvas.drawPath(path, gridPaint);
     }
     for (double y = 0; y <= size.height; y += step) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
+      final path = Path();
+      path.moveTo(0, y);
+      for (double x = 0; x <= size.width; x += 10) {
+        double dy = y;
+        if (isPointerDown) {
+          final pdx = x - pointerX;
+          final pdy = dy - pointerY;
+          final dist = sqrt(pdx * pdx + pdy * pdy);
+          if (dist < 150) {
+            final s = (150 - dist) / 150;
+            dy += pdy * s * 0.4;
+          }
+        }
+        path.lineTo(x, dy);
+      }
+      canvas.drawPath(path, gridPaint);
     }
     // Neon pulse nodes at intersections
     final nodePaint =
@@ -2236,47 +2693,154 @@ class _PaperEffectPainter extends CustomPainter {
   // ── Glass: refraction bubbles with light sheen ──
   void _drawRealisticBubbles(Canvas canvas, Size size) {
     final rng = Random(21);
-    for (int i = 0; i < 14; i++) {
+    final sprite = sprites?['assets/images/particles/bubble.png'];
+
+    for (int i = 0; i < 24; i++) {
       final x = rng.nextDouble() * size.width;
       final rawY = rng.nextDouble();
       final y =
           ((rawY + progress * 0.06) % 1.1) * size.height - size.height * 0.05;
       final radius = ui.lerpDouble(14, 38, rng.nextDouble())!;
-      final center = Offset(x, y);
+      double screenX = x;
+      double screenY = y;
 
-      // Bubble body
-      canvas.drawCircle(
-        center,
-        radius,
-        Paint()
-          ..color = spec.accent.withValues(alpha: 0.06)
-          ..style = PaintingStyle.fill,
-      );
-      // Rim
-      canvas.drawCircle(
-        center,
-        radius,
-        Paint()
-          ..color = spec.accent.withValues(alpha: 0.10)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.0,
-      );
-      // Specular highlight arc
-      final highlightRect = Rect.fromCircle(
-        center: Offset(center.dx - radius * 0.25, center.dy - radius * 0.3),
-        radius: radius * 0.5,
-      );
-      canvas.drawArc(
-        highlightRect,
-        -pi * 0.8,
-        pi * 0.7,
-        false,
-        Paint()
-          ..color = Colors.white.withValues(alpha: 0.12)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.5
-          ..strokeCap = StrokeCap.round,
-      );
+      // ** Interaction: Bubble Push **
+      if (isPointerDown) {
+        final dx = screenX - pointerX;
+        final dy = screenY - pointerY;
+        final dist = sqrt(dx * dx + dy * dy);
+        if (dist < 120) {
+          final s = (120 - dist) / 120;
+          screenX += dx / dist * s * 60;
+          screenY += dy / dist * s * 60;
+        }
+      }
+      final center = Offset(screenX, screenY);
+
+      if (sprite != null) {
+        final bSize = radius * 2.5;
+        canvas.save();
+        canvas.translate(center.dx, center.dy);
+        canvas.rotate(progress * 0.2 + i);
+        canvas.drawImageRect(
+          sprite,
+          Rect.fromLTWH(
+            0,
+            0,
+            sprite.width.toDouble(),
+            sprite.height.toDouble(),
+          ),
+          Rect.fromCenter(center: Offset.zero, width: bSize, height: bSize),
+          Paint()..color = Colors.white.withValues(alpha: 0.8),
+        );
+        canvas.restore();
+      } else {
+        // Bubble body fallback
+        canvas.drawCircle(
+          center,
+          radius,
+          Paint()
+            ..color = spec.accent.withValues(alpha: 0.06)
+            ..style = PaintingStyle.fill,
+        );
+        // Rim
+        canvas.drawCircle(
+          center,
+          radius,
+          Paint()
+            ..color = spec.accent.withValues(alpha: 0.10)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 1.0,
+        );
+      }
+    }
+  }
+
+  // ── Procedural swaying plants (grass, herbs) ──
+  void _drawSwayingPlants(Canvas canvas, Size size) {
+    final rng = Random(12345);
+    final count = 45;
+    final windSway = sin(progress * pi * 4) * 0.15;
+
+    // ** Extra Materials: Wet Stones/Mud for Rain Theme **
+    final isRain = spec.motif == _PaperMotif.raining;
+    if (isRain) {
+      final stonePaint = Paint()..color = Colors.black.withValues(alpha: 0.15);
+      final stoneRng = Random(88);
+      for (int i = 0; i < 12; i++) {
+        final sx = stoneRng.nextDouble() * size.width;
+        final sw = 40.0 + stoneRng.nextDouble() * 80.0;
+        final sh = 10.0 + stoneRng.nextDouble() * 15.0;
+        canvas.drawOval(
+          Rect.fromLTWH(sx, size.height - sh * 0.5, sw, sh),
+          stonePaint..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+        );
+      }
+    }
+
+    for (int i = 0; i < count; i++) {
+      final x = (i / count) * size.width + (rng.nextDouble() * 20 - 10);
+      double h = 15.0 + rng.nextDouble() * 35.0;
+
+      // Rain theme has lush, larger grass
+      if (isRain) {
+        h *= 1.6;
+      }
+
+      final color = Color.lerp(
+        spec.accent,
+        spec.accent2,
+        rng.nextDouble() * 0.5,
+      )!.withValues(alpha: 0.12 + rng.nextDouble() * 0.08);
+
+      final paint =
+          Paint()
+            ..color = color
+            ..style = PaintingStyle.stroke
+            ..strokeWidth =
+                (1.0 + rng.nextDouble() * 2.0) * (isRain ? 1.5 : 1.0)
+            ..strokeCap = StrokeCap.round;
+
+      final path = Path();
+      path.moveTo(x, size.height + 5);
+
+      // Base wind bending
+      double swayVal = windSway;
+
+      // ** Interaction: Physical touch forces grass to bend! **
+      if (isPointerDown) {
+        // Approximate top of the blade location before bending
+        final bladeTopY = size.height - h;
+        final dx = x - pointerX;
+        final dy = bladeTopY - pointerY;
+        final dist = sqrt(dx * dx + dy * dy);
+        final affectRadius = 100.0 * (isRain ? 1.4 : 1.0);
+
+        if (dist < affectRadius && dist > 0.01) {
+          // Push away violently from the finger
+          final pushForce = (affectRadius - dist) / affectRadius;
+          final swayDirection = dx > 0 ? 1.0 : -1.0;
+
+          // Bend is much stronger than wind
+          swayVal += swayDirection * pushForce * 1.5;
+        }
+      }
+
+      // Quadratic curve to simulate bending blade
+      final controlX = x + (swayVal * h * 1.5);
+      final controlY = size.height - h * 0.5;
+      final endX = x + (swayVal * h * 3.0);
+      final endY = size.height - h;
+
+      path.quadraticBezierTo(controlX, controlY, endX, endY);
+      canvas.drawPath(path, paint);
+
+      // Occasional "herb" or "flower" head
+      if (i % 7 == 0) {
+        final headPaint =
+            Paint()..color = color.withValues(alpha: color.a * 1.5);
+        canvas.drawCircle(Offset(endX, endY), isRain ? 3 : 2, headPaint);
+      }
     }
   }
 
@@ -2375,7 +2939,11 @@ class _PaperEffectPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _PaperEffectPainter oldDelegate) {
-    return oldDelegate.progress != progress || oldDelegate.spec != spec;
+    return oldDelegate.progress != progress ||
+        oldDelegate.spec != spec ||
+        oldDelegate.pointerX != pointerX ||
+        oldDelegate.pointerY != pointerY ||
+        oldDelegate.isPointerDown != isPointerDown;
   }
 }
 
