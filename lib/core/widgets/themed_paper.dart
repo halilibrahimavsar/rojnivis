@@ -237,6 +237,17 @@ class _ThemedBackdropState extends State<ThemedBackdrop>
                     : 0.0;
             final content = Stack(
               children: [
+                if ((visualFamily == PageVisualFamily.vintage
+                            ? vintageSpec.base
+                            : spec.base)
+                        .a <
+                    1.0)
+                  Positioned.fill(
+                    child: BackdropFilter(
+                      filter: ui.ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                      child: const SizedBox.shrink(),
+                    ),
+                  ),
                 Positioned.fill(
                   child: DecoratedBox(
                     decoration: BoxDecoration(
@@ -539,6 +550,17 @@ class _ThemedPaperState extends State<ThemedPaper>
                       : 0.0;
               return Stack(
                 children: [
+                  if ((visualFamily == PageVisualFamily.vintage
+                              ? vintageSpec.base
+                              : spec.base)
+                          .a <
+                      1.0)
+                    Positioned.fill(
+                      child: BackdropFilter(
+                        filter: ui.ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                        child: const SizedBox.shrink(),
+                      ),
+                    ),
                   Positioned.fill(
                     child: DecoratedBox(
                       decoration: BoxDecoration(
@@ -836,14 +858,14 @@ _PaperSpec _paperSpecFor(AppThemePreset preset, bool isDark) {
       );
     case AppThemePreset.nightblue:
       return _PaperSpec(
-        base: const Color(0xFF02040A),
+        base: const Color(0xCC050A15),
         gradient: const [
-          Color(0xFF02040A),
-          Color(0xFF0A1020),
-          Color(0xFF152040),
+          Color(0xCC050A15),
+          Color(0xD90A1225),
+          Color(0xE60F1A30),
         ],
-        accent: const Color(0xFFE6E6FA), // Lavender stars
-        accent2: const Color(0xFF4169E1), // Royal Blue glow
+        accent: const Color(0xFFC4B5FD), // Pastel Indigo
+        accent2: const Color(0xFF60A5FA), // Soft Blue glow
         lineColor: Colors.white.withValues(alpha: 0.05),
         motif: _PaperMotif.stars,
       );
@@ -937,14 +959,14 @@ _PaperSpec _paperSpecFor(AppThemePreset preset, bool isDark) {
 
     case AppThemePreset.nebula:
       return _PaperSpec(
-        base: const Color(0xFF120316),
+        base: const Color(0xCC100518),
         gradient: const [
-          Color(0xFF120316),
-          Color(0xFF200A26),
-          Color(0xFF100010),
+          Color(0xCC100518),
+          Color(0xD91B0A26),
+          Color(0xE6260B2A),
         ],
-        accent: const Color(0xFF9C27B0), // Purple Gas
-        accent2: const Color(0xFFFF4081), // Pink Gas
+        accent: const Color(0xFFD8B4FE), // Lavender Gas
+        accent2: const Color(0xFFF472B6), // Pink Gas
         lineColor: Colors.white.withValues(alpha: 0.05),
         motif: _PaperMotif.nebula,
       );
@@ -1426,6 +1448,14 @@ class _PaperEffectPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    if ((spec.motif == _PaperMotif.stars ||
+            spec.motif == _PaperMotif.nebula ||
+            spec.motif == _PaperMotif.fog) &&
+        pointerX >= 0 &&
+        pointerY >= 0) {
+      _drawBioluminescentGlow(canvas, size);
+    }
+
     switch (spec.motif) {
       case _PaperMotif.hearts:
         _drawRealisticHearts(canvas, size);
@@ -1491,6 +1521,28 @@ class _PaperEffectPainter extends CustomPainter {
     if (isPointerDown) {
       _drawMagicShine(canvas, size);
     }
+  }
+
+  void _drawBioluminescentGlow(Canvas canvas, Size size) {
+    final pulse = sin(progress * pi * 4) * 0.1 + 0.9;
+    final radius = isPointerDown ? 180.0 : 120.0 * pulse;
+    final intensity = isPointerDown ? 0.35 : 0.15;
+
+    final glowPaint =
+        Paint()
+          ..shader = RadialGradient(
+            colors: [
+              spec.accent.withValues(alpha: intensity),
+              spec.accent2.withValues(alpha: intensity * 0.5),
+              Colors.transparent,
+            ],
+            stops: const [0.0, 0.4, 1.0],
+          ).createShader(
+            Rect.fromCircle(center: Offset(pointerX, pointerY), radius: radius),
+          )
+          ..blendMode = BlendMode.screen;
+
+    canvas.drawCircle(Offset(pointerX, pointerY), radius, glowPaint);
   }
 
   void _drawMagicShine(Canvas canvas, Size size) {

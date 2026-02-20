@@ -52,7 +52,10 @@ class _QuickQuestionCardState extends State<QuickQuestionCard> {
                 onPressed: _refreshQuestion,
                 tooltip: 'new_question'.tr(),
                 color: onPrimaryContainer,
-                visualDensity: const VisualDensity(horizontal: -2, vertical: -2),
+                visualDensity: const VisualDensity(
+                  horizontal: -2,
+                  vertical: -2,
+                ),
                 constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
               ),
             ],
@@ -75,11 +78,15 @@ class _QuickQuestionCardState extends State<QuickQuestionCard> {
                 label: Text('use_question'.tr()),
                 style: TextButton.styleFrom(
                   foregroundColor: onPrimaryContainer,
-                  visualDensity:
-                      const VisualDensity(horizontal: -2, vertical: -2),
+                  visualDensity: const VisualDensity(
+                    horizontal: -2,
+                    vertical: -2,
+                  ),
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
                 ),
               ),
             ),

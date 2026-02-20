@@ -19,7 +19,13 @@ class SettingsPage extends StatelessWidget {
     final presets = AppTheme.presets;
 
     return Scaffold(
-      appBar: AppBar(title: Text('settings'.tr())),
+      backgroundColor: Colors.transparent,
+      extendBody: true,
+      appBar: AppBar(
+        title: Text('settings'.tr()),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
       body: BlocBuilder<SettingsBloc, SettingsState>(
         builder: (context, state) {
           if (state is! SettingsLoaded) {
@@ -27,7 +33,7 @@ class SettingsPage extends StatelessWidget {
           }
 
           return ListView(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
             children: [
               _Section(
                 title: 'account_security'.tr(),
@@ -65,6 +71,32 @@ class SettingsPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     SegmentedButton<ThemeMode>(
+                      showSelectedIcon: false,
+                      style: ButtonStyle(
+                        backgroundColor: WidgetStateProperty.resolveWith((
+                          states,
+                        ) {
+                          if (states.contains(WidgetState.selected)) {
+                            return Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.2);
+                          }
+                          return Colors.transparent;
+                        }),
+                        foregroundColor: WidgetStateProperty.resolveWith((
+                          states,
+                        ) {
+                          if (states.contains(WidgetState.selected)) {
+                            return Theme.of(context).colorScheme.primary;
+                          }
+                          return Theme.of(context).colorScheme.onSurface;
+                        }),
+                        side: WidgetStateProperty.all(
+                          BorderSide(
+                            color: Theme.of(context).colorScheme.outlineVariant,
+                          ),
+                        ),
+                      ),
                       segments: [
                         ButtonSegment(
                           value: ThemeMode.system,
@@ -220,6 +252,32 @@ class SettingsPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 10),
                     SegmentedButton<String>(
+                      showSelectedIcon: false,
+                      style: ButtonStyle(
+                        backgroundColor: WidgetStateProperty.resolveWith((
+                          states,
+                        ) {
+                          if (states.contains(WidgetState.selected)) {
+                            return Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.2);
+                          }
+                          return Colors.transparent;
+                        }),
+                        foregroundColor: WidgetStateProperty.resolveWith((
+                          states,
+                        ) {
+                          if (states.contains(WidgetState.selected)) {
+                            return Theme.of(context).colorScheme.primary;
+                          }
+                          return Theme.of(context).colorScheme.onSurface;
+                        }),
+                        side: WidgetStateProperty.all(
+                          BorderSide(
+                            color: Theme.of(context).colorScheme.outlineVariant,
+                          ),
+                        ),
+                      ),
                       segments: [
                         ButtonSegment(
                           value: 'classic',
@@ -248,6 +306,28 @@ class SettingsPage extends StatelessWidget {
               _Section(
                 title: 'language'.tr(),
                 child: SegmentedButton<Locale>(
+                  showSelectedIcon: false,
+                  style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return Theme.of(
+                          context,
+                        ).colorScheme.primary.withValues(alpha: 0.2);
+                      }
+                      return Colors.transparent;
+                    }),
+                    foregroundColor: WidgetStateProperty.resolveWith((states) {
+                      if (states.contains(WidgetState.selected)) {
+                        return Theme.of(context).colorScheme.primary;
+                      }
+                      return Theme.of(context).colorScheme.onSurface;
+                    }),
+                    side: WidgetStateProperty.all(
+                      BorderSide(
+                        color: Theme.of(context).colorScheme.outlineVariant,
+                      ),
+                    ),
+                  ),
                   segments: [
                     ButtonSegment(
                       value: const Locale('tr', 'TR'),
@@ -289,7 +369,7 @@ class SettingsPage extends StatelessWidget {
               ),
               const SizedBox(height: 12),
 
-                _Section(
+              _Section(
                 title: 'ai_assistant'.tr(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -303,32 +383,40 @@ class SettingsPage extends StatelessWidget {
                     const SizedBox(height: 8),
                     _buildModelSelector(),
                     const SizedBox(height: 16),
-                    
+
                     // Connection Status & Test
                     FutureBuilder<AiServiceStatus>(
                       future: getIt<AiService>().getStatus(),
                       builder: (context, snapshot) {
                         final status = snapshot.data;
                         final isConfigured = status?.isConfigured ?? false;
-                        
+
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Row(
                               children: [
                                 Icon(
-                                  isConfigured ? Icons.check_circle : Icons.error,
-                                  color: isConfigured ? Colors.green : Colors.orange,
+                                  isConfigured
+                                      ? Icons.check_circle
+                                      : Icons.error,
+                                  color:
+                                      isConfigured
+                                          ? Colors.green
+                                          : Colors.orange,
                                   size: 20,
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: Text(
-                                    isConfigured 
-                                      ? 'AI Servisi Hazır (Remote Config)' 
-                                      : 'AI Servisi Yapılandırılmadı',
+                                    isConfigured
+                                        ? 'AI Servisi Hazır (Remote Config)'
+                                        : 'AI Servisi Yapılandırılmadı',
                                     style: TextStyle(
-                                      color: isConfigured ? Colors.green : Colors.orange,
+                                      color:
+                                          isConfigured
+                                              ? Colors.green
+                                              : Colors.orange,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -355,9 +443,10 @@ class SettingsPage extends StatelessWidget {
                           showDialog(
                             context: context,
                             barrierDismissible: false,
-                            builder: (c) => const Center(
-                              child: CircularProgressIndicator(),
-                            ),
+                            builder:
+                                (c) => const Center(
+                                  child: CircularProgressIndicator(),
+                                ),
                           );
 
                           try {
@@ -365,59 +454,65 @@ class SettingsPage extends StatelessWidget {
                             await getIt<AiService>().init();
                             final service = getIt<AiService>();
                             final models = await service.listAvailableModels();
-                            
+
                             if (context.mounted) {
                               Navigator.pop(context); // Pop loading
                               showDialog(
                                 context: context,
-                                builder: (c) => AlertDialog(
-                                  title: Text('ai_model_status'.tr()),
-                                  content: SingleChildScrollView(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        if (service.isConfigured)
-                                          Text(
-                                            '✅ ${'ai_available'.tr()}',
-                                            style: const TextStyle(
-                                              color: Colors.green,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          )
-                                        else
-                                          Text(
-                                            '❌ ${'ai_unavailable'.tr()}',
-                                            style: const TextStyle(
-                                              color: Colors.red,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                        const SizedBox(height: 8),
-                                        Text('${'ai_models'.tr()}:'),
-                                        const SizedBox(height: 4),
-                                        ...models.map((m) {
-                                          final isError = m.contains(':') || 
-                                              m.contains('No working') || 
-                                              m.contains('Kota');
-                                          return Text(
-                                            isError ? '⚠️ $m' : '✅ $m',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: isError ? Colors.orange : Colors.green[700],
-                                            ),
-                                          );
-                                        }),
+                                builder:
+                                    (c) => AlertDialog(
+                                      title: Text('ai_model_status'.tr()),
+                                      content: SingleChildScrollView(
+                                        child: Column(
+                                          mainAxisSize: MainAxisSize.min,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            if (service.isConfigured)
+                                              Text(
+                                                '✅ ${'ai_available'.tr()}',
+                                                style: const TextStyle(
+                                                  color: Colors.green,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              )
+                                            else
+                                              Text(
+                                                '❌ ${'ai_unavailable'.tr()}',
+                                                style: const TextStyle(
+                                                  color: Colors.red,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            const SizedBox(height: 8),
+                                            Text('${'ai_models'.tr()}:'),
+                                            const SizedBox(height: 4),
+                                            ...models.map((m) {
+                                              final isError =
+                                                  m.contains(':') ||
+                                                  m.contains('No working') ||
+                                                  m.contains('Kota');
+                                              return Text(
+                                                isError ? '⚠️ $m' : '✅ $m',
+                                                style: TextStyle(
+                                                  fontSize: 12,
+                                                  color:
+                                                      isError
+                                                          ? Colors.orange
+                                                          : Colors.green[700],
+                                                ),
+                                              );
+                                            }),
+                                          ],
+                                        ),
+                                      ),
+                                      actions: [
+                                        TextButton(
+                                          onPressed: () => Navigator.pop(c),
+                                          child: Text('close'.tr()),
+                                        ),
                                       ],
                                     ),
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () => Navigator.pop(c),
-                                      child: Text('close'.tr()),
-                                    ),
-                                  ],
-                                ),
                               );
                             }
                           } catch (e) {
@@ -507,7 +602,6 @@ class SettingsPage extends StatelessWidget {
       },
     );
   }
-
 }
 
 class _SettingsButton extends StatelessWidget {

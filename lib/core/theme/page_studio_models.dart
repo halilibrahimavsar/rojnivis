@@ -1,19 +1,8 @@
-enum PageVisualFamily {
-  classic,
-  vintage,
-}
+enum PageVisualFamily { classic, vintage }
 
-enum VintagePaperVariant {
-  parchment,
-  sepiaDiary,
-  pressedFloral,
-}
+enum VintagePaperVariant { parchment, sepiaDiary, pressedFloral }
 
-enum AnimationIntensity {
-  off,
-  subtle,
-  cinematic,
-}
+enum AnimationIntensity { off, subtle, cinematic }
 
 extension PageVisualFamilyX on PageVisualFamily {
   String get id {

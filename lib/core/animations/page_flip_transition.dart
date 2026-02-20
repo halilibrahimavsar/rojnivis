@@ -67,14 +67,13 @@ class PageFlipTransitionPage<T> extends CustomTransitionPage<T> {
            );
 
            // Shadow intensity follows the flip midpoint
-           final shadowOpacity = Tween<double>(
-             begin: 0.0,
-             end: 0.4,
-           ).animate(CurvedAnimation(
-             parent: animation,
-             curve: const Interval(0.0, 0.5, curve: Curves.easeIn),
-             reverseCurve: const Interval(0.5, 1.0, curve: Curves.easeOut),
-           ));
+           final shadowOpacity = Tween<double>(begin: 0.0, end: 0.4).animate(
+             CurvedAnimation(
+               parent: animation,
+               curve: const Interval(0.0, 0.5, curve: Curves.easeIn),
+               reverseCurve: const Interval(0.5, 1.0, curve: Curves.easeOut),
+             ),
+           );
 
            return AnimatedBuilder(
              animation: Listenable.merge([animation, secondaryAnimation]),
@@ -84,9 +83,10 @@ class PageFlipTransitionPage<T> extends CustomTransitionPage<T> {
                    // Exiting page with dimming overlay
                    if (secondaryAnimation.value > 0)
                      Transform(
-                       transform: Matrix4.identity()
-                         ..setEntry(3, 2, 0.001)
-                         ..rotateY(closingTransform.value),
+                       transform:
+                           Matrix4.identity()
+                             ..setEntry(3, 2, 0.001)
+                             ..rotateY(closingTransform.value),
                        alignment: Alignment.centerLeft,
                        child: Stack(
                          children: [
@@ -128,9 +128,10 @@ class PageFlipTransitionPage<T> extends CustomTransitionPage<T> {
 
                    // Entering page with lighting gradient overlay
                    Transform(
-                     transform: Matrix4.identity()
-                       ..setEntry(3, 2, 0.001)
-                       ..rotateY(openingTransform.value),
+                     transform:
+                         Matrix4.identity()
+                           ..setEntry(3, 2, 0.001)
+                           ..rotateY(openingTransform.value),
                      alignment: Alignment.centerLeft,
                      child: Stack(
                        children: [

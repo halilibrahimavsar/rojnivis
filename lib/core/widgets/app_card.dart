@@ -55,7 +55,8 @@ class _AppCardState extends State<AppCard> {
                 getIt<SoundService>().playPencilTap();
                 widget.onTap?.call();
               },
-              onHighlightChanged: (pressed) => setState(() => _isPressed = pressed),
+              onHighlightChanged:
+                  (pressed) => setState(() => _isPressed = pressed),
               onHover: (hovered) => setState(() => _isHovered = hovered),
               borderRadius: borderRadiusResolved,
               child: content,
@@ -129,7 +130,10 @@ class _AppCardState extends State<AppCard> {
                       color: (isDark ? Colors.white : Colors.white).withValues(
                         alpha: isDark ? (_isHovered ? 0.06 : 0.04) : 0.75,
                       ),
-                      offset: Offset(_isHovered ? -10 : -8, _isHovered ? -10 : -8),
+                      offset: Offset(
+                        _isHovered ? -10 : -8,
+                        _isHovered ? -10 : -8,
+                      ),
                       blurRadius: _isHovered ? 24 : 18,
                     ),
                     BoxShadow(
@@ -162,7 +166,10 @@ class _AppCardState extends State<AppCard> {
     }
 
     final animated = AnimatedScale(
-      scale: _isPressed ? 0.98 : (_isHovered && widget.showHoverEffect ? 1.02 : 1.0),
+      scale:
+          _isPressed
+              ? 0.98
+              : (_isHovered && widget.showHoverEffect ? 1.02 : 1.0),
       duration: const Duration(milliseconds: 150),
       curve: Curves.easeOutBack,
       child: built,

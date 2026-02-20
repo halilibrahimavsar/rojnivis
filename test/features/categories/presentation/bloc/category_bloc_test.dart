@@ -50,14 +50,17 @@ void main() {
       blocTest<CategoryBloc, CategoryState>(
         'emits [CategoryLoading, CategoryLoaded] when loading succeeds',
         setUp: () {
-          when(() => mockGetCategories()).thenAnswer((_) async => testCategories);
+          when(
+            () => mockGetCategories(),
+          ).thenAnswer((_) async => testCategories);
         },
         build: buildBloc,
         act: (bloc) => bloc.add(const LoadCategories()),
-        expect: () => [
-          const CategoryLoading(),
-          const CategoryLoaded(categories: testCategories),
-        ],
+        expect:
+            () => [
+              const CategoryLoading(),
+              const CategoryLoaded(categories: testCategories),
+            ],
       );
 
       blocTest<CategoryBloc, CategoryState>(
@@ -67,10 +70,7 @@ void main() {
         },
         build: buildBloc,
         act: (bloc) => bloc.add(const LoadCategories()),
-        expect: () => [
-          const CategoryLoading(),
-          isA<CategoryError>(),
-        ],
+        expect: () => [const CategoryLoading(), isA<CategoryError>()],
       );
     });
 
@@ -79,11 +79,14 @@ void main() {
         'calls addCategory and reloads categories on success',
         setUp: () {
           when(() => mockAddCategory(any())).thenAnswer((_) async {});
-          when(() => mockGetCategories()).thenAnswer((_) async => testCategories);
+          when(
+            () => mockGetCategories(),
+          ).thenAnswer((_) async => testCategories);
         },
         build: buildBloc,
-        act: (bloc) =>
-            bloc.add(const UpsertCategoryRequested(category: testCategory)),
+        act:
+            (bloc) =>
+                bloc.add(const UpsertCategoryRequested(category: testCategory)),
         verify: (_) {
           verify(() => mockAddCategory(testCategory)).called(1);
         },
@@ -92,12 +95,14 @@ void main() {
       blocTest<CategoryBloc, CategoryState>(
         'emits CategoryError when upsert fails',
         setUp: () {
-          when(() => mockAddCategory(any()))
-              .thenThrow(Exception('Upsert failed'));
+          when(
+            () => mockAddCategory(any()),
+          ).thenThrow(Exception('Upsert failed'));
         },
         build: buildBloc,
-        act: (bloc) =>
-            bloc.add(const UpsertCategoryRequested(category: testCategory)),
+        act:
+            (bloc) =>
+                bloc.add(const UpsertCategoryRequested(category: testCategory)),
         expect: () => [isA<CategoryError>()],
       );
     });
@@ -107,11 +112,14 @@ void main() {
         'calls deleteCategory and reloads categories on success',
         setUp: () {
           when(() => mockDeleteCategory(any())).thenAnswer((_) async {});
-          when(() => mockGetCategories()).thenAnswer((_) async => testCategories);
+          when(
+            () => mockGetCategories(),
+          ).thenAnswer((_) async => testCategories);
         },
         build: buildBloc,
-        act: (bloc) => bloc
-            .add(const DeleteCategoryRequested(categoryId: 'test-1')),
+        act:
+            (bloc) =>
+                bloc.add(const DeleteCategoryRequested(categoryId: 'test-1')),
         verify: (_) {
           verify(() => mockDeleteCategory('test-1')).called(1);
         },
@@ -120,12 +128,14 @@ void main() {
       blocTest<CategoryBloc, CategoryState>(
         'emits CategoryError when delete fails',
         setUp: () {
-          when(() => mockDeleteCategory(any()))
-              .thenThrow(Exception('Delete failed'));
+          when(
+            () => mockDeleteCategory(any()),
+          ).thenThrow(Exception('Delete failed'));
         },
         build: buildBloc,
-        act: (bloc) => bloc
-            .add(const DeleteCategoryRequested(categoryId: 'test-1')),
+        act:
+            (bloc) =>
+                bloc.add(const DeleteCategoryRequested(categoryId: 'test-1')),
         expect: () => [isA<CategoryError>()],
       );
     });

@@ -43,7 +43,10 @@ class RemoteAuthSettingsPage extends StatelessWidget {
                                   displayName.isNotEmpty
                                       ? displayName[0].toUpperCase()
                                       : 'U',
-                                  style: Theme.of(context).textTheme.headlineMedium,
+                                  style:
+                                      Theme.of(
+                                        context,
+                                      ).textTheme.headlineMedium,
                                 )
                                 : null,
                       ),
@@ -66,10 +69,14 @@ class RemoteAuthSettingsPage extends StatelessWidget {
                         width: double.infinity,
                         child: OutlinedButton.icon(
                           onPressed: () {
-                             // Manage Account logic or navigation
-                             ScaffoldMessenger.of(context).showSnackBar(
-                               SnackBar(content: Text('Verification email sent to $email')),
-                             );
+                            // Manage Account logic or navigation
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'Verification email sent to $email',
+                                ),
+                              ),
+                            );
                           },
                           icon: const Icon(Icons.manage_accounts),
                           label: Text('manage_account'.tr()),
@@ -80,11 +87,13 @@ class RemoteAuthSettingsPage extends StatelessWidget {
                         width: double.infinity,
                         child: FilledButton.icon(
                           onPressed: () {
-                             context.read<AuthBloc>().add(const SignOutEvent());
+                            context.read<AuthBloc>().add(const SignOutEvent());
                           },
                           style: FilledButton.styleFrom(
-                            backgroundColor: Theme.of(context).colorScheme.error,
-                            foregroundColor: Theme.of(context).colorScheme.onError,
+                            backgroundColor:
+                                Theme.of(context).colorScheme.error,
+                            foregroundColor:
+                                Theme.of(context).colorScheme.onError,
                           ),
                           icon: const Icon(Icons.logout),
                           label: Text('sign_out'.tr()),
@@ -96,8 +105,8 @@ class RemoteAuthSettingsPage extends StatelessWidget {
               ],
             );
           } else {
-             return Center(
-               child: Column(
+            return Center(
+              child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
@@ -114,8 +123,8 @@ class RemoteAuthSettingsPage extends StatelessWidget {
                     label: Text('sign_in'.tr()),
                   ),
                 ],
-               ),
-             );
+              ),
+            );
           }
         },
       ),

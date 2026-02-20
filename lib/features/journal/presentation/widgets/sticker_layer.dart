@@ -8,7 +8,7 @@ import 'sticker_transform_handles.dart';
 
 class StickerLayerController extends ChangeNotifier {
   StickerLayerController({List<EntrySticker>? stickers})
-      : _stickers = List<EntrySticker>.from(stickers ?? const []);
+    : _stickers = List<EntrySticker>.from(stickers ?? const []);
 
   List<EntrySticker> _stickers;
   String? _selectedStickerId;
@@ -139,7 +139,9 @@ class _StickerLayerState extends State<StickerLayer> {
   void _notifyChanged() {
     final stickers = widget.controller.stickers;
     final signature = stickers
-        .map((s) => '${s.id}:${s.x}:${s.y}:${s.scale}:${s.rotation}:${s.zIndex}')
+        .map(
+          (s) => '${s.id}:${s.x}:${s.y}:${s.scale}:${s.rotation}:${s.zIndex}',
+        )
         .join('|');
     if (signature == _lastStickerSignature) return;
     _lastStickerSignature = signature;
@@ -168,7 +170,11 @@ class _StickerLayerState extends State<StickerLayer> {
     );
   }
 
-  Widget _buildStickerItem(BuildContext context, EntrySticker sticker, Size area) {
+  Widget _buildStickerItem(
+    BuildContext context,
+    EntrySticker sticker,
+    Size area,
+  ) {
     const baseSize = 82.0;
     final isSelected = sticker.id == widget.controller.selectedStickerId;
     final stickerSize = baseSize * sticker.scale;
@@ -183,44 +189,50 @@ class _StickerLayerState extends State<StickerLayer> {
       height: stickerSize,
       child: GestureDetector(
         behavior: HitTestBehavior.translucent,
-        onTap: widget.editable
-            ? () {
-                widget.controller.select(sticker.id);
-                widget.controller.bringToFront(sticker.id);
-              }
-            : null,
-        onScaleStart: !widget.editable
-            ? null
-            : (details) {
-                _activeId = sticker.id;
-                _startScale = sticker.scale;
-                _startRotation = sticker.rotation;
-                widget.controller.select(sticker.id);
-                widget.controller.bringToFront(sticker.id);
-              },
-        onScaleUpdate: !widget.editable
-            ? null
-            : (details) {
-                if (_activeId != sticker.id) return;
-                final current = widget.controller.stickers.firstWhere(
-                  (s) => s.id == sticker.id,
-                  orElse: () => sticker,
-                );
-                final newX = current.x + (details.focalPointDelta.dx / area.width);
-                final newY = current.y + (details.focalPointDelta.dy / area.height);
-                widget.controller.updateTransform(
-                  id: sticker.id,
-                  x: newX,
-                  y: newY,
-                  scale: _startScale * details.scale,
-                  rotation: _startRotation + details.rotation,
-                );
-              },
-        onScaleEnd: !widget.editable
-            ? null
-            : (_) {
-                _activeId = null;
-              },
+        onTap:
+            widget.editable
+                ? () {
+                  widget.controller.select(sticker.id);
+                  widget.controller.bringToFront(sticker.id);
+                }
+                : null,
+        onScaleStart:
+            !widget.editable
+                ? null
+                : (details) {
+                  _activeId = sticker.id;
+                  _startScale = sticker.scale;
+                  _startRotation = sticker.rotation;
+                  widget.controller.select(sticker.id);
+                  widget.controller.bringToFront(sticker.id);
+                },
+        onScaleUpdate:
+            !widget.editable
+                ? null
+                : (details) {
+                  if (_activeId != sticker.id) return;
+                  final current = widget.controller.stickers.firstWhere(
+                    (s) => s.id == sticker.id,
+                    orElse: () => sticker,
+                  );
+                  final newX =
+                      current.x + (details.focalPointDelta.dx / area.width);
+                  final newY =
+                      current.y + (details.focalPointDelta.dy / area.height);
+                  widget.controller.updateTransform(
+                    id: sticker.id,
+                    x: newX,
+                    y: newY,
+                    scale: _startScale * details.scale,
+                    rotation: _startRotation + details.rotation,
+                  );
+                },
+        onScaleEnd:
+            !widget.editable
+                ? null
+                : (_) {
+                  _activeId = null;
+                },
         child: Transform.rotate(
           angle: sticker.rotation,
           child: Stack(

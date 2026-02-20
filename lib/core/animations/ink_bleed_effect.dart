@@ -61,18 +61,12 @@ class _InkBleedEffectState extends State<InkBleedEffect>
     _radiusAnimation = Tween<double>(
       begin: 0.0,
       end: widget.maxRadius,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOut,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
 
     _opacityAnimation = Tween<double>(
       begin: 0.15,
       end: 0.0,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeIn,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeIn));
 
     if (widget.isActive) {
       _controller.repeat();
@@ -103,13 +97,14 @@ class _InkBleedEffectState extends State<InkBleedEffect>
       animation: _controller,
       builder: (context, child) {
         return CustomPaint(
-          foregroundPainter: widget.isActive || _controller.isAnimating
-              ? _InkBleedPainter(
-                  radius: _radiusAnimation.value,
-                  opacity: _opacityAnimation.value,
-                  color: widget.color,
-                )
-              : null,
+          foregroundPainter:
+              widget.isActive || _controller.isAnimating
+                  ? _InkBleedPainter(
+                    radius: _radiusAnimation.value,
+                    opacity: _opacityAnimation.value,
+                    color: widget.color,
+                  )
+                  : null,
           child: child,
         );
       },
@@ -133,9 +128,10 @@ class _InkBleedPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (opacity <= 0 || radius <= 0) return;
 
-    final paint = Paint()
-      ..color = color.withValues(alpha: opacity)
-      ..maskFilter = MaskFilter.blur(BlurStyle.normal, radius * 0.6);
+    final paint =
+        Paint()
+          ..color = color.withValues(alpha: opacity)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, radius * 0.6);
 
     // Draw multiple overlapping circles for organic ink bleed look
     final random = math.Random(42); // Fixed seed for consistency
@@ -146,11 +142,7 @@ class _InkBleedPainter extends CustomPainter {
       final offsetY = (random.nextDouble() - 0.5) * radius * 0.3;
       final spotRadius = radius * (0.5 + random.nextDouble() * 0.5);
 
-      canvas.drawCircle(
-        center + Offset(offsetX, offsetY),
-        spotRadius,
-        paint,
-      );
+      canvas.drawCircle(center + Offset(offsetX, offsetY), spotRadius, paint);
     }
   }
 

@@ -12,12 +12,7 @@ class StickerAsset {
   final StickerCategory category;
 }
 
-enum StickerCategory {
-  waxSeals,
-  tapes,
-  stamps,
-  florals,
-}
+enum StickerCategory { waxSeals, tapes, stamps, florals }
 
 const List<StickerAsset> stickerCatalog = [
   StickerAsset(

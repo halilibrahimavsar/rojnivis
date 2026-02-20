@@ -16,7 +16,7 @@ class LocalAuthSettingsPage extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: LocalAuthSettingsWidget(
           repository: getIt<LocalAuthRepository>(),
-          showHeader: false, 
+          showHeader: false,
         ),
       ),
     );

@@ -171,18 +171,19 @@ void main() {
       blocTest<SettingsBloc, SettingsState>(
         'updates page visual family and persists',
         build: buildBloc,
-        seed: () => const SettingsLoaded(
-          themeMode: ThemeMode.system,
-          locale: Locale('tr', 'TR'),
-          fontFamily: 'Poppins',
-          themePreset: 'default',
-          showAttachmentBackdrop: true,
-          notebookCoverColor: 0xFF2C3E50,
-          notebookCoverTexture: 'leather',
-          pageVisualFamily: 'classic',
-          vintagePaperVariant: 'parchment',
-          animationIntensity: 'subtle',
-        ),
+        seed:
+            () => const SettingsLoaded(
+              themeMode: ThemeMode.system,
+              locale: Locale('tr', 'TR'),
+              fontFamily: 'Poppins',
+              themePreset: 'default',
+              showAttachmentBackdrop: true,
+              notebookCoverColor: 0xFF2C3E50,
+              notebookCoverTexture: 'leather',
+              pageVisualFamily: 'classic',
+              vintagePaperVariant: 'parchment',
+              animationIntensity: 'subtle',
+            ),
         act: (bloc) => bloc.add(const UpdatePageVisualFamily('vintage')),
         expect: () => [isA<SettingsLoaded>()],
         verify: (bloc) {
@@ -195,20 +196,20 @@ void main() {
       blocTest<SettingsBloc, SettingsState>(
         'updates vintage paper variant and persists',
         build: buildBloc,
-        seed: () => const SettingsLoaded(
-          themeMode: ThemeMode.system,
-          locale: Locale('tr', 'TR'),
-          fontFamily: 'Poppins',
-          themePreset: 'default',
-          showAttachmentBackdrop: true,
-          notebookCoverColor: 0xFF2C3E50,
-          notebookCoverTexture: 'leather',
-          pageVisualFamily: 'vintage',
-          vintagePaperVariant: 'parchment',
-          animationIntensity: 'subtle',
-        ),
-        act: (bloc) =>
-            bloc.add(const UpdateVintagePaperVariant('sepia_diary')),
+        seed:
+            () => const SettingsLoaded(
+              themeMode: ThemeMode.system,
+              locale: Locale('tr', 'TR'),
+              fontFamily: 'Poppins',
+              themePreset: 'default',
+              showAttachmentBackdrop: true,
+              notebookCoverColor: 0xFF2C3E50,
+              notebookCoverTexture: 'leather',
+              pageVisualFamily: 'vintage',
+              vintagePaperVariant: 'parchment',
+              animationIntensity: 'subtle',
+            ),
+        act: (bloc) => bloc.add(const UpdateVintagePaperVariant('sepia_diary')),
         expect: () => [isA<SettingsLoaded>()],
         verify: (bloc) {
           final state = bloc.state as SettingsLoaded;
@@ -220,20 +221,20 @@ void main() {
       blocTest<SettingsBloc, SettingsState>(
         'updates animation intensity and persists',
         build: buildBloc,
-        seed: () => const SettingsLoaded(
-          themeMode: ThemeMode.system,
-          locale: Locale('tr', 'TR'),
-          fontFamily: 'Poppins',
-          themePreset: 'default',
-          showAttachmentBackdrop: true,
-          notebookCoverColor: 0xFF2C3E50,
-          notebookCoverTexture: 'leather',
-          pageVisualFamily: 'vintage',
-          vintagePaperVariant: 'parchment',
-          animationIntensity: 'subtle',
-        ),
-        act: (bloc) =>
-            bloc.add(const UpdateAnimationIntensity('cinematic')),
+        seed:
+            () => const SettingsLoaded(
+              themeMode: ThemeMode.system,
+              locale: Locale('tr', 'TR'),
+              fontFamily: 'Poppins',
+              themePreset: 'default',
+              showAttachmentBackdrop: true,
+              notebookCoverColor: 0xFF2C3E50,
+              notebookCoverTexture: 'leather',
+              pageVisualFamily: 'vintage',
+              vintagePaperVariant: 'parchment',
+              animationIntensity: 'subtle',
+            ),
+        act: (bloc) => bloc.add(const UpdateAnimationIntensity('cinematic')),
         expect: () => [isA<SettingsLoaded>()],
         verify: (bloc) {
           final state = bloc.state as SettingsLoaded;

@@ -35,8 +35,9 @@ void main() {
     });
 
     test('delegates to repository.getCategories()', () async {
-      when(() => mockRepository.getCategories())
-          .thenAnswer((_) async => [testCategory]);
+      when(
+        () => mockRepository.getCategories(),
+      ).thenAnswer((_) async => [testCategory]);
 
       final result = await getCategories();
 
@@ -53,8 +54,7 @@ void main() {
     });
 
     test('delegates to repository.upsertCategory()', () async {
-      when(() => mockRepository.upsertCategory(any()))
-          .thenAnswer((_) async {});
+      when(() => mockRepository.upsertCategory(any())).thenAnswer((_) async {});
 
       await addCategory(testCategory);
 
@@ -70,8 +70,7 @@ void main() {
     });
 
     test('delegates to repository.deleteCategory()', () async {
-      when(() => mockRepository.deleteCategory(any()))
-          .thenAnswer((_) async {});
+      when(() => mockRepository.deleteCategory(any())).thenAnswer((_) async {});
 
       await deleteCategory('test-1');
 

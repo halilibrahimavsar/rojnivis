@@ -46,16 +46,12 @@ import '../features/settings/presentation/bloc/settings_bloc.dart' as _i419;
 import 'app_module.dart' as _i460;
 
 extension GetItInjectableX on _i174.GetIt {
-// initializes the registration of main-scope dependencies inside of GetIt
+  // initializes the registration of main-scope dependencies inside of GetIt
   Future<_i174.GetIt> init({
     String? environment,
     _i526.EnvironmentFilter? environmentFilter,
   }) async {
-    final gh = _i526.GetItHelper(
-      this,
-      environment,
-      environmentFilter,
-    );
+    final gh = _i526.GetItHelper(this, environment, environmentFilter);
     final externalDependenciesModule = _$ExternalDependenciesModule();
     await gh.factoryAsync<_i460.SharedPreferences>(
       () => externalDependenciesModule.prefs,
@@ -63,50 +59,77 @@ extension GetItInjectableX on _i174.GetIt {
     );
     gh.lazySingleton<_i173.SoundService>(() => _i173.SoundService());
     gh.lazySingleton<_i152.LocalAuthentication>(
-        () => externalDependenciesModule.localAuth);
-    gh.lazySingleton<_i314.LocalAuthRepository>(() => externalDependenciesModule
-        .localAuthRepository(gh<_i460.SharedPreferences>()));
+      () => externalDependenciesModule.localAuth,
+    );
+    gh.lazySingleton<_i314.LocalAuthRepository>(
+      () => externalDependenciesModule.localAuthRepository(
+        gh<_i460.SharedPreferences>(),
+      ),
+    );
     gh.factory<_i419.SettingsBloc>(
-        () => _i419.SettingsBloc(gh<_i460.SharedPreferences>()));
+      () => _i419.SettingsBloc(gh<_i460.SharedPreferences>()),
+    );
     gh.lazySingleton<_i805.AiService>(
-        () => _i805.GeminiAiService(gh<_i460.SharedPreferences>()));
+      () => _i805.GeminiAiService(gh<_i460.SharedPreferences>()),
+    );
     gh.lazySingleton<_i409.CategoryLocalDataSource>(
-        () => _i409.CategoryLocalDataSourceImpl());
+      () => _i409.CategoryLocalDataSourceImpl(),
+    );
     gh.lazySingleton<_i417.JournalLocalDataSource>(
-        () => _i417.JournalLocalDataSourceImpl());
-    gh.lazySingleton<_i745.CategoryRepository>(() =>
-        _i346.CategoryRepositoryImpl(gh<_i409.CategoryLocalDataSource>()));
-    gh.factory<_i197.LocalAuthLoginBloc>(() => externalDependenciesModule
-        .localAuthLoginBloc(gh<_i314.LocalAuthRepository>()));
-    gh.factory<_i1022.LocalAuthSettingsBloc>(() => externalDependenciesModule
-        .localAuthSettingsBloc(gh<_i314.LocalAuthRepository>()));
+      () => _i417.JournalLocalDataSourceImpl(),
+    );
+    gh.lazySingleton<_i745.CategoryRepository>(
+      () => _i346.CategoryRepositoryImpl(gh<_i409.CategoryLocalDataSource>()),
+    );
+    gh.factory<_i197.LocalAuthLoginBloc>(
+      () => externalDependenciesModule.localAuthLoginBloc(
+        gh<_i314.LocalAuthRepository>(),
+      ),
+    );
+    gh.factory<_i1022.LocalAuthSettingsBloc>(
+      () => externalDependenciesModule.localAuthSettingsBloc(
+        gh<_i314.LocalAuthRepository>(),
+      ),
+    );
     gh.lazySingleton<_i303.JournalRepository>(
-        () => _i531.JournalRepositoryImpl(gh<_i417.JournalLocalDataSource>()));
+      () => _i531.JournalRepositoryImpl(gh<_i417.JournalLocalDataSource>()),
+    );
     gh.factory<_i932.DeleteCategory>(
-        () => _i932.DeleteCategory(gh<_i745.CategoryRepository>()));
+      () => _i932.DeleteCategory(gh<_i745.CategoryRepository>()),
+    );
     gh.lazySingleton<_i197.GetCategories>(
-        () => _i197.GetCategories(gh<_i745.CategoryRepository>()));
+      () => _i197.GetCategories(gh<_i745.CategoryRepository>()),
+    );
     gh.lazySingleton<_i153.AddCategory>(
-        () => _i153.AddCategory(gh<_i745.CategoryRepository>()));
+      () => _i153.AddCategory(gh<_i745.CategoryRepository>()),
+    );
     gh.lazySingleton<_i423.GetEntries>(
-        () => _i423.GetEntries(gh<_i303.JournalRepository>()));
+      () => _i423.GetEntries(gh<_i303.JournalRepository>()),
+    );
     gh.lazySingleton<_i187.AddEntry>(
-        () => _i187.AddEntry(gh<_i303.JournalRepository>()));
+      () => _i187.AddEntry(gh<_i303.JournalRepository>()),
+    );
     gh.lazySingleton<_i112.SearchEntries>(
-        () => _i112.SearchEntries(gh<_i303.JournalRepository>()));
+      () => _i112.SearchEntries(gh<_i303.JournalRepository>()),
+    );
     gh.factory<_i165.DeleteEntry>(
-        () => _i165.DeleteEntry(gh<_i303.JournalRepository>()));
-    gh.factory<_i393.CategoryBloc>(() => _i393.CategoryBloc(
-          gh<_i197.GetCategories>(),
-          gh<_i153.AddCategory>(),
-          gh<_i932.DeleteCategory>(),
-        ));
-    gh.factory<_i379.JournalBloc>(() => _i379.JournalBloc(
-          gh<_i423.GetEntries>(),
-          gh<_i187.AddEntry>(),
-          gh<_i112.SearchEntries>(),
-          gh<_i165.DeleteEntry>(),
-        ));
+      () => _i165.DeleteEntry(gh<_i303.JournalRepository>()),
+    );
+    gh.factory<_i393.CategoryBloc>(
+      () => _i393.CategoryBloc(
+        gh<_i197.GetCategories>(),
+        gh<_i153.AddCategory>(),
+        gh<_i932.DeleteCategory>(),
+      ),
+    );
+    gh.factory<_i379.JournalBloc>(
+      () => _i379.JournalBloc(
+        gh<_i423.GetEntries>(),
+        gh<_i187.AddEntry>(),
+        gh<_i112.SearchEntries>(),
+        gh<_i165.DeleteEntry>(),
+      ),
+    );
     return this;
   }
 }

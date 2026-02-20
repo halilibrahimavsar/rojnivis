@@ -83,7 +83,9 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
           notebookCoverColor: notebookCoverColor,
           notebookCoverTexture: notebookCoverTexture,
           pageVisualFamily: _sanitizePageVisualFamily(pageVisualFamily),
-          vintagePaperVariant: _sanitizeVintagePaperVariant(vintagePaperVariant),
+          vintagePaperVariant: _sanitizeVintagePaperVariant(
+            vintagePaperVariant,
+          ),
           animationIntensity: _sanitizeAnimationIntensity(animationIntensity),
         ),
       );

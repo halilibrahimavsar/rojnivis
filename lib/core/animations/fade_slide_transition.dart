@@ -58,23 +58,14 @@ class _FadeSlideTransitionState extends State<FadeSlideTransition>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: widget.duration,
-      vsync: this,
-    );
+    _controller = AnimationController(duration: widget.duration, vsync: this);
 
-    _fadeAnimation = CurvedAnimation(
-      parent: _controller,
-      curve: widget.curve,
-    );
+    _fadeAnimation = CurvedAnimation(parent: _controller, curve: widget.curve);
 
     _slideAnimation = Tween<Offset>(
       begin: Offset(0, widget.slideOffset),
       end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: widget.curve,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: widget.curve));
 
     // Stagger the animation start based on index
     final delay = widget.staggerDelay * widget.index;
@@ -96,10 +87,7 @@ class _FadeSlideTransitionState extends State<FadeSlideTransition>
       builder: (context, child) {
         return Transform.translate(
           offset: _slideAnimation.value,
-          child: Opacity(
-            opacity: _fadeAnimation.value,
-            child: child,
-          ),
+          child: Opacity(opacity: _fadeAnimation.value, child: child),
         );
       },
       child: widget.child,

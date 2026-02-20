@@ -30,9 +30,7 @@ class EntryDecorationLocalDataSourceImpl
         if (item is Map<String, dynamic>) {
           stickers.add(EntrySticker.fromJson(item));
         } else if (item is Map) {
-          stickers.add(
-            EntrySticker.fromJson(Map<String, dynamic>.from(item)),
-          );
+          stickers.add(EntrySticker.fromJson(Map<String, dynamic>.from(item)));
         }
       }
       stickers.sort((a, b) => a.zIndex.compareTo(b.zIndex));
@@ -44,7 +42,9 @@ class EntryDecorationLocalDataSourceImpl
 
   @override
   Future<void> saveStickers(String entryId, List<EntrySticker> stickers) async {
-    final payload = jsonEncode(stickers.map((s) => s.toJson()).toList(growable: false));
+    final payload = jsonEncode(
+      stickers.map((s) => s.toJson()).toList(growable: false),
+    );
     await _box.put(entryId, payload);
   }
 

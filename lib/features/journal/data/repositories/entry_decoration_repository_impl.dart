@@ -5,7 +5,8 @@ import '../datasources/entry_decoration_local_datasource.dart';
 class EntryDecorationRepositoryImpl implements EntryDecorationRepository {
   EntryDecorationRepositoryImpl({
     EntryDecorationLocalDataSource? localDataSource,
-  }) : _localDataSource = localDataSource ?? EntryDecorationLocalDataSourceImpl();
+  }) : _localDataSource =
+           localDataSource ?? EntryDecorationLocalDataSourceImpl();
 
   final EntryDecorationLocalDataSource _localDataSource;
 

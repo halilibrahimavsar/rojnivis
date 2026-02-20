@@ -49,11 +49,11 @@ void main() {
   });
 
   JournalBloc buildBloc() => JournalBloc(
-        mockGetEntries,
-        mockAddEntry,
-        mockSearchEntries,
-        mockDeleteEntry,
-      );
+    mockGetEntries,
+    mockAddEntry,
+    mockSearchEntries,
+    mockDeleteEntry,
+  );
 
   group('JournalBloc', () {
     test('initial state is JournalInitial', () {
@@ -68,10 +68,8 @@ void main() {
         },
         build: buildBloc,
         act: (bloc) => bloc.add(const LoadJournalEntries()),
-        expect: () => [
-          const JournalLoading(),
-          JournalLoaded(entries: testEntries),
-        ],
+        expect:
+            () => [const JournalLoading(), JournalLoaded(entries: testEntries)],
       );
 
       blocTest<JournalBloc, JournalState>(
@@ -81,10 +79,7 @@ void main() {
         },
         build: buildBloc,
         act: (bloc) => bloc.add(const LoadJournalEntries()),
-        expect: () => [
-          const JournalLoading(),
-          isA<JournalError>(),
-        ],
+        expect: () => [const JournalLoading(), isA<JournalError>()],
       );
     });
 
@@ -105,15 +100,12 @@ void main() {
       blocTest<JournalBloc, JournalState>(
         'emits JournalActionError when upsert fails',
         setUp: () {
-          when(() => mockAddEntry(any()))
-              .thenThrow(Exception('Upsert failed'));
+          when(() => mockAddEntry(any())).thenThrow(Exception('Upsert failed'));
         },
         build: buildBloc,
         act: (bloc) => bloc.add(UpsertEntryRequested(entry: testEntry)),
-        expect: () => [
-          const JournalActionInProgress(),
-          isA<JournalActionError>(),
-        ],
+        expect:
+            () => [const JournalActionInProgress(), isA<JournalActionError>()],
       );
     });
 
@@ -125,8 +117,7 @@ void main() {
           when(() => mockGetEntries()).thenAnswer((_) async => testEntries);
         },
         build: buildBloc,
-        act: (bloc) =>
-            bloc.add(const DeleteEntryRequested(entryId: 'entry-1')),
+        act: (bloc) => bloc.add(const DeleteEntryRequested(entryId: 'entry-1')),
         verify: (_) {
           verify(() => mockDeleteEntry('entry-1')).called(1);
         },
@@ -137,15 +128,17 @@ void main() {
       blocTest<JournalBloc, JournalState>(
         'emits [JournalLoading, JournalLoaded] when search succeeds',
         setUp: () {
-          when(() => mockSearchEntries(any()))
-              .thenAnswer((_) async => testEntries);
+          when(
+            () => mockSearchEntries(any()),
+          ).thenAnswer((_) async => testEntries);
         },
         build: buildBloc,
         act: (bloc) => bloc.add(const SearchRequested(filter: testFilter)),
-        expect: () => [
-          const JournalLoading(),
-          JournalLoaded(entries: testEntries, filter: testFilter),
-        ],
+        expect:
+            () => [
+              const JournalLoading(),
+              JournalLoaded(entries: testEntries, filter: testFilter),
+            ],
       );
 
       blocTest<JournalBloc, JournalState>(
@@ -154,12 +147,9 @@ void main() {
           when(() => mockGetEntries()).thenAnswer((_) async => testEntries);
         },
         build: buildBloc,
-        act: (bloc) =>
-            bloc.add(const SearchRequested(filter: JournalFilter())),
-        expect: () => [
-          const JournalLoading(),
-          JournalLoaded(entries: testEntries),
-        ],
+        act: (bloc) => bloc.add(const SearchRequested(filter: JournalFilter())),
+        expect:
+            () => [const JournalLoading(), JournalLoaded(entries: testEntries)],
       );
     });
 
@@ -171,10 +161,8 @@ void main() {
         },
         build: buildBloc,
         act: (bloc) => bloc.add(const ClearSearch()),
-        expect: () => [
-          const JournalLoading(),
-          JournalLoaded(entries: testEntries),
-        ],
+        expect:
+            () => [const JournalLoading(), JournalLoaded(entries: testEntries)],
       );
     });
   });

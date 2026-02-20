@@ -39,19 +39,35 @@ class _StickerPickerSheetState extends State<_StickerPickerSheet> {
             children: [
               Text(
                 'sticker_picker'.tr(),
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 10),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  _categoryChip(context, StickerCategory.waxSeals, 'sticker_category_wax'.tr()),
-                  _categoryChip(context, StickerCategory.tapes, 'sticker_category_tape'.tr()),
-                  _categoryChip(context, StickerCategory.stamps, 'sticker_category_stamp'.tr()),
-                  _categoryChip(context, StickerCategory.florals, 'sticker_category_floral'.tr()),
+                  _categoryChip(
+                    context,
+                    StickerCategory.waxSeals,
+                    'sticker_category_wax'.tr(),
+                  ),
+                  _categoryChip(
+                    context,
+                    StickerCategory.tapes,
+                    'sticker_category_tape'.tr(),
+                  ),
+                  _categoryChip(
+                    context,
+                    StickerCategory.stamps,
+                    'sticker_category_stamp'.tr(),
+                  ),
+                  _categoryChip(
+                    context,
+                    StickerCategory.florals,
+                    'sticker_category_floral'.tr(),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -75,7 +91,8 @@ class _StickerPickerSheetState extends State<_StickerPickerSheet> {
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: Theme.of(context).colorScheme.outlineVariant,
+                              color:
+                                  Theme.of(context).colorScheme.outlineVariant,
                             ),
                           ),
                           child: Padding(

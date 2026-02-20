@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 
 class StickerTransformHandles extends StatelessWidget {
-  const StickerTransformHandles({
-    super.key,
-    required this.onDelete,
-  });
+  const StickerTransformHandles({super.key, required this.onDelete});
 
   final VoidCallback onDelete;
 
@@ -20,7 +17,10 @@ class StickerTransformHandles extends StatelessWidget {
             Positioned.fill(
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  border: Border.all(color: color.withValues(alpha: 0.8), width: 1.4),
+                  border: Border.all(
+                    color: color.withValues(alpha: 0.8),
+                    width: 1.4,
+                  ),
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),

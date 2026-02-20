@@ -60,9 +60,10 @@ class _ParallaxScrollEffectState extends State<ParallaxScrollEffect> {
           // Parallax background layer
           if (widget.backgroundWidget != null)
             Transform.translate(
-              offset: widget.axis == Axis.vertical
-                  ? Offset(0, -_scrollOffset * widget.parallaxFactor)
-                  : Offset(-_scrollOffset * widget.parallaxFactor, 0),
+              offset:
+                  widget.axis == Axis.vertical
+                      ? Offset(0, -_scrollOffset * widget.parallaxFactor)
+                      : Offset(-_scrollOffset * widget.parallaxFactor, 0),
               child: widget.backgroundWidget,
             ),
           // Foreground content
@@ -87,11 +88,7 @@ class ParallaxListItem extends StatelessWidget {
   /// The global key used to calculate position.
   final GlobalKey _itemKey = GlobalKey();
 
-  ParallaxListItem({
-    super.key,
-    required this.child,
-    this.depth = 1.0,
-  });
+  ParallaxListItem({super.key, required this.child, this.depth = 1.0});
 
   @override
   Widget build(BuildContext context) {
@@ -102,9 +99,7 @@ class ParallaxListItem extends StatelessWidget {
         itemKey: _itemKey,
         depth: depth,
       ),
-      children: [
-        SizedBox(key: _itemKey, child: child),
-      ],
+      children: [SizedBox(key: _itemKey, child: child)],
     );
   }
 }
@@ -130,8 +125,7 @@ class _ParallaxFlowDelegate extends FlowDelegate {
   @override
   void paintChildren(FlowPaintingContext context) {
     // Calculate the position of this item within the viewport
-    final scrollableBox =
-        scrollable.context.findRenderObject() as RenderBox;
+    final scrollableBox = scrollable.context.findRenderObject() as RenderBox;
     final itemBox = itemKey.currentContext?.findRenderObject() as RenderBox?;
     if (itemBox == null) {
       context.paintChild(0);
@@ -217,32 +211,26 @@ class _NotebookPaperPainter extends CustomPainter {
     );
 
     // Draw horizontal ruled lines
-    final linePaint = Paint()
-      ..color = lineColor
-      ..strokeWidth = 0.5
-      ..style = PaintingStyle.stroke;
+    final linePaint =
+        Paint()
+          ..color = lineColor
+          ..strokeWidth = 0.5
+          ..style = PaintingStyle.stroke;
 
     double y = lineSpacing;
     while (y < size.height) {
-      canvas.drawLine(
-        Offset(0, y),
-        Offset(size.width, y),
-        linePaint,
-      );
+      canvas.drawLine(Offset(0, y), Offset(size.width, y), linePaint);
       y += lineSpacing;
     }
 
     // Draw left margin line
-    final marginPaint = Paint()
-      ..color = lineColor.withValues(alpha: 0.3)
-      ..strokeWidth = 1.0
-      ..style = PaintingStyle.stroke;
+    final marginPaint =
+        Paint()
+          ..color = lineColor.withValues(alpha: 0.3)
+          ..strokeWidth = 1.0
+          ..style = PaintingStyle.stroke;
 
-    canvas.drawLine(
-      const Offset(40, 0),
-      Offset(40, size.height),
-      marginPaint,
-    );
+    canvas.drawLine(const Offset(40, 0), Offset(40, size.height), marginPaint);
   }
 
   @override

@@ -60,7 +60,13 @@ class CategoriesPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('categories'.tr())),
+      backgroundColor: Colors.transparent,
+      extendBody: true,
+      appBar: AppBar(
+        title: Text('categories'.tr()),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
       body: BlocBuilder<CategoryBloc, CategoryState>(
         builder: (context, state) {
           if (state is CategoryInitial || state is CategoryLoading) {
@@ -164,10 +170,13 @@ class CategoriesPage extends StatelessWidget {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openEditor(context),
-        icon: const Icon(Icons.add),
-        label: Text('add_category'.tr()),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 80.0),
+        child: FloatingActionButton.extended(
+          onPressed: () => _openEditor(context),
+          icon: const Icon(Icons.add),
+          label: Text('add_category'.tr()),
+        ),
       ),
     );
   }
@@ -249,9 +258,7 @@ class _CategoryEditorDialogState extends State<_CategoryEditorDialog> {
                           border: Border.all(
                             color:
                                 _selectedColor == color.toARGB32()
-                                    ? Theme.of(
-                                      context,
-                                    ).colorScheme.onSurface
+                                    ? Theme.of(context).colorScheme.onSurface
                                     : Colors.transparent,
                             width: 2,
                           ),

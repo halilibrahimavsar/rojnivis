@@ -19,11 +19,11 @@ class SplashPage extends StatefulWidget {
 
 class _SplashPageState extends State<SplashPage> {
   bool _isAnimationComplete = false;
-  
+
   // To verify auth status
   // We'll assume the AuthBloc is already initialized in main.dart
   // and has fired an event. We just need to check its current state.
-  
+
   void _checkAndNavigate() async {
     if (!_isAnimationComplete) return;
     if (!mounted) return;
@@ -33,7 +33,7 @@ class _SplashPageState extends State<SplashPage> {
     if (authState is AuthInitialState || authState is AuthLoadingState) return;
 
     final localAuthRepo = getIt<LocalAuthRepository>();
-    
+
     // Check if either biometric or PIN is enabled
     final isBiometricEnabled = await localAuthRepo.isBiometricEnabled();
     final isPinSet = await localAuthRepo.isPinSet();
@@ -42,21 +42,21 @@ class _SplashPageState extends State<SplashPage> {
     // Small delay to ensure smooth transition
     if (!mounted) return;
     // We can remove the arbitrary delay or keep it minimal if we want to show the full book for a split second
-    // await Future.delayed(const Duration(milliseconds: 300)); 
+    // await Future.delayed(const Duration(milliseconds: 300));
 
     if (authState is AuthenticatedState) {
-        if (isLocalAuthEnabled) {
-             context.go('/home');
-        } else {
-             context.go('/home');
-        }
+      if (isLocalAuthEnabled) {
+        context.go('/home');
+      } else {
+        context.go('/home');
+      }
     } else if (authState is UnauthenticatedState) {
-       context.go('/public');
+      context.go('/public');
     }
-    // If AuthErrorState, we might want to go to public or show error. 
+    // If AuthErrorState, we might want to go to public or show error.
     // Usually unauthenticated is safer.
     else if (authState is AuthErrorState) {
-       context.go('/public');
+      context.go('/public');
     }
   }
 

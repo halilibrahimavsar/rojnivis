@@ -1,9 +1,11 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../animations/page_flip_transition.dart';
 import '../../features/journal/presentation/pages/journal_page.dart';
 import '../../features/journal/presentation/pages/add_entry_page.dart';
 import '../../features/journal/presentation/pages/entry_detail_page.dart';
 import '../../features/categories/presentation/pages/categories_page.dart';
+import '../../features/calendar/presentation/pages/calendar_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/settings/presentation/pages/page_studio_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
@@ -11,9 +13,18 @@ import '../../features/settings/presentation/pages/local_auth_settings_page.dart
 import '../../features/settings/presentation/pages/remote_auth_settings_page.dart';
 
 import 'package:remote_auth_module/remote_auth_module.dart';
+import '../widgets/app_layout.dart';
+
+final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'root',
+);
+final GlobalKey<NavigatorState> _shellNavigatorKey = GlobalKey<NavigatorState>(
+  debugLabel: 'shell',
+);
 
 class AppRouter {
   static final router = GoRouter(
+    navigatorKey: _rootNavigatorKey,
     initialLocation: '/',
     routes: [
       GoRoute(
@@ -24,73 +35,103 @@ class AppRouter {
               child: const SplashPage(),
             ),
       ),
-      GoRoute(
-        path: '/home',
-        pageBuilder:
-            (context, state) => PageFlipTransitionPage(
-              key: state.pageKey,
-              child: const JournalPage(),
-            ),
+      ShellRoute(
+        navigatorKey: _shellNavigatorKey,
+        builder: (context, state, child) {
+          return AppLayout(child: child);
+        },
         routes: [
           GoRoute(
-            path: 'add-entry',
-            pageBuilder: (context, state) {
-              final entryId = state.uri.queryParameters['entryId'];
-              return PageFlipTransitionPage(
-                key: state.pageKey,
-                child: AddEntryPage(entryId: entryId),
-              );
-            },
-          ),
-          GoRoute(
-            path: 'entry/:entryId',
-            pageBuilder: (context, state) {
-              final entryId = state.pathParameters['entryId']!;
-              return PageFlipTransitionPage(
-                key: state.pageKey,
-                child: EntryDetailPage(entryId: entryId),
-              );
-            },
-          ),
-          GoRoute(
-            path: 'categories',
+            path: '/home',
             pageBuilder:
-                (context, state) => PageFlipTransitionPage(
+                (context, state) => CustomTransitionPage(
                   key: state.pageKey,
-                  child: const CategoriesPage(),
-                ),
-          ),
-          GoRoute(
-            path: 'settings',
-            pageBuilder:
-                (context, state) => PageFlipTransitionPage(
-                  key: state.pageKey,
-                  child: const SettingsPage(),
+                  child: const JournalPage(),
+                  transitionsBuilder:
+                      (context, animation, secondaryAnimation, child) =>
+                          FadeTransition(opacity: animation, child: child),
                 ),
             routes: [
               GoRoute(
-                path: 'local-auth',
+                path: 'add-entry',
+                parentNavigatorKey: _rootNavigatorKey,
+                pageBuilder: (context, state) {
+                  final entryId = state.uri.queryParameters['entryId'];
+                  return PageFlipTransitionPage(
+                    key: state.pageKey,
+                    child: AddEntryPage(entryId: entryId),
+                  );
+                },
+              ),
+              GoRoute(
+                path: 'entry/:entryId',
+                parentNavigatorKey: _rootNavigatorKey,
+                pageBuilder: (context, state) {
+                  final entryId = state.pathParameters['entryId']!;
+                  return PageFlipTransitionPage(
+                    key: state.pageKey,
+                    child: EntryDetailPage(entryId: entryId),
+                  );
+                },
+              ),
+              GoRoute(
+                path: 'categories',
                 pageBuilder:
-                    (context, state) => PageFlipTransitionPage(
+                    (context, state) => CustomTransitionPage(
                       key: state.pageKey,
-                      child: const LocalAuthSettingsPage(),
+                      child: const CategoriesPage(),
+                      transitionsBuilder:
+                          (context, animation, secondaryAnimation, child) =>
+                              FadeTransition(opacity: animation, child: child),
                     ),
               ),
               GoRoute(
-                path: 'remote-auth',
+                path: 'calendar',
                 pageBuilder:
-                    (context, state) => PageFlipTransitionPage(
+                    (context, state) => CustomTransitionPage(
                       key: state.pageKey,
-                      child: const RemoteAuthSettingsPage(),
+                      child: const CalendarPage(),
+                      transitionsBuilder:
+                          (context, animation, secondaryAnimation, child) =>
+                              FadeTransition(opacity: animation, child: child),
                     ),
               ),
               GoRoute(
-                path: 'page-studio',
+                path: 'settings',
                 pageBuilder:
-                    (context, state) => PageFlipTransitionPage(
+                    (context, state) => CustomTransitionPage(
                       key: state.pageKey,
-                      child: const PageStudioPage(),
+                      child: const SettingsPage(),
+                      transitionsBuilder:
+                          (context, animation, secondaryAnimation, child) =>
+                              FadeTransition(opacity: animation, child: child),
                     ),
+                routes: [
+                  GoRoute(
+                    path: 'local-auth',
+                    pageBuilder:
+                        (context, state) => PageFlipTransitionPage(
+                          key: state.pageKey,
+                          child: const LocalAuthSettingsPage(),
+                        ),
+                  ),
+                  GoRoute(
+                    path: 'remote-auth',
+                    pageBuilder:
+                        (context, state) => PageFlipTransitionPage(
+                          key: state.pageKey,
+                          child: const RemoteAuthSettingsPage(),
+                        ),
+                  ),
+                  GoRoute(
+                    path: 'page-studio',
+                    pageBuilder:
+                        (context, state) => PageFlipTransitionPage(
+                          key: state.pageKey,
+                          child: const PageStudioPage(),
+                        ),
+                  ),
+                ],
               ),
             ],
           ),

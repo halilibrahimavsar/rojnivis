@@ -46,7 +46,10 @@ class _FilterDialogState extends State<FilterDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('date_range'.tr(), style: Theme.of(context).textTheme.labelLarge),
+            Text(
+              'date_range'.tr(),
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
             const SizedBox(height: 8),
             Row(
               children: [
@@ -96,7 +99,10 @@ class _FilterDialogState extends State<FilterDialog> {
               ],
             ),
             const SizedBox(height: 16),
-            Text('categories'.tr(), style: Theme.of(context).textTheme.labelLarge),
+            Text(
+              'categories'.tr(),
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
             const SizedBox(height: 8),
             BlocBuilder<CategoryBloc, CategoryState>(
               builder: (context, state) {
@@ -104,30 +110,36 @@ class _FilterDialogState extends State<FilterDialog> {
                   return Wrap(
                     spacing: 8,
                     runSpacing: 8,
-                    children: state.categories.map((category) {
-                      final isSelected = _selectedCategories.contains(category.id);
-                      final color = Color(category.color);
-                      return FilterChip(
-                        label: Text(category.name),
-                        selected: isSelected,
-                        onSelected: (selected) {
-                          setState(() {
-                            if (selected) {
-                              _selectedCategories.add(category.id);
-                            } else {
-                              _selectedCategories.remove(category.id);
-                            }
-                          });
-                        },
-                        checkmarkColor: isSelected ? Colors.white : null,
-                        backgroundColor: color.withValues(alpha: 0.1),
-                        selectedColor: color,
-                        labelStyle: TextStyle(
-                          color: isSelected ? Colors.white : Colors.black87,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                        ),
-                      );
-                    }).toList(),
+                    children:
+                        state.categories.map((category) {
+                          final isSelected = _selectedCategories.contains(
+                            category.id,
+                          );
+                          final color = Color(category.color);
+                          return FilterChip(
+                            label: Text(category.name),
+                            selected: isSelected,
+                            onSelected: (selected) {
+                              setState(() {
+                                if (selected) {
+                                  _selectedCategories.add(category.id);
+                                } else {
+                                  _selectedCategories.remove(category.id);
+                                }
+                              });
+                            },
+                            checkmarkColor: isSelected ? Colors.white : null,
+                            backgroundColor: color.withValues(alpha: 0.1),
+                            selectedColor: color,
+                            labelStyle: TextStyle(
+                              color: isSelected ? Colors.white : Colors.black87,
+                              fontWeight:
+                                  isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                            ),
+                          );
+                        }).toList(),
                   );
                 }
                 return const SizedBox.shrink();
@@ -161,11 +173,12 @@ class _FilterDialogState extends State<FilterDialog> {
         ),
         FilledButton(
           onPressed: () {
-            final tags = _tagsController.text
-                .split(',')
-                .map((e) => e.trim())
-                .where((e) => e.isNotEmpty)
-                .toList();
+            final tags =
+                _tagsController.text
+                    .split(',')
+                    .map((e) => e.trim())
+                    .where((e) => e.isNotEmpty)
+                    .toList();
 
             final filter = widget.initialFilter.copyWith(
               startDate: _startDate,

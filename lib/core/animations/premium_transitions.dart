@@ -47,17 +47,11 @@ class _ScaleBounceTapState extends State<ScaleBounceTap>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: widget.duration,
-      vsync: this,
-    );
+    _controller = AnimationController(duration: widget.duration, vsync: this);
     _scaleAnimation = Tween<double>(
       begin: 1.0,
       end: widget.scaleDown,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    ));
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -81,10 +75,7 @@ class _ScaleBounceTapState extends State<ScaleBounceTap>
       onTapDown: _onTapDown,
       onTapUp: _onTapUp,
       onTapCancel: _onTapCancel,
-      child: ScaleTransition(
-        scale: _scaleAnimation,
-        child: widget.child,
-      ),
+      child: ScaleTransition(scale: _scaleAnimation, child: widget.child),
     );
   }
 }
@@ -133,10 +124,7 @@ class _ShimmerEffectState extends State<ShimmerEffect>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: widget.duration,
-      vsync: this,
-    );
+    _controller = AnimationController(duration: widget.duration, vsync: this);
     if (widget.enabled) _controller.repeat();
   }
 
@@ -175,8 +163,7 @@ class _ShimmerEffectState extends State<ShimmerEffect>
               stops: const [0.0, 0.5, 1.0],
               begin: const Alignment(-1.5, -0.3),
               end: const Alignment(1.5, 0.3),
-              transform:
-                  _SlidingGradientTransform(percent: _controller.value),
+              transform: _SlidingGradientTransform(percent: _controller.value),
             ).createShader(bounds);
           },
           child: child,
@@ -245,8 +232,7 @@ class MorphingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bgColor =
-        backgroundColor ?? Theme.of(context).cardColor;
+    final bgColor = backgroundColor ?? Theme.of(context).cardColor;
 
     return GestureDetector(
       onTap: onTap,
@@ -260,9 +246,7 @@ class MorphingCard extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(
-                alpha: isExpanded ? 0.12 : 0.06,
-              ),
+              color: Colors.black.withValues(alpha: isExpanded ? 0.12 : 0.06),
               blurRadius: isExpanded ? 24 : 8,
               offset: Offset(0, isExpanded ? 8 : 2),
             ),
@@ -270,9 +254,8 @@ class MorphingCard extends StatelessWidget {
         ),
         child: AnimatedCrossFade(
           duration: duration,
-          crossFadeState: isExpanded
-              ? CrossFadeState.showSecond
-              : CrossFadeState.showFirst,
+          crossFadeState:
+              isExpanded ? CrossFadeState.showSecond : CrossFadeState.showFirst,
           firstChild: collapsedChild,
           secondChild: expandedChild,
           firstCurve: Curves.easeInOutCubic,
@@ -418,7 +401,8 @@ class SmoothPageIndicator extends StatelessWidget {
       children: List.generate(count, (index) {
         final distance = (currentPage - index).abs();
         final scale = (1 - distance.clamp(0.0, 1.0)) * 0.5 + 0.5;
-        final color = Color.lerp(
+        final color =
+            Color.lerp(
               inactiveColor,
               activeColor,
               (1 - distance.clamp(0.0, 1.0)),
