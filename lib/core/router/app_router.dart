@@ -6,7 +6,6 @@ import '../../features/journal/presentation/pages/entry_detail_page.dart';
 import '../../features/categories/presentation/pages/categories_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/settings/presentation/pages/page_studio_page.dart';
-import '../../features/mindmap/presentation/pages/mind_map_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../features/settings/presentation/pages/local_auth_settings_page.dart';
 import '../../features/settings/presentation/pages/remote_auth_settings_page.dart';
@@ -19,10 +18,11 @@ class AppRouter {
     routes: [
       GoRoute(
         path: '/',
-        pageBuilder: (context, state) => PageFlipTransitionPage(
-          key: state.pageKey,
-          child: const SplashPage(),
-        ),
+        pageBuilder:
+            (context, state) => PageFlipTransitionPage(
+              key: state.pageKey,
+              child: const SplashPage(),
+            ),
       ),
       GoRoute(
         path: '/home',
@@ -93,14 +93,6 @@ class AppRouter {
                     ),
               ),
             ],
-          ),
-          GoRoute(
-            path: 'mindmap',
-            pageBuilder:
-                (context, state) => PageFlipTransitionPage(
-                  key: state.pageKey,
-                  child: const MindMapPage(),
-                ),
           ),
         ],
       ),
