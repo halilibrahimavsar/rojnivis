@@ -3,10 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:remote_auth_module/remote_auth_module.dart';
-import 'package:unified_flutter_features/features/local_auth/data/local_auth_repository.dart';
 
 import '../../../../core/widgets/themed_paper.dart';
-import '../../../../di/injection.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -67,20 +65,17 @@ class _SplashPageState extends State<SplashPage>
     // Don't navigate while still initializing
     if (authState is AuthInitialState || authState is AuthLoadingState) return;
 
-    final localAuthRepo = getIt<LocalAuthRepository>();
-
-    final isBiometricEnabled = await localAuthRepo.isBiometricEnabled();
-    final isPinSet = await localAuthRepo.isPinSet();
-    final isLocalAuthEnabled = isBiometricEnabled || isPinSet;
-
-    if (!mounted) return;
-
     if (authState is AuthenticatedState) {
-      if (isLocalAuthEnabled) {
-        context.go('/home');
-      } else {
-        context.go('/home');
+      // If the user opted out of 'remember me', treat this as a session-only
+      // login — sign them out silently so they must log in again next launch.
+      final rememberMe = await RememberMeService().load();
+      if (!mounted) return;
+      if (!rememberMe) {
+        context.read<AuthBloc>().add(const SignOutEvent());
+        context.go('/public');
+        return;
       }
+      context.go('/home');
     } else if (authState is UnauthenticatedState ||
         authState is AuthErrorState) {
       context.go('/public');
