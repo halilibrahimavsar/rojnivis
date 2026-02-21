@@ -16,7 +16,8 @@
             "ios": "1:628938091989:ios:5486a442b792f87622a15c",
             "macos": "1:628938091989:ios:5486a442b792f87622a15c",
             "web": "1:628938091989:web:b91a5435af48d95422a15c",
-            "windows": "1:628938091989:web:1695fe7f3118440622a15c"
+            "windows": "1:628938091989:web:1695fe7f3118440622a15c",
+            "linux": "1:628938091989:web:30cc21c7333867a422a15c"
           }
         }
       }
@@ -41,5 +42,25 @@
     "providers": {
       "emailPassword": true
     }
+  },
+  "firestore": {
+    "database": "(default)",
+    "location": "us-central1",
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "hosting": {
+    "public": "build/web",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
   }
 }

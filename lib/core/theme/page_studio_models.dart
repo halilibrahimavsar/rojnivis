@@ -1,4 +1,4 @@
-enum PageVisualFamily { classic, vintage }
+enum PageVisualFamily { classic, vintage, oceanic }
 
 enum VintagePaperVariant { parchment, sepiaDiary, pressedFloral }
 
@@ -11,6 +11,8 @@ extension PageVisualFamilyX on PageVisualFamily {
         return PageVisualFamilyIds.classic;
       case PageVisualFamily.vintage:
         return PageVisualFamilyIds.vintage;
+      case PageVisualFamily.oceanic:
+        return PageVisualFamilyIds.oceanic;
     }
   }
 
@@ -18,6 +20,8 @@ extension PageVisualFamilyX on PageVisualFamily {
     switch (id) {
       case PageVisualFamilyIds.vintage:
         return PageVisualFamily.vintage;
+      case PageVisualFamilyIds.oceanic:
+        return PageVisualFamily.oceanic;
       case PageVisualFamilyIds.classic:
       default:
         return PageVisualFamily.classic;
@@ -82,6 +86,7 @@ class PageVisualFamilyIds {
 
   static const String classic = 'classic';
   static const String vintage = 'vintage';
+  static const String oceanic = 'oceanic';
 }
 
 class VintagePaperVariantIds {

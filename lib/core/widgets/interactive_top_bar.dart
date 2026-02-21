@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../features/journal/domain/models/filter_model.dart';
 import '../../features/journal/presentation/bloc/journal_bloc.dart';
+import '../../features/journal/presentation/widgets/filter_dialog.dart';
 import '../../features/settings/presentation/bloc/settings_bloc.dart';
 import '../theme/app_theme.dart';
 import 'glass_overlays.dart';
@@ -39,6 +40,26 @@ class _InteractiveTopBarState extends State<InteractiveTopBar> {
     context.read<JournalBloc>().add(
       SearchRequested(filter: currentFilter.copyWith(query: value)),
     );
+  }
+
+  Future<void> _showFilterDialog() async {
+    final state = context.read<JournalBloc>().state;
+    JournalFilter currentFilter = const JournalFilter();
+    if (state is JournalLoaded) {
+      currentFilter = state.filter;
+    }
+
+    final result = await showDialog<JournalFilter>(
+      context: context,
+      builder: (context) => FilterDialog(initialFilter: currentFilter),
+    );
+
+    if (result != null) {
+      if (!mounted) return;
+      context.read<JournalBloc>().add(
+        SearchRequested(filter: result.copyWith(query: _searchController.text)),
+      );
+    }
   }
 
   void _closeExpanded() {
@@ -132,6 +153,14 @@ class _InteractiveTopBarState extends State<InteractiveTopBar> {
                                           border: InputBorder.none,
                                         ),
                                       ),
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.filter_list_outlined,
+                                        size: 20,
+                                      ),
+                                      onPressed: _showFilterDialog,
+                                      tooltip: 'filter'.tr(),
                                     ),
                                     IconButton(
                                       icon: const Icon(Icons.close, size: 20),

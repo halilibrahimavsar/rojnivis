@@ -22,6 +22,8 @@ class JournalFilter extends Equatable {
       (categoryIds == null || categoryIds!.isEmpty) &&
       (tags == null || tags!.isEmpty);
 
+  bool get hasActiveFilters => !isEmpty;
+
   JournalFilter copyWith({
     String? query,
     DateTime? startDate,

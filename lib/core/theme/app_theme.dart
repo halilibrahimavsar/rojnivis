@@ -26,6 +26,8 @@ enum AppThemePreset {
   raining,
   snowing,
   sunny,
+  sunkenYacht,
+  pirateTreasure,
 }
 
 extension AppThemePresetX on AppThemePreset {
@@ -73,6 +75,10 @@ extension AppThemePresetX on AppThemePreset {
         return ThemePresets.snowing;
       case AppThemePreset.sunny:
         return ThemePresets.sunny;
+      case AppThemePreset.sunkenYacht:
+        return ThemePresets.sunkenYacht;
+      case AppThemePreset.pirateTreasure:
+        return ThemePresets.pirateTreasure;
     }
   }
 
@@ -118,6 +124,10 @@ extension AppThemePresetX on AppThemePreset {
         return AppThemePreset.snowing;
       case ThemePresets.sunny:
         return AppThemePreset.sunny;
+      case ThemePresets.sunkenYacht:
+        return AppThemePreset.sunkenYacht;
+      case ThemePresets.pirateTreasure:
+        return AppThemePreset.pirateTreasure;
       case ThemePresets.defaultPreset:
       default:
         return AppThemePreset.defaultPreset;
@@ -259,6 +269,16 @@ class AppTheme {
       preset: AppThemePreset.sunny,
       labelKey: 'theme_sunny',
       previewColor: _paletteFor(AppThemePreset.sunny).seed,
+    ),
+    ThemePresetOption(
+      preset: AppThemePreset.sunkenYacht,
+      labelKey: 'Batık Yat',
+      previewColor: _paletteFor(AppThemePreset.sunkenYacht).seed,
+    ),
+    ThemePresetOption(
+      preset: AppThemePreset.pirateTreasure,
+      labelKey: 'Korsan Hazinesi',
+      previewColor: _paletteFor(AppThemePreset.pirateTreasure).seed,
     ),
   ]);
 
@@ -756,6 +776,26 @@ class AppTheme {
           backgroundDark: Color(0xFF3E2723), // Warm Dark Brown
           surfaceDark: Color(0xFF4E342E),
         );
+      case AppThemePreset.sunkenYacht:
+        return const _ThemePalette(
+          seed: Color(0xFF00695C), // Deep Teal
+          secondary: Color(0xFF4DB6AC), // Seafoam
+          tertiary: Color(0xFFFFD54F), // Glowing Gold
+          backgroundLight: Color(0xFFE0F2F1),
+          surfaceLight: Color(0xFFFFFFFF),
+          backgroundDark: Color(0xFF00221E),
+          surfaceDark: Color(0xFF00332D),
+        );
+      case AppThemePreset.pirateTreasure:
+        return const _ThemePalette(
+          seed: Color(0xFF3E2723), // Deep Brown
+          secondary: Color(0xFFFFA000), // Gold
+          tertiary: Color(0xFFD32F2F), // Pirate Red
+          backgroundLight: Color(0xFFEFEBE9),
+          surfaceLight: Color(0xFFFFFFFF),
+          backgroundDark: Color(0xFF1B110F),
+          surfaceDark: Color(0xFF221614),
+        );
     }
   }
 
@@ -804,6 +844,10 @@ class AppTheme {
           return const Color(0xFF0F171C);
         case AppThemePreset.sunny:
           return const Color(0xFF261917);
+        case AppThemePreset.sunkenYacht:
+          return const Color(0xFF001512);
+        case AppThemePreset.pirateTreasure:
+          return const Color(0xFF1B110F);
       }
     }
 
@@ -850,6 +894,10 @@ class AppTheme {
         return const Color(0xFFE1F5FE);
       case AppThemePreset.sunny:
         return const Color(0xFFFFF9C4);
+      case AppThemePreset.sunkenYacht:
+        return const Color(0xFFE0F2F1);
+      case AppThemePreset.pirateTreasure:
+        return const Color(0xFFD7CCC8);
     }
   }
 }

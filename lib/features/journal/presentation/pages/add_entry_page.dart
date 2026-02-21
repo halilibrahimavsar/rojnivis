@@ -29,8 +29,9 @@ import '../widgets/sticker_picker_sheet.dart';
 import '../../../../core/services/ai_service.dart';
 
 class AddEntryPage extends StatefulWidget {
-  const AddEntryPage({super.key, this.entryId});
+  const AddEntryPage({super.key, this.entryId, this.initialContent});
   final String? entryId;
+  final String? initialContent;
 
   @override
   State<AddEntryPage> createState() => _AddEntryPageState();
@@ -57,6 +58,9 @@ class _AddEntryPageState extends State<AddEntryPage> {
     super.initState();
     _workingEntryId = widget.entryId ?? const Uuid().v4();
     _hydrateIfEditing();
+    if (widget.initialContent != null && _contentController.text.isEmpty) {
+      _contentController.text = widget.initialContent!;
+    }
     _loadStickers();
   }
 

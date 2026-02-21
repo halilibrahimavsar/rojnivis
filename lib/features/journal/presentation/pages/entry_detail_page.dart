@@ -180,119 +180,128 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
                     ),
                   ),
                 )
-                : SafeArea(
-                  child: Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _Header(entry: entry),
-                            if (entry.summary != null || _isSummarizing) ...[
-                              const SizedBox(height: 12),
-                              AiSummaryCard(
-                                summary: entry.summary ?? '',
-                                isLoading: _isSummarizing,
-                                onRefresh: () => _summarizeEntry(entry!),
-                              ),
-                            ] else if (getIt<AiService>().isConfigured) ...[
-                              const SizedBox(height: 8),
-                              Align(
-                                alignment: Alignment.centerLeft,
-                                child: TextButton.icon(
-                                  onPressed: () => _summarizeEntry(entry!),
-                                  icon: const Icon(
-                                    Icons.auto_awesome,
-                                    size: 14,
+                : Positioned.fill(
+                  child: ThemedPaper(
+                    applyPageStudio: true,
+                    lined: _style == _EntryViewStyle.letter,
+                    child: SafeArea(
+                      bottom: false,
+                      child: Column(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _Header(entry: entry),
+                                if (entry.summary != null ||
+                                    _isSummarizing) ...[
+                                  const SizedBox(height: 12),
+                                  AiSummaryCard(
+                                    summary: entry.summary ?? '',
+                                    isLoading: _isSummarizing,
+                                    onRefresh: () => _summarizeEntry(entry!),
                                   ),
-                                  label: Text(
-                                    'summarize'.tr(),
-                                    style: const TextStyle(fontSize: 12),
+                                ] else if (getIt<AiService>().isConfigured) ...[
+                                  const SizedBox(height: 8),
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: TextButton.icon(
+                                      onPressed: () => _summarizeEntry(entry!),
+                                      icon: const Icon(
+                                        Icons.auto_awesome,
+                                        size: 14,
+                                      ),
+                                      label: Text(
+                                        'summarize'.tr(),
+                                        style: const TextStyle(fontSize: 12),
+                                      ),
+                                      style: TextButton.styleFrom(
+                                        visualDensity: VisualDensity.compact,
+                                      ),
+                                    ),
                                   ),
-                                  style: TextButton.styleFrom(
-                                    visualDensity: VisualDensity.compact,
+                                ],
+                                const SizedBox(height: 12),
+                                SegmentedButton<_EntryViewStyle>(
+                                  segments: [
+                                    ButtonSegment(
+                                      value: _EntryViewStyle.normal,
+                                      label: Text('view_normal'.tr()),
+                                      icon: const Icon(Icons.article_outlined),
+                                    ),
+                                    ButtonSegment(
+                                      value: _EntryViewStyle.letter,
+                                      label: Text('view_letter'.tr()),
+                                      icon: const Icon(Icons.mail_outline),
+                                    ),
+                                    ButtonSegment(
+                                      value: _EntryViewStyle.library,
+                                      label: Text('view_library'.tr()),
+                                      icon: const Icon(
+                                        Icons.local_library_outlined,
+                                      ),
+                                    ),
+                                  ],
+                                  selected: {_style},
+                                  style: ButtonStyle(
+                                    visualDensity: _compactDensity,
+                                    tapTargetSize:
+                                        MaterialTapTargetSize.shrinkWrap,
+                                    minimumSize: const WidgetStatePropertyAll(
+                                      Size(0, 0),
+                                    ),
+                                    padding: const WidgetStatePropertyAll(
+                                      EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 6,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ),
-                            ],
-                            const SizedBox(height: 12),
-                            SegmentedButton<_EntryViewStyle>(
-                              segments: [
-                                ButtonSegment(
-                                  value: _EntryViewStyle.normal,
-                                  label: Text('view_normal'.tr()),
-                                  icon: const Icon(Icons.article_outlined),
-                                ),
-                                ButtonSegment(
-                                  value: _EntryViewStyle.letter,
-                                  label: Text('view_letter'.tr()),
-                                  icon: const Icon(Icons.mail_outline),
-                                ),
-                                ButtonSegment(
-                                  value: _EntryViewStyle.library,
-                                  label: Text('view_library'.tr()),
-                                  icon: const Icon(
-                                    Icons.local_library_outlined,
-                                  ),
+                                  onSelectionChanged: (selection) {
+                                    setState(() {
+                                      _style = selection.first;
+                                      if (_style == _EntryViewStyle.library) {
+                                        _isStickerEditMode = false;
+                                      }
+                                    });
+                                  },
                                 ),
                               ],
-                              selected: {_style},
-                              style: ButtonStyle(
-                                visualDensity: _compactDensity,
-                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                                minimumSize: const WidgetStatePropertyAll(
-                                  Size(0, 0),
-                                ),
-                                padding: const WidgetStatePropertyAll(
-                                  EdgeInsets.symmetric(
-                                    horizontal: 10,
-                                    vertical: 6,
-                                  ),
-                                ),
-                              ),
-                              onSelectionChanged: (selection) {
-                                setState(() {
-                                  _style = selection.first;
-                                  if (_style == _EntryViewStyle.library) {
-                                    _isStickerEditMode = false;
-                                  }
-                                });
-                              },
                             ),
-                          ],
-                        ),
-                      ),
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                          child: AnimatedSwitcher(
-                            duration: const Duration(milliseconds: 250),
-                            child:
-                                _style == _EntryViewStyle.letter
-                                    ? _LetterView(
-                                      key: const ValueKey('letter'),
-                                      entry: entry,
-                                      stickerController: _stickerController,
-                                      editable: _isStickerEditMode,
-                                      onStickersChanged: _onStickersChanged,
-                                    )
-                                    : _style == _EntryViewStyle.library
-                                    ? _LibraryView(
-                                      key: const ValueKey('library'),
-                                      entry: entry,
-                                    )
-                                    : _NormalView(
-                                      key: const ValueKey('normal'),
-                                      entry: entry,
-                                      stickerController: _stickerController,
-                                      editable: _isStickerEditMode,
-                                      onStickersChanged: _onStickersChanged,
-                                    ),
                           ),
-                        ),
+                          Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                              child: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 250),
+                                child:
+                                    _style == _EntryViewStyle.letter
+                                        ? _LetterView(
+                                          key: const ValueKey('letter'),
+                                          entry: entry,
+                                          stickerController: _stickerController,
+                                          editable: _isStickerEditMode,
+                                          onStickersChanged: _onStickersChanged,
+                                        )
+                                        : _style == _EntryViewStyle.library
+                                        ? _LibraryView(
+                                          key: const ValueKey('library'),
+                                          entry: entry,
+                                        )
+                                        : _NormalView(
+                                          key: const ValueKey('normal'),
+                                          entry: entry,
+                                          stickerController: _stickerController,
+                                          editable: _isStickerEditMode,
+                                          onStickersChanged: _onStickersChanged,
+                                        ),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 );
 
@@ -772,17 +781,19 @@ class _FullScreenSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const padding = EdgeInsets.fromLTRB(18, 18, 18, 20);
+    const padding = EdgeInsets.fromLTRB(
+      18,
+      0,
+      18,
+      20,
+    ); // Use 0 top padding since we shifted it
     return LayoutBuilder(
       builder: (context, constraints) {
         final minInnerHeight = (constraints.maxHeight - padding.vertical).clamp(
           0.0,
           double.infinity,
         );
-        return ThemedPaper(
-          lined: lined,
-          applyPageStudio: true,
-          minHeight: constraints.maxHeight,
+        return Padding(
           padding: padding,
           child: SingleChildScrollView(
             child: ConstrainedBox(

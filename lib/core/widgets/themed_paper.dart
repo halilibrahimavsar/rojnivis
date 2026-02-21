@@ -61,6 +61,12 @@ class _ThemedBackdropState extends State<ThemedBackdrop>
   double _pointerY = -100;
   bool _isPointerDown = false;
 
+  // Persistent Fauna State
+  final List<_BirdState> _birds = [];
+  final List<_ButterflyState> _butterflies = [];
+  final List<_FishState> _fish = [];
+  double _lastTime = 0.0;
+
   @override
   void initState() {
     super.initState();
@@ -68,6 +74,36 @@ class _ThemedBackdropState extends State<ThemedBackdrop>
       vsync: this,
       duration: const Duration(seconds: 22),
     );
+
+    // Initialize fauna
+    final rng = Random(42);
+    for (int i = 0; i < 7; i++) {
+      _birds.add(
+        _BirdState(
+          x: rng.nextDouble() * 1000,
+          y: rng.nextDouble() * 300,
+          seed: i * 1337.0,
+        ),
+      );
+    }
+    for (int i = 0; i < 3; i++) {
+      _butterflies.add(
+        _ButterflyState(
+          x: rng.nextDouble() * 800,
+          y: rng.nextDouble() * 600,
+          seed: i * 999.0,
+        ),
+      );
+    }
+    for (int i = 0; i < 6; i++) {
+      _fish.add(
+        _FishState(
+          x: rng.nextDouble() * 800,
+          y: rng.nextDouble() * 600,
+          seed: i * 777.0,
+        ),
+      );
+    }
   }
 
   Map<String, ui.Image> _cache = {};
@@ -106,6 +142,17 @@ class _ThemedBackdropState extends State<ThemedBackdrop>
         paths.add('assets/images/particles/star.png');
       case AppThemePreset.nightmare:
         paths.add('assets/images/particles/smoke.png');
+      case AppThemePreset.ocean:
+      case AppThemePreset.sunkenYacht:
+      case AppThemePreset.pirateTreasure:
+        paths.add('assets/images/particles/bubble.png');
+        paths.add('assets/images/particles/snowflake.png');
+        paths.add('assets/images/particles/cloud_subtle.png');
+        paths.add('assets/images/particles/fish_exotic_1.png');
+        paths.add('assets/images/particles/fish_exotic_2.png');
+        paths.add('assets/images/particles/fish_exotic_3.png');
+        paths.add('assets/images/particles/fish_exotic_4.png');
+        paths.add('assets/images/particles/fish_exotic_5.png');
       default:
         break;
     }
@@ -235,6 +282,24 @@ class _ThemedBackdropState extends State<ThemedBackdrop>
                 widget.animated && intensity.isAnimated
                     ? _controller.value
                     : 0.0;
+
+            // Calculate dt for persistent physics
+            final dt =
+                (t - _lastTime)
+                    .abs(); // Simplified, ignores looping wrap but fine for ambient
+            _lastTime = t;
+
+            // Provide physics update to state lists
+            for (var b in _birds) {
+              b.update(dt, t);
+            }
+            for (var bf in _butterflies) {
+              bf.update(dt, t);
+            }
+            for (var f in _fish) {
+              f.update(dt, t);
+            }
+
             final content = Stack(
               children: [
                 if ((visualFamily == PageVisualFamily.vintage
@@ -291,6 +356,9 @@ class _ThemedBackdropState extends State<ThemedBackdrop>
                                 spec: spec,
                                 progress: t,
                                 sprites: _cache,
+                                birds: _birds,
+                                butterflies: _butterflies,
+                                fish: _fish,
                                 pointerX: _pointerX,
                                 pointerY: _pointerY,
                                 isPointerDown: _isPointerDown,
@@ -348,6 +416,15 @@ class _ThemedPaperState extends State<ThemedPaper>
   double _pointerY = -100;
   bool _isPointerDown = false;
 
+  // Persistent Fauna State
+  final List<_BirdState> _birds = [];
+  final List<_ButterflyState> _butterflies = [];
+  final List<_FishState> _fish = [];
+  final List<_CloudState> _clouds = [];
+  final List<_InteractiveBubble> _bubbles = [];
+  double _lastTime = 0.0;
+  double _lastBatchTime = 0.0;
+
   @override
   void initState() {
     super.initState();
@@ -355,6 +432,47 @@ class _ThemedPaperState extends State<ThemedPaper>
       vsync: this,
       duration: const Duration(seconds: 18),
     );
+
+    // Initialize fauna
+    final rng = Random(42);
+    for (int i = 0; i < 7; i++) {
+      _birds.add(
+        _BirdState(
+          x: rng.nextDouble() * 1000,
+          y: rng.nextDouble() * 300,
+          seed: i * 1337.0,
+        ),
+      );
+    }
+    for (int i = 0; i < 3; i++) {
+      _butterflies.add(
+        _ButterflyState(
+          x: rng.nextDouble() * 800,
+          y: rng.nextDouble() * 600,
+          seed: i * 999.0,
+        ),
+      );
+    }
+    for (int i = 0; i < 6; i++) {
+      _fish.add(
+        _FishState(
+          x: rng.nextDouble() * 800,
+          y: rng.nextDouble() * 600,
+          seed: i * 777.0,
+        ),
+      );
+    }
+    for (int i = 0; i < 4; i++) {
+      _clouds.add(
+        _CloudState(
+          x: rng.nextDouble() * 1000,
+          y: 20 + rng.nextDouble() * 150,
+          speed: 10.0 + rng.nextDouble() * 20.0,
+          scale: 0.8 + rng.nextDouble() * 1.5,
+          opacity: 0.1 + rng.nextDouble() * 0.3,
+        ),
+      );
+    }
   }
 
   Map<String, ui.Image> _cache = {};
@@ -393,6 +511,17 @@ class _ThemedPaperState extends State<ThemedPaper>
         paths.add('assets/images/particles/star.png');
       case AppThemePreset.nightmare:
         paths.add('assets/images/particles/smoke.png');
+      case AppThemePreset.ocean:
+      case AppThemePreset.sunkenYacht:
+      case AppThemePreset.pirateTreasure:
+        paths.add('assets/images/particles/bubble.png');
+        paths.add('assets/images/particles/snowflake.png');
+        paths.add('assets/images/particles/cloud_subtle.png');
+        paths.add('assets/images/particles/fish_exotic_1.png');
+        paths.add('assets/images/particles/fish_exotic_2.png');
+        paths.add('assets/images/particles/fish_exotic_3.png');
+        paths.add('assets/images/particles/fish_exotic_4.png');
+        paths.add('assets/images/particles/fish_exotic_5.png');
       default:
         break;
     }
@@ -548,6 +677,46 @@ class _ThemedPaperState extends State<ThemedPaper>
                   widget.animated && intensity.isAnimated
                       ? _controller.value
                       : 0.0;
+
+              // Calculate dt for persistent physics
+              final dt = (t - _lastTime).abs();
+              _lastTime = t;
+
+              // Provide physics update to state lists
+              for (var b in _birds) {
+                b.update(dt, t);
+              }
+              for (var bf in _butterflies) {
+                bf.update(dt, t);
+              }
+              for (var f in _fish) {
+                f.update(dt, t);
+              }
+              for (var c in _clouds) {
+                c.update(dt, 1000);
+              }
+
+              // Bubble generation on touch
+              if (_isPointerDown &&
+                  (t - _lastBatchTime).abs() > 0.4 &&
+                  spec.motif == _PaperMotif.oceanic) {
+                _bubbles.add(
+                  _InteractiveBubble(
+                    x: _pointerX,
+                    y: _pointerY,
+                    speed: 80 + Random().nextDouble() * 100,
+                    scale: 10 + Random().nextDouble() * 15,
+                  ),
+                );
+                _lastBatchTime = t;
+              }
+
+              // Update bubbles
+              _bubbles.removeWhere((b) {
+                b.update(dt);
+                return b.isDead;
+              });
+
               return Stack(
                 children: [
                   if ((visualFamily == PageVisualFamily.vintage
@@ -609,6 +778,11 @@ class _ThemedPaperState extends State<ThemedPaper>
                                   spec: spec,
                                   progress: t,
                                   sprites: _cache,
+                                  birds: _birds,
+                                  butterflies: _butterflies,
+                                  fish: _fish,
+                                  clouds: _clouds,
+                                  interactiveBubbles: _bubbles,
                                   pointerX: _pointerX,
                                   pointerY: _pointerY,
                                   isPointerDown: _isPointerDown,
@@ -651,6 +825,171 @@ enum _PaperMotif {
   raining,
   snowing,
   sunny,
+  oceanic,
+}
+
+// --- Physics State Classes for Fauna ---
+
+class _BirdState {
+  double x;
+  double y;
+  final double seed;
+
+  double flapSpeed = 15.0;
+  double targetY = 0.0;
+  double baseSpeedX = 0.0;
+
+  _BirdState({required this.x, required this.y, required this.seed}) {
+    baseSpeedX = -12.0 - (seed % 10.0); // Fly left, slowed down
+    targetY = y;
+  }
+
+  void update(double dt, double t) {
+    if (dt == 0 || dt > 1.0) return; // Ignore large jumps
+
+    // Normal cruising - significantly slowed down
+    double vx = baseSpeedX * 70.0 * dt;
+    double vy = sin(t * 3 + seed) * 15.0 * dt * 2;
+    flapSpeed = 10.0 + (seed % 5);
+
+    // Smoothly apply target limits
+    y += (targetY - y) * dt * 2.0;
+    targetY += vy; // Continually drift target Y with sine wave
+
+    x += vx;
+  }
+}
+
+class _ButterflyState {
+  double x;
+  double y;
+  final double seed;
+
+  double flapSpeed = 30.0;
+  double tilt = 0.0;
+
+  double _vx = 0.0;
+  double _vy = 0.0;
+
+  _ButterflyState({required this.x, required this.y, required this.seed}) {
+    _vx = 15.0 + (seed % 15.0);
+    _vy = -10.0 - (seed % 15.0); // Drift upwards slowly
+  }
+
+  void update(double dt, double t) {
+    if (dt == 0 || dt > 1.0) return;
+
+    // Base erratic flight speeds
+    double speedX = 15.0 + (seed % 15.0);
+    double speedY = 10.0 + (seed % 15.0);
+
+    flapSpeed = 30.0;
+
+    // Drift back to normal speed smoothly
+    final targetVx =
+        speedX * (sin(t * 2 + seed) > 0 ? 1 : -1) * 30; // Random X wandering
+    final targetVy = -speedY * 20; // Upwards trend
+
+    _vx += (targetVx - _vx) * dt * 2.0;
+    _vy += (targetVy - _vy) * dt * 2.0;
+
+    // Introduce the sine waves directly into position for extra erratic jitter
+    x += _vx * dt + sin(t * 8 + seed) * 1.5;
+    y += _vy * dt + cos(t * 11 + seed) * 1.5;
+
+    tilt = cos(t * 4 + seed) * 0.6 + (_vx * 0.002);
+  }
+}
+
+class _FishState {
+  double x;
+  double y;
+  final double seed;
+
+  double depth = 1.0;
+  double tilt = 0.0;
+
+  double _vx = 0.0;
+  double _vy = 0.0;
+
+  // Trail for "particle" effect
+  final List<Offset> trail = [];
+  static const int maxTrail = 6; // Reduced for performance
+
+  _FishState({required this.x, required this.y, required this.seed}) {
+    _vx = 30.0 + (seed % 20.0); // Boosted base speed
+    // Depth 0.5 (far/small/slow) to 1.5 (close/big/fast)
+    depth = 0.5 + ((seed * 1.3) % 1.0);
+  }
+
+  void update(double dt, double t) {
+    if (dt == 0 || dt > 1.0) return;
+
+    // Drifting speeds, scaled by depth
+    double speedX = (45.0 + (seed % 35.0)) * depth;
+
+    final targetVx =
+        speedX * ((seed % 2 == 0) ? 1 : -1) * 25; // Boosted swim speed
+    // Y tends to drift with faster sine waves for "swimming" feel
+    final targetVy = sin(t * 1.5 + seed) * 35.0 * depth;
+
+    _vx += (targetVx - _vx) * dt * 0.8;
+    _vy += (targetVy - _vy) * dt * 0.8;
+
+    x += _vx * dt;
+    y += _vy * dt;
+
+    // Add a bit of "wiggle" to the tilt based on speed and time
+    tilt = (_vy * 0.01) + (sin(t * 3 + seed) * 0.05);
+
+    // Add current position to trail
+    trail.insert(0, Offset(x, y));
+    if (trail.length > maxTrail) {
+      trail.removeLast();
+    }
+  }
+}
+
+class _InteractiveBubble {
+  double x;
+  double y;
+  final double speed;
+  final double scale;
+  double alpha = 1.0;
+  bool isDead = false;
+
+  _InteractiveBubble({
+    required this.x,
+    required this.y,
+    required this.speed,
+    required this.scale,
+  });
+
+  void update(double dt) {
+    y -= speed * dt;
+    alpha -= 0.6 * dt; // Fades out
+    if (alpha <= 0 || y < -50) isDead = true;
+  }
+}
+
+class _CloudState {
+  double x;
+  double y;
+  final double speed;
+  final double scale;
+  final double opacity;
+
+  _CloudState({
+    required this.x,
+    required this.y,
+    required this.speed,
+    required this.scale,
+    required this.opacity,
+  });
+
+  void update(double dt, double width) {
+    x += speed * dt;
+  }
 }
 
 class _PaperSpec {
@@ -717,7 +1056,7 @@ _PaperSpec _paperSpecFor(AppThemePreset preset, bool isDark) {
             isDark
                 ? Colors.white.withValues(alpha: 0.05)
                 : Colors.black.withValues(alpha: 0.05),
-        motif: _PaperMotif.waves,
+        motif: _PaperMotif.oceanic,
       );
     case AppThemePreset.sunset:
       return _PaperSpec(
@@ -1019,6 +1358,44 @@ _PaperSpec _paperSpecFor(AppThemePreset preset, bool isDark) {
         motif: _PaperMotif.sunny,
       );
 
+    case AppThemePreset.sunkenYacht:
+      return _PaperSpec(
+        base: isDark ? const Color(0xFF001512) : const Color(0xFFE0F2F1),
+        gradient:
+            isDark
+                ? const [
+                  Color(0xFF001512),
+                  Color(0xFF00221E),
+                  Color(0xFF001A18),
+                ]
+                : const [Color(0xFFE0EFEF), Color(0xFFB2DFDB)],
+        accent: const Color(0xFF26A69A),
+        accent2: const Color(0xFFB2FF59),
+        lineColor:
+            isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.black.withValues(alpha: 0.05),
+        motif: _PaperMotif.oceanic,
+      );
+    case AppThemePreset.pirateTreasure:
+      return _PaperSpec(
+        base: isDark ? const Color(0xFF1B110F) : const Color(0xFFD7CCC8),
+        gradient:
+            isDark
+                ? const [
+                  Color(0xFF1B110F),
+                  Color(0xFF2D1F1D),
+                  Color(0xFF1A1211),
+                ]
+                : const [Color(0xFFD7CCC8), Color(0xFFA1887F)],
+        accent: const Color(0xFFFFA000), // Gold
+        accent2: const Color(0xFFD32F2F), // Red
+        lineColor:
+            isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.black.withValues(alpha: 0.05),
+        motif: _PaperMotif.oceanic,
+      );
     case AppThemePreset.defaultPreset:
       return _PaperSpec(
         base: isDark ? const Color(0xFF141326) : const Color(0xFFFCFBFF),
@@ -1072,7 +1449,8 @@ String? _bgImageFor(AppThemePreset preset) {
     AppThemePreset.darkNature => 'assets/images/backgrounds/darknature.png',
     AppThemePreset.autumn => 'assets/images/backgrounds/autumn.png',
     AppThemePreset.spring => 'assets/images/backgrounds/spring.png',
-    AppThemePreset.ocean => 'assets/images/backgrounds/ocean.png',
+    AppThemePreset.ocean =>
+      'assets/images/backgrounds/ocean_abyss_shipwreck.png',
     AppThemePreset.love => 'assets/images/backgrounds/love.png',
     AppThemePreset.nightmare => 'assets/images/backgrounds/nightmare.png',
     AppThemePreset.sunset => 'assets/images/backgrounds/sunset.png',
@@ -1081,6 +1459,9 @@ String? _bgImageFor(AppThemePreset preset) {
     AppThemePreset.glass => 'assets/images/backgrounds/glass.png',
     AppThemePreset.nature => 'assets/images/backgrounds/nature.png',
     AppThemePreset.sunrise => 'assets/images/backgrounds/sunset.png',
+    AppThemePreset.sunkenYacht => 'assets/images/backgrounds/sunken_yacht.png',
+    AppThemePreset.pirateTreasure =>
+      'assets/images/backgrounds/pirate_treasure.png',
     _ => null,
   };
 }
@@ -1434,6 +1815,11 @@ class _PaperEffectPainter extends CustomPainter {
     required this.spec,
     required this.progress,
     this.sprites,
+    this.birds,
+    this.butterflies,
+    this.fish,
+    this.clouds,
+    this.interactiveBubbles,
     this.pointerX = -100,
     this.pointerY = -100,
     this.isPointerDown = false,
@@ -1442,6 +1828,11 @@ class _PaperEffectPainter extends CustomPainter {
   final _PaperSpec spec;
   final double progress;
   final Map<String, ui.Image>? sprites;
+  final List<_BirdState>? birds;
+  final List<_ButterflyState>? butterflies;
+  final List<_FishState>? fish;
+  final List<_CloudState>? clouds;
+  final List<_InteractiveBubble>? interactiveBubbles;
   final double pointerX;
   final double pointerY;
   final bool isPointerDown;
@@ -1505,6 +1896,9 @@ class _PaperEffectPainter extends CustomPainter {
       case _PaperMotif.sunny:
         _drawRealisticSunny(canvas, size);
         break;
+      case _PaperMotif.oceanic:
+        _drawOceanic(canvas, size);
+        break;
       case _PaperMotif.none:
         break;
     }
@@ -1516,6 +1910,9 @@ class _PaperEffectPainter extends CustomPainter {
         spec.motif == _PaperMotif.raining) {
       _drawSwayingPlants(canvas, size);
     }
+
+    // ** Antigravity's Added Fauna: Birds & Butterflies! **
+    _drawAmbientFauna(canvas, size);
 
     // ** Antigravity's Added Perk: Magic Shine particles on touch! **
     if (isPointerDown) {
@@ -1560,6 +1957,333 @@ class _PaperEffectPainter extends CustomPainter {
       final s = 2.0 * (1.0 - t);
       paint.color = spec.accent2.withValues(alpha: 0.4 * (1.0 - t));
       canvas.drawCircle(Offset(px, py), s, paint);
+    }
+  }
+
+  void _drawAmbientFauna(Canvas canvas, Size size) {
+    // Only draw naturally if progress is running
+    if (progress <= 0 || progress >= 1) return;
+
+    final hasBirds =
+        spec.motif == _PaperMotif.sun ||
+        spec.motif == _PaperMotif.sunny ||
+        spec.motif == _PaperMotif.leaves ||
+        spec.motif == _PaperMotif.raining ||
+        spec.motif == _PaperMotif.snowing;
+
+    final hasButterflies =
+        spec.motif == _PaperMotif.petals || spec.motif == _PaperMotif.leaves;
+
+    final hasFish =
+        spec.motif == _PaperMotif.waves || spec.motif == _PaperMotif.oceanic;
+
+    if (hasBirds && birds != null) _drawFlock(canvas, size, birds!);
+    if (hasButterflies && butterflies != null) {
+      _drawButterflies(canvas, size, butterflies!);
+    }
+    if (hasFish && fish != null) _drawFish(canvas, size, fish!);
+  }
+
+  void _drawFlock(Canvas canvas, Size size, List<_BirdState> birdList) {
+    // Distant, atmospheric birds
+    final birdColor =
+        (spec.base.computeLuminance() > 0.5)
+            ? Colors.black.withValues(alpha: 0.25)
+            : Colors.white.withValues(alpha: 0.25);
+
+    final birdPaint =
+        Paint()
+          ..color = birdColor
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.8
+          ..strokeCap = StrokeCap.round
+          ..strokeJoin = StrokeJoin.round;
+
+    for (var b in birdList) {
+      // Loop horizontally
+      double renderX = b.x % (size.width + 300) - 150;
+      // Parallax Y offset based on base position
+      double renderY =
+          size.height * 0.15 + (b.seed % (size.height * 0.25)) + b.y;
+
+      final wingY = sin(progress * b.flapSpeed * 4 + b.seed) * 7.0;
+
+      final path = Path();
+      // Center point (tail/body anchor)
+      path.moveTo(renderX, renderY);
+      // Left wing curve
+      path.quadraticBezierTo(
+        renderX - 6,
+        renderY + wingY - 4,
+        renderX - 14,
+        renderY + wingY,
+      );
+      path.moveTo(renderX, renderY);
+      // Right wing curve
+      path.quadraticBezierTo(
+        renderX + 6,
+        renderY + wingY - 4,
+        renderX + 14,
+        renderY + wingY,
+      );
+
+      canvas.drawPath(path, birdPaint);
+    }
+  }
+
+  void _drawButterflies(
+    Canvas canvas,
+    Size size,
+    List<_ButterflyState> butterflyList,
+  ) {
+    for (var bf in butterflyList) {
+      double renderX = (bf.x % (size.width + 100)) - 50;
+      // Let them drift up slowly but reset
+      double renderY = size.height * 0.8 + (bf.y % (size.height + 100));
+
+      final flap = sin(progress * bf.flapSpeed * 4 + bf.seed);
+      final wingScaleX = 0.1 + (flap.abs() * 0.9);
+
+      canvas.save();
+      canvas.translate(renderX, renderY);
+      canvas.rotate(bf.tilt);
+      canvas.scale(wingScaleX, 1.0);
+
+      final color = Color.lerp(
+        spec.accent,
+        spec.accent2,
+        (bf.seed % 100) / 100.0, // Stable deterministic color
+      )!.withValues(alpha: 0.85);
+
+      final paint =
+          Paint()
+            ..color = color
+            ..style = PaintingStyle.fill;
+
+      // Draw butterfly wings
+      final path = Path();
+      path.moveTo(0, 0);
+      path.quadraticBezierTo(8, -10, 12, -4);
+      path.quadraticBezierTo(14, 2, 8, 6);
+      path.quadraticBezierTo(4, 10, 0, 0);
+
+      path.moveTo(0, 0);
+      path.quadraticBezierTo(-8, -10, -12, -4);
+      path.quadraticBezierTo(-14, 2, -8, 6);
+      path.quadraticBezierTo(-4, 10, 0, 0);
+
+      canvas.drawPath(path, paint);
+
+      // Tiny body
+      canvas.drawOval(
+        Rect.fromCenter(center: Offset.zero, width: 2, height: 8),
+        Paint()..color = Colors.black87,
+      );
+
+      canvas.restore();
+    }
+  }
+
+  void _drawFish(Canvas canvas, Size size, List<_FishState> fishList) {
+    for (var f in fishList) {
+      double renderX = (f.x % (size.width + 300)) - 150;
+      double renderY = size.height * 0.1 + (f.y % (size.height * 0.8));
+
+      // Flip graphic if swimming left
+      final bool isLeft = f.seed % 2 != 0;
+
+      // Draw particle trail (Bubbles/Spectral Glow)
+      final trailPaint = Paint()..style = PaintingStyle.fill;
+      for (int i = 0; i < f.trail.length; i++) {
+        final tPos = f.trail[i];
+        final tRenderX = (tPos.dx % (size.width + 300)) - 150;
+        final tRenderY = size.height * 0.1 + (tPos.dy % (size.height * 0.8));
+
+        final tAlpha = (1.0 - (i / f.trail.length)) * 0.15 * f.depth;
+        final tSize = (1.0 - (i / f.trail.length)) * 4.0 * f.depth;
+
+        trailPaint.color = spec.accent2.withValues(alpha: tAlpha);
+        canvas.drawCircle(Offset(tRenderX, tRenderY), tSize, trailPaint);
+      }
+
+      // Parallax opacity based on depth
+      final alpha = (0.3 + (f.depth * 0.5)).clamp(0.0, 1.0);
+
+      // Check for exotic fish sprites
+      final fishIndex = (f.seed % 5).toInt() + 1;
+      final fishPath = 'assets/images/particles/fish_exotic_$fishIndex.png';
+      final fishSprite = sprites?[fishPath];
+
+      if (fishSprite != null) {
+        final w = 64.0 * f.depth;
+        final h = 42.0 * f.depth;
+        canvas.save();
+        canvas.translate(renderX, renderY);
+
+        // Natively, some sprites face left, others face right.
+        // Index 2 (Lionfish) and 4 (Green) face LEFT.
+        // Index 1, 3, 5 face RIGHT.
+        final bool nativeIsLeft = (fishIndex == 2 || fishIndex == 4);
+        final bool movingRight = f._vx > 0;
+
+        // If it's moving right but faces left naturally, flip it.
+        // If it's moving left but faces right naturally, flip it.
+        final bool shouldFlip = movingRight == nativeIsLeft;
+
+        if (shouldFlip) {
+          canvas.scale(-1.0, 1.0);
+        }
+        canvas.rotate(f.tilt);
+
+        // Render with Plus blend mode to remove black background and create glow
+        final fishPaint =
+            Paint()
+              ..color = Colors.white.withValues(alpha: alpha * 0.9)
+              ..blendMode = BlendMode.plus;
+
+        canvas.drawImageRect(
+          fishSprite,
+          Rect.fromLTWH(
+            0,
+            0,
+            fishSprite.width.toDouble(),
+            fishSprite.height.toDouble(),
+          ),
+          Rect.fromCenter(center: Offset.zero, width: w, height: h),
+          fishPaint,
+        );
+        canvas.restore();
+      } else {
+        canvas.save();
+        canvas.translate(renderX, renderY);
+        if (isLeft) canvas.scale(-1.0, 1.0);
+        canvas.rotate(f.tilt);
+        canvas.scale(f.depth * 0.75);
+
+        final paint =
+            Paint()
+              ..color = spec.accent2.withValues(alpha: alpha)
+              ..style = PaintingStyle.fill
+              ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1);
+
+        final bodyPath = Path();
+        bodyPath.moveTo(0, 0);
+        bodyPath.quadraticBezierTo(15, -10, 30, 0);
+        bodyPath.quadraticBezierTo(15, 10, 0, 0);
+
+        final tailWag = sin(progress * 12 * f.depth + f.seed) * 5.0;
+        final tailPath = Path();
+        tailPath.moveTo(30, 0);
+        tailPath.lineTo(42, -6 + tailWag);
+        tailPath.lineTo(42, 6 + tailWag);
+        tailPath.close();
+
+        canvas.drawPath(bodyPath, paint);
+        canvas.drawPath(tailPath, paint);
+
+        canvas.restore();
+      }
+    }
+  }
+
+  // ── Oceanic: Full Underwater Panorama + Interactive Bubbles ──
+  void _drawOceanic(Canvas canvas, Size size) {
+    final rng = Random(1996);
+    final bubbleSprite = sprites?['assets/images/particles/bubble.png'];
+    final snowSprite = sprites?['assets/images/particles/snowflake.png'];
+
+    // 1. Draw sinking particles (marine snow) - Consistently with RealisticSnow
+    final snowPaint = Paint();
+    for (int i = 0; i < 20; i++) {
+      final xSeed = rng.nextDouble();
+      final ySeed = rng.nextDouble();
+      final sizeFactor = rng.nextDouble();
+
+      final t = progress * (0.02 + 0.05 * sizeFactor);
+      final yBase = (ySeed + t) % 1.1 * size.height - 10;
+      final sway = sin(t * pi * 3 + i) * 12 * sizeFactor;
+      final xBase = xSeed * size.width + sway;
+
+      double x = xBase;
+      double y = yBase;
+
+      // Interaction: Snow/Plankton drifts from touch
+      if (isPointerDown) {
+        final dx = x - pointerX;
+        final dy = y - pointerY;
+        final dist = sqrt(dx * dx + dy * dy);
+        if (dist < 100) {
+          final force = (100 - dist) / 100;
+          x += (dx / dist) * force * 20;
+          y += (dy / dist) * force * 20;
+        }
+      }
+
+      final alpha = (0.1 + 0.3 * sizeFactor);
+      if (snowSprite != null) {
+        final s = (2.0 + 4.0 * sizeFactor);
+        canvas.save();
+        canvas.translate(x, y);
+        canvas.rotate(progress * 0.5 + i);
+        canvas.drawImageRect(
+          snowSprite,
+          Rect.fromLTWH(
+            0,
+            0,
+            snowSprite.width.toDouble(),
+            snowSprite.height.toDouble(),
+          ),
+          Rect.fromCenter(center: Offset.zero, width: s, height: s),
+          Paint()..color = Colors.white.withValues(alpha: alpha),
+        );
+        canvas.restore();
+      } else {
+        canvas.drawCircle(
+          Offset(x, y),
+          1.0 + sizeFactor,
+          snowPaint..color = Colors.white.withValues(alpha: alpha),
+        );
+      }
+    }
+
+    // 2. Draw Interactive Bubbles (Rising up)
+    if (interactiveBubbles != null) {
+      for (var b in interactiveBubbles!) {
+        if (b.isDead) continue;
+        final bAlpha = b.alpha.clamp(0.0, 1.0);
+
+        // Pop effect: Grows and gets thinner as it reaches top or fades
+        final bScale = b.scale * (1.0 + (1.0 - bAlpha) * 0.5);
+        final bAlphaEffect = bAlpha * 0.7;
+
+        if (bubbleSprite != null) {
+          canvas.save();
+          canvas.translate(b.x, b.y);
+          // Slight wiggle
+          canvas.translate(sin(progress * 10 + b.speed) * 3, 0);
+          canvas.drawImageRect(
+            bubbleSprite,
+            Rect.fromLTWH(
+              0,
+              0,
+              bubbleSprite.width.toDouble(),
+              bubbleSprite.height.toDouble(),
+            ),
+            Rect.fromCenter(center: Offset.zero, width: bScale, height: bScale),
+            Paint()..color = Colors.white.withValues(alpha: bAlphaEffect),
+          );
+          canvas.restore();
+        } else {
+          canvas.drawCircle(
+            Offset(b.x, b.y),
+            bScale / 2,
+            Paint()
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = 1.0
+              ..color = Colors.white.withValues(alpha: bAlphaEffect),
+          );
+        }
+      }
     }
   }
 
@@ -1717,68 +2441,107 @@ class _PaperEffectPainter extends CustomPainter {
     }
   }
 
-  // ── Sunny: Bright sun + lens flare ──
+  // ── Sunny: Spectral sun + advanced lens flare ──
   void _drawRealisticSunny(Canvas canvas, Size size) {
-    final sunCenter = Offset(size.width * 0.85, size.height * 0.15);
-    final sunRadius = size.shortestSide * 0.12;
+    final sunCenter = Offset(size.width * 0.82, size.height * 0.18);
+    final sunRadius = size.shortestSide * 0.11;
 
-    // Multi-ring sun glow
-    for (int i = 0; i < 4; i++) {
-      final r = sunRadius * (2.0 + i);
-      final paint =
-          Paint()
-            ..shader = RadialGradient(
-              colors: [spec.accent.withValues(alpha: 0.12), Colors.transparent],
-            ).createShader(Rect.fromCircle(center: sunCenter, radius: r));
-      canvas.drawCircle(sunCenter, r, paint);
+    // Volumetric Spectral Sun
+    final sunPaint = Paint()..blendMode = BlendMode.screen;
+
+    // Chromatic Ring (Outer Halo)
+    for (int i = 0; i < 3; i++) {
+      final r = sunRadius * (2.0 + i * 0.1);
+      final color =
+          i == 0
+              ? Colors.cyan
+              : (i == 1 ? const Color(0xFFFF00FF) : Colors.yellow);
+      canvas.drawCircle(
+        sunCenter,
+        r,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.0
+          ..color = color.withValues(alpha: 0.03)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
+      );
     }
 
-    // Sun core
-    canvas.drawCircle(sunCenter, sunRadius, Paint()..color = spec.accent);
+    // Core Glow (Multi-layered for bloom)
+    for (int i = 6; i >= 0; i--) {
+      final r = sunRadius * (1.1 + i * 0.5);
+      final alpha = (0.04 + (6 - i) * 0.07).clamp(0.0, 1.0);
+      sunPaint.shader = ui.Gradient.radial(
+        sunCenter,
+        r,
+        [spec.accent.withValues(alpha: alpha), Colors.transparent],
+        [0.1, 1.0],
+      );
+      canvas.drawCircle(sunCenter, r, sunPaint);
+    }
+
+    // High Intensity Core
     canvas.drawCircle(
       sunCenter,
-      sunRadius * 0.7,
-      Paint()..color = Colors.white.withValues(alpha: 0.6),
+      sunRadius * 0.65,
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.85)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 18),
     );
 
-    // Animated rays
+    // Dynamic Spectral Rays (Flickering)
     final rayPaint =
         Paint()
-          ..color = spec.accent.withValues(alpha: 0.15)
-          ..strokeWidth = 2;
-    for (int i = 0; i < 12; i++) {
-      final angle = i * (pi * 2 / 12) + progress * 0.5;
-      final p1 = Offset(
-        sunCenter.dx + cos(angle) * sunRadius * 1.4,
-        sunCenter.dy + sin(angle) * sunRadius * 1.4,
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.5
+          ..strokeCap = StrokeCap.round;
+
+    final rayCount = 16;
+    for (int i = 0; i < rayCount; i++) {
+      final flicker = 0.8 + 0.2 * sin(progress * 15 + i);
+      final angle = (i * pi * 2 / rayCount) + (progress * 0.2);
+      final length = sunRadius * (2.0 + 1.5 * flicker);
+
+      rayPaint.shader = ui.Gradient.linear(
+        sunCenter,
+        sunCenter + Offset(cos(angle) * length, sin(angle) * length),
+        [spec.accent.withValues(alpha: 0.2 * flicker), Colors.transparent],
       );
-      final p2 = Offset(
-        sunCenter.dx + cos(angle) * sunRadius * 3.0,
-        sunCenter.dy + sin(angle) * sunRadius * 3.0,
+      canvas.drawLine(
+        sunCenter + Offset(cos(angle) * sunRadius, sin(angle) * sunRadius),
+        sunCenter + Offset(cos(angle) * length, sin(angle) * length),
+        rayPaint,
       );
-      canvas.drawLine(p1, p2, rayPaint);
     }
 
-    // Lens flare chase
-    final centerScreen = Offset(size.width / 2, size.height / 2);
-    final target = isPointerDown ? Offset(pointerX, pointerY) : centerScreen;
+    // Advanced Lens Flare System (Chasing the sun)
+    final center = Offset(size.width / 2, size.height / 2);
+    final flareDir = center - sunCenter;
+    final dist = flareDir.distance;
+    final unit = flareDir / dist;
 
-    final dir = target - sunCenter;
-    final dist = dir.distance;
-    final unit = dist > 0.1 ? dir / dist : Offset.zero;
-
-    final flarePaint =
-        Paint()..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
-
-    void drawFlare(double percent, double r, Color c) {
-      final pos = sunCenter + unit * (dist * percent);
-      canvas.drawCircle(pos, r, flarePaint..color = c.withValues(alpha: 0.1));
+    void drawFlareElement(
+      double offsetPercent,
+      double radius,
+      Color color, {
+      double blur = 5,
+    }) {
+      final pos = sunCenter + unit * (dist * offsetPercent);
+      canvas.drawCircle(
+        pos,
+        radius,
+        Paint()
+          ..color = color.withValues(alpha: 0.15)
+          ..maskFilter = MaskFilter.blur(BlurStyle.normal, blur)
+          ..blendMode = BlendMode.screen,
+      );
     }
 
-    drawFlare(0.3, 8 * (isPointerDown ? 1.5 : 1.0), spec.accent2);
-    drawFlare(0.5, 25, spec.accent.withValues(alpha: 0.15));
-    drawFlare(0.8, 4, Colors.white);
-    drawFlare(1.1, 35 * (isPointerDown ? 1.2 : 1.0), spec.accent2);
+    drawFlareElement(0.2, 15, spec.accent2, blur: 10);
+    drawFlareElement(0.45, 40, spec.accent.withValues(alpha: 0.1), blur: 20);
+    drawFlareElement(0.7, 8, Colors.white, blur: 2);
+    drawFlareElement(1.2, 60, spec.accent2.withValues(alpha: 0.05), blur: 30);
+    drawFlareElement(1.5, 20, spec.accent, blur: 15);
   }
 
   // ── Aurora: waving light curtains ──
@@ -2205,142 +2968,188 @@ class _PaperEffectPainter extends CustomPainter {
     }
   }
 
-  // ── Ocean: multi-layered waves with foam and caustic shimmer ──
+  // ── Ocean: deep water, god rays, and caustic shimmer ──
   void _drawRealisticOcean(Canvas canvas, Size size) {
-    // Atmospheric depth gradient
-    final depthPaint =
-        Paint()
-          ..shader = LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              spec.accent.withValues(alpha: 0.03),
-              spec.accent2.withValues(alpha: 0.08),
-              spec.accent.withValues(alpha: 0.12),
-            ],
-          ).createShader(Offset.zero & size);
-    canvas.drawRect(Offset.zero & size, depthPaint);
+    // Deep atmospheric water background
+    final baseGradient = LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [
+        spec.base.withValues(alpha: 0.1),
+        const Color(0xFF071F36), // Deep Navy
+        const Color(0xFF03101C), // Abyss
+      ],
+      stops: const [0.0, 0.4, 1.0],
+    );
+    canvas.drawRect(
+      Offset.zero & size,
+      Paint()..shader = baseGradient.createShader(Offset.zero & size),
+    );
 
-    // Caustic light shimmer
+    // Dynamic God Rays (Light Rays) streaming down
+    final numRays = 8;
+    final rayPaint =
+        Paint()
+          ..style = PaintingStyle.fill
+          ..blendMode = BlendMode.screen;
+
+    for (int i = 0; i < numRays; i++) {
+      // Rays drift slowly back and forth
+      final sway = sin(progress * 2 + i * 1.5) * 50;
+      final topX = size.width * (i / numRays) + sway;
+      // Widen at the bottom for perspective
+      final botLeftX = topX - 100 - sway * 2.0;
+      final botRightX = topX + 100 + sway * 1.5;
+
+      final rayPath = Path();
+      rayPath.moveTo(topX - 15, -100);
+      rayPath.lineTo(topX + 15, -100);
+      rayPath.lineTo(botRightX, size.height + 100);
+      rayPath.lineTo(botLeftX, size.height + 100);
+      rayPath.close();
+
+      // Fade out rays towards the deep
+      final alpha = 0.03 + (sin(progress * 3 + i) * 0.015);
+      rayPaint.shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          spec.accent.withValues(alpha: alpha * 1.5),
+          spec.accent.withValues(alpha: 0.0),
+        ],
+      ).createShader(Offset.zero & size);
+
+      canvas.drawPath(rayPath, rayPaint);
+    }
+
+    // Caustic light shimmer on the "sea floor" / background
     final causticPaint =
         Paint()
-          ..color = spec.accent2.withValues(alpha: 0.06)
+          ..color = spec.accent2.withValues(alpha: 0.04)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
+
     final rng = Random(88);
-    for (int i = 0; i < 18; i++) {
+    for (int i = 0; i < 20; i++) {
       final cx = rng.nextDouble() * size.width;
-      final cy = rng.nextDouble() * size.height;
-      final drift = sin(progress * pi * 2 + i * 1.7) * 8;
+      final cy = size.height * 0.5 + rng.nextDouble() * size.height * 0.5;
+      final driftX = sin(progress * pi * 2 + i * 1.7) * 40;
+      final driftY = cos(progress * pi * 1.5 + i * 2.1) * 20;
+
+      // Draw distorted, merging blobs of light
       canvas.drawOval(
         Rect.fromCenter(
-          center: Offset(cx + drift, cy),
-          width: 30 + rng.nextDouble() * 50,
-          height: 12 + rng.nextDouble() * 20,
+          center: Offset(cx + driftX, cy + driftY),
+          width: 60 + rng.nextDouble() * 100,
+          height: 20 + rng.nextDouble() * 40,
         ),
         causticPaint,
       );
     }
 
-    // 5 layered wave crests with decreasing opacity
-    for (int layer = 0; layer < 5; layer++) {
-      final layerT = layer / 4.0;
-      final baseY = size.height * (0.25 + layerT * 0.18);
-      final amplitude = 6.0 + layer * 5;
-      final freq = 1.8 + layer * 0.5;
-      final phase = progress * pi * 2 * (0.4 + layer * 0.15);
-      final alpha = 0.06 + layerT * 0.10;
+    // Ambient Drifting Bubbles
+    final bubblePaint =
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.0;
 
-      final wavePath = Path();
-      wavePath.moveTo(-10, size.height);
-      wavePath.lineTo(-10, baseY);
-      for (double x = -10; x <= size.width + 10; x += 4) {
-        double y1 = sin((x / size.width) * pi * freq + phase) * amplitude;
-        final y2 =
-            sin((x / size.width) * pi * (freq * 1.3) + phase * 0.7) *
-            amplitude *
-            0.4;
+    final bubbleRng = Random(55);
+    for (int i = 0; i < 15; i++) {
+      final seedX = bubbleRng.nextDouble();
+      final seedY = bubbleRng.nextDouble();
+      final sizeFactor = bubbleRng.nextDouble();
 
-        // ** Interaction: Ripple Engine **
-        if (isPointerDown) {
-          final dist = (x - pointerX).abs();
-          if (dist < 120) {
-            final rip = sin(dist * 0.1 - progress * 15) * (120 - dist) * 0.25;
-            y1 += rip;
-          }
-        }
+      // Bubbles drift UP and wobble
+      final speedY = 0.1 + (sizeFactor * 0.1);
+      final t = progress * speedY;
 
-        wavePath.lineTo(x, baseY + y1 + y2);
-      }
-      wavePath.lineTo(size.width + 10, size.height);
-      wavePath.close();
+      final y = size.height - ((seedY + t) % 1.0) * size.height;
+      final x = size.width * seedX + sin(progress * 10 + i) * 15;
 
-      canvas.drawPath(
-        wavePath,
-        Paint()..color = spec.accent.withValues(alpha: alpha),
+      final r = 2.0 + (sizeFactor * 6.0);
+
+      // Bubbles thin out / fade near the surface
+      final depthAlpha = (y / size.height).clamp(0.0, 1.0);
+
+      bubblePaint.color = Colors.white.withValues(alpha: 0.2 * depthAlpha);
+      canvas.drawCircle(Offset(x, y), r, bubblePaint);
+
+      // Little shine highlight
+      canvas.drawArc(
+        Rect.fromCircle(center: Offset(x, y), radius: r - 1.0),
+        pi,
+        pi / 2,
+        false,
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.0
+          ..strokeCap = StrokeCap.round
+          ..color = Colors.white.withValues(alpha: 0.4 * depthAlpha),
       );
-
-      // Foam highlights on wave crests
-      final foamPaint =
-          Paint()
-            ..color = Colors.white.withValues(alpha: alpha * 0.5)
-            ..style = PaintingStyle.stroke
-            ..strokeWidth = 1.0 + layerT;
-
-      final foamPath = Path();
-      foamPath.moveTo(0, baseY - 2);
-      for (double x = 0; x <= size.width; x += 4) {
-        final y1 = sin((x / size.width) * pi * freq + phase) * amplitude;
-        final y2 =
-            sin((x / size.width) * pi * (freq * 1.3) + phase * 0.7) *
-            amplitude *
-            0.4;
-        foamPath.lineTo(x, baseY + y1 + y2 - 1.5);
-      }
-      canvas.drawPath(foamPath, foamPaint);
     }
   }
 
-  // ── Sunset: volumetric sun glow, cloud bands, light rays ──
+  // ── Sunset/Sunrise: volumetric spectral sun and cloud bands ──
   void _drawRealisticSunset(Canvas canvas, Size size) {
-    final sunCenter = Offset(size.width * 0.75, size.height * 0.22);
-    final sunRadius = size.shortestSide * 0.14;
+    final sunCenter = Offset(size.width * 0.75, size.height * 0.25);
+    final sunRadius = size.shortestSide * 0.13;
 
-    // Multi-ring sun glow
-    for (int ring = 4; ring >= 0; ring--) {
-      final r = sunRadius * (1.0 + ring * 0.8);
-      final alpha = 0.04 + (4 - ring) * 0.05;
+    // Volumetric Bloom Sun
+    for (int i = 6; i >= 0; i--) {
+      final r = sunRadius * (1.0 + i * 0.7);
+      final alpha = (0.03 + (6 - i) * 0.04).clamp(0.0, 1.0);
       canvas.drawCircle(
         sunCenter,
         r,
         Paint()
-          ..shader = RadialGradient(
-            colors: [spec.accent.withValues(alpha: alpha), Colors.transparent],
-          ).createShader(Rect.fromCircle(center: sunCenter, radius: r)),
+          ..shader = ui.Gradient.radial(
+            sunCenter,
+            r,
+            [spec.accent.withValues(alpha: alpha), Colors.transparent],
+            [0.3, 1.0],
+          )
+          ..blendMode = BlendMode.screen,
       );
     }
 
-    // Sun core
+    // High Intensity Flare Core
     canvas.drawCircle(
       sunCenter,
-      sunRadius * 0.5,
-      Paint()..color = spec.accent.withValues(alpha: 0.22),
+      sunRadius * 0.4,
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.6)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
     );
 
-    // God rays from sun
+    // God Rays / Light Beams from Sunset
     final rayPaint =
         Paint()
-          ..strokeWidth = 1.5
-          ..style = PaintingStyle.stroke;
-    for (int i = 0; i < 12; i++) {
-      final angle = (i / 12.0) * pi * 2 + progress * pi * 0.3;
-      final len = sunRadius * (2.0 + sin(progress * pi * 2 + i) * 0.6);
-      final endX = sunCenter.dx + cos(angle) * len;
-      final endY = sunCenter.dy + sin(angle) * len;
-      rayPaint.shader = LinearGradient(
-        colors: [spec.accent.withValues(alpha: 0.12), Colors.transparent],
-      ).createShader(Rect.fromPoints(sunCenter, Offset(endX, endY)));
-      canvas.drawLine(sunCenter, Offset(endX, endY), rayPaint);
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3.0;
+    for (int i = 0; i < 18; i++) {
+      final angle = (i / 18.0) * pi * 2 + (progress * 0.15);
+      final length = sunRadius * (2.0 + 4.0 * sin(progress * 4.5 + i));
+      rayPaint.shader = ui.Gradient.linear(
+        sunCenter,
+        sunCenter + Offset(cos(angle) * length, sin(angle) * length),
+        [spec.accent.withValues(alpha: 0.2), Colors.transparent],
+      );
+      canvas.drawLine(
+        sunCenter,
+        sunCenter + Offset(cos(angle) * length, sin(angle) * length),
+        rayPaint,
+      );
     }
+
+    // Extra Spectral Halo
+    canvas.drawCircle(
+      sunCenter,
+      sunRadius * 3.5,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.0
+        ..color = spec.accent.withValues(alpha: 0.05)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 20),
+    );
 
     // Cloud bands
     for (int i = 0; i < 4; i++) {
@@ -2362,15 +3171,15 @@ class _PaperEffectPainter extends CustomPainter {
       cloudPath.lineTo(-20, cloudY + 30);
       cloudPath.close();
 
-      final cloudColor =
-          i < 2
-              ? spec.accent.withValues(alpha: 0.06 + i * 0.02)
-              : spec.accent2.withValues(alpha: 0.04 + i * 0.01);
       canvas.drawPath(
         cloudPath,
         Paint()
-          ..color = cloudColor
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+          ..shader = ui.Gradient.linear(
+            Offset(0, cloudY),
+            Offset(0, cloudY + 30),
+            [spec.accent2.withValues(alpha: 0.1), Colors.transparent],
+          )
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
       );
     }
   }

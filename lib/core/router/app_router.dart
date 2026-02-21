@@ -5,7 +5,7 @@ import '../../features/journal/presentation/pages/journal_page.dart';
 import '../../features/journal/presentation/pages/add_entry_page.dart';
 import '../../features/journal/presentation/pages/entry_detail_page.dart';
 import '../../features/categories/presentation/pages/categories_page.dart';
-import '../../features/calendar/presentation/pages/calendar_page.dart';
+import '../../features/insights/presentation/pages/insights_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/settings/presentation/pages/page_studio_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
@@ -57,9 +57,14 @@ class AppRouter {
                 parentNavigatorKey: _rootNavigatorKey,
                 pageBuilder: (context, state) {
                   final entryId = state.uri.queryParameters['entryId'];
+                  final initialContent =
+                      state.uri.queryParameters['initialContent'];
                   return PageFlipTransitionPage(
                     key: state.pageKey,
-                    child: AddEntryPage(entryId: entryId),
+                    child: AddEntryPage(
+                      entryId: entryId,
+                      initialContent: initialContent,
+                    ),
                   );
                 },
               ),
@@ -86,11 +91,11 @@ class AppRouter {
                     ),
               ),
               GoRoute(
-                path: 'calendar',
+                path: 'insights',
                 pageBuilder:
                     (context, state) => CustomTransitionPage(
                       key: state.pageKey,
-                      child: const CalendarPage(),
+                      child: const InsightsPage(),
                       transitionsBuilder:
                           (context, animation, secondaryAnimation, child) =>
                               FadeTransition(opacity: animation, child: child),

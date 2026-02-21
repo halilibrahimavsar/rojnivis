@@ -227,6 +227,8 @@ class ThemePresets {
   static const String raining = 'raining';
   static const String snowing = 'snowing';
   static const String sunny = 'sunny';
+  static const String sunkenYacht = 'sunken_yacht';
+  static const String pirateTreasure = 'pirate_treasure';
 }
 
 /// Hive type IDs for adapters
