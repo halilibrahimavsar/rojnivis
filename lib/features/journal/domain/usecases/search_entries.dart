@@ -1,7 +1,8 @@
 import 'package:injectable/injectable.dart';
 
-import '../../data/models/journal_entry_model.dart';
-import '../models/filter_model.dart';
+import '../../../../core/errors/failures.dart';
+import '../entities/journal_entry.dart';
+import '../entities/journal_filter.dart';
 import '../repositories/journal_repository.dart';
 
 @lazySingleton
@@ -10,6 +11,6 @@ class SearchEntries {
 
   SearchEntries(this._repository);
 
-  Future<List<JournalEntryModel>> call(JournalFilter filter) =>
+  Future<(Failure?, List<JournalEntry>?)> call(JournalFilter filter) =>
       _repository.searchEntries(filter);
 }

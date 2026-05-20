@@ -1,4 +1,5 @@
 import 'package:hive/hive.dart';
+import '../../domain/entities/journal_entry.dart';
 
 part 'journal_entry_model.g.dart';
 
@@ -45,6 +46,36 @@ class JournalEntryModel {
     this.attachmentPaths = const [],
     this.summary,
   });
+
+  /// Creates a model from a domain entity.
+  factory JournalEntryModel.fromEntity(JournalEntry entity) {
+    return JournalEntryModel(
+      id: entity.id,
+      title: entity.title,
+      content: entity.content,
+      date: entity.date,
+      moodIndex: entity.mood.index,
+      tags: entity.tags,
+      categoryId: entity.categoryId,
+      attachmentPaths: entity.attachmentPaths,
+      summary: entity.summary,
+    );
+  }
+
+  /// Converts this model to a domain entity.
+  JournalEntry toEntity() {
+    return JournalEntry(
+      id: id,
+      title: title,
+      content: content,
+      date: date,
+      mood: Mood.values[moodIndex],
+      tags: tags,
+      categoryId: categoryId,
+      attachmentPaths: attachmentPaths,
+      summary: summary,
+    );
+  }
 
   JournalEntryModel copyWith({
     String? id,

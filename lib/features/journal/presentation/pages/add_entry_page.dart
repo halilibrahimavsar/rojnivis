@@ -13,16 +13,17 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../core/widgets/attachment_preview.dart';
 import '../../../../core/widgets/themed_paper.dart';
-import '../../../categories/data/models/category_model.dart';
 import '../../../categories/presentation/bloc/category_bloc.dart';
 import '../../../quick_questions/presentation/quick_question_card.dart';
-import '../../data/models/journal_entry_model.dart';
+import '../../../categories/domain/entities/category.dart';
+import '../../domain/entities/journal_entry.dart';
 import '../bloc/journal_bloc.dart';
 import '../widgets/audio_recorder_widget.dart';
 import '../widgets/sketch_canvas.dart';
 import '../../../../di/injection.dart';
-import '../../data/repositories/entry_decoration_repository_singleton.dart';
-import '../../domain/models/entry_sticker.dart';
+import '../../domain/entities/entry_sticker.dart';
+import '../../domain/usecases/get_stickers.dart';
+import '../../domain/usecases/save_stickers.dart';
 import '../widgets/ai_writing_sheet.dart';
 import '../widgets/sticker_layer.dart';
 import '../widgets/sticker_picker_sheet.dart';
@@ -44,10 +45,10 @@ class _AddEntryPageState extends State<AddEntryPage> {
 
   DateTime _selectedDate = DateTime.now();
   String? _selectedCategoryId;
-  int _selectedMoodIndex = 2;
+  Mood _selectedMood = Mood.neutral;
   final List<String> _attachmentPaths = [];
 
-  JournalEntryModel? _editingEntry;
+  JournalEntry? _editingEntry;
   late final String _workingEntryId;
   final StickerLayerController _stickerController = StickerLayerController();
   Timer? _stickerSaveDebounce;
@@ -71,7 +72,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
     final state = context.read<JournalBloc>().state;
     if (state is! JournalLoaded) return;
 
-    JournalEntryModel? entry;
+    JournalEntry? entry;
     for (final e in state.entries) {
       if (e.id == entryId) {
         entry = e;
@@ -86,7 +87,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
     _tagsController.text = entry.tags.join(', ');
     _selectedDate = entry.date;
     _selectedCategoryId = entry.categoryId;
-    _selectedMoodIndex = entry.moodIndex;
+    _selectedMood = entry.mood;
     _attachmentPaths
       ..clear()
       ..addAll(entry.attachmentPaths);
@@ -103,11 +104,11 @@ class _AddEntryPageState extends State<AddEntryPage> {
   }
 
   Future<void> _loadStickers() async {
-    final stickers = await entryDecorationRepository.getStickers(
-      _workingEntryId,
-    );
+    final (failure, stickers) = await getIt<GetStickers>()(_workingEntryId);
     if (!mounted) return;
-    _stickerController.setStickers(stickers);
+    if (failure == null && stickers != null) {
+      _stickerController.setStickers(stickers);
+    }
   }
 
   Future<void> _pickDateTime() async {
@@ -332,12 +333,12 @@ class _AddEntryPageState extends State<AddEntryPage> {
     await _persistStickersNow();
     if (!mounted) return;
 
-    final entry = JournalEntryModel(
+    final entry = JournalEntry(
       id: _workingEntryId,
       title: _titleController.text.trim(),
       content: content,
       date: _selectedDate,
-      moodIndex: _selectedMoodIndex,
+      mood: _selectedMood,
       categoryId: _selectedCategoryId,
       tags: _parseTags(_tagsController.text),
       attachmentPaths: List.of(_attachmentPaths),
@@ -463,7 +464,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
   }
 
   Future<void> _openMoodPicker() async {
-    final selection = await showModalBottomSheet<int>(
+    final selection = await showModalBottomSheet<Mood>(
       context: context,
       builder:
           (context) => SafeArea(
@@ -478,37 +479,37 @@ class _AddEntryPageState extends State<AddEntryPage> {
                     ),
                     title: Text('happy'.tr()),
                     trailing:
-                        _selectedMoodIndex == 0
+                        _selectedMood == Mood.happy
                             ? const Icon(Icons.check)
                             : null,
-                    onTap: () => Navigator.pop(context, 0),
+                    onTap: () => Navigator.pop(context, Mood.happy),
                   ),
                   ListTile(
                     leading: const Icon(Icons.sentiment_dissatisfied_outlined),
                     title: Text('sad'.tr()),
                     trailing:
-                        _selectedMoodIndex == 1
+                        _selectedMood == Mood.sad
                             ? const Icon(Icons.check)
                             : null,
-                    onTap: () => Navigator.pop(context, 1),
+                    onTap: () => Navigator.pop(context, Mood.sad),
                   ),
                   ListTile(
                     leading: const Icon(Icons.sentiment_neutral_outlined),
                     title: Text('neutral'.tr()),
                     trailing:
-                        _selectedMoodIndex == 2
+                        _selectedMood == Mood.neutral
                             ? const Icon(Icons.check)
                             : null,
-                    onTap: () => Navigator.pop(context, 2),
+                    onTap: () => Navigator.pop(context, Mood.neutral),
                   ),
                   ListTile(
                     leading: const Icon(Icons.celebration_outlined),
                     title: Text('excited'.tr()),
                     trailing:
-                        _selectedMoodIndex == 3
+                        _selectedMood == Mood.excited
                             ? const Icon(Icons.check)
                             : null,
-                    onTap: () => Navigator.pop(context, 3),
+                    onTap: () => Navigator.pop(context, Mood.excited),
                   ),
                   ListTile(
                     leading: const Icon(
@@ -516,10 +517,10 @@ class _AddEntryPageState extends State<AddEntryPage> {
                     ),
                     title: Text('angry'.tr()),
                     trailing:
-                        _selectedMoodIndex == 4
+                        _selectedMood == Mood.angry
                             ? const Icon(Icons.check)
                             : null,
-                    onTap: () => Navigator.pop(context, 4),
+                    onTap: () => Navigator.pop(context, Mood.angry),
                   ),
                 ],
               ),
@@ -527,7 +528,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
           ),
     );
     if (selection == null || !mounted) return;
-    setState(() => _selectedMoodIndex = selection);
+    setState(() => _selectedMood = selection);
   }
 
   Future<void> _openAudioRecorder() async {
@@ -595,32 +596,27 @@ class _AddEntryPageState extends State<AddEntryPage> {
   void _scheduleStickerSave([List<EntrySticker>? stickers]) {
     _stickerSaveDebounce?.cancel();
     _stickerSaveDebounce = Timer(const Duration(milliseconds: 300), () async {
-      await entryDecorationRepository.saveStickers(
-        _workingEntryId,
-        stickers ?? _stickerController.stickers,
-      );
+      final s = stickers ?? _stickerController.stickers;
+      await getIt<SaveStickers>()(_workingEntryId, s);
     });
   }
 
   Future<void> _persistStickersNow() async {
     _stickerSaveDebounce?.cancel();
-    await entryDecorationRepository.saveStickers(
-      _workingEntryId,
-      _stickerController.stickers,
-    );
+    await getIt<SaveStickers>()(_workingEntryId, _stickerController.stickers);
   }
 
-  IconData _moodIcon(int index) {
-    switch (index) {
-      case 0:
+  IconData _moodIcon(Mood mood) {
+    switch (mood) {
+      case Mood.happy:
         return Icons.sentiment_very_satisfied_rounded;
-      case 1:
+      case Mood.sad:
         return Icons.sentiment_dissatisfied_rounded;
-      case 3:
+      case Mood.excited:
         return Icons.celebration_rounded;
-      case 4:
+      case Mood.angry:
         return Icons.sentiment_very_dissatisfied_rounded;
-      default:
+      case Mood.neutral:
         return Icons.sentiment_neutral_rounded;
     }
   }
@@ -739,7 +735,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
           const Spacer(),
           IconButton(
             icon: Icon(
-              _moodIcon(_selectedMoodIndex),
+              _moodIcon(_selectedMood),
               color: theme.colorScheme.secondary,
             ),
             onPressed: _openMoodPicker,
@@ -753,10 +749,8 @@ class _AddEntryPageState extends State<AddEntryPage> {
     return BlocBuilder<CategoryBloc, CategoryState>(
       builder: (context, state) {
         final categories =
-            state is CategoryLoaded
-                ? state.categories
-                : const <CategoryModel>[];
-        CategoryModel? selectedCategory;
+            state is CategoryLoaded ? state.categories : const <Category>[];
+        Category? selectedCategory;
         if (_selectedCategoryId != null) {
           for (final category in categories) {
             if (category.id == _selectedCategoryId) {

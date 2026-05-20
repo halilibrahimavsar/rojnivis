@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:remote_auth_module/remote_auth_module.dart';
 
 import '../../../../core/widgets/themed_paper.dart';
+import '../bloc/splash_bloc.dart';
 
 class SplashPage extends StatefulWidget {
   const SplashPage({super.key});
@@ -18,7 +18,6 @@ class _SplashPageState extends State<SplashPage>
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
-  bool _isAnimationComplete = false;
 
   @override
   void initState() {
@@ -38,48 +37,19 @@ class _SplashPageState extends State<SplashPage>
       CurvedAnimation(parent: _fadeController, curve: Curves.easeOutCubic),
     );
 
-    _startDisplaySequence();
+    _startAnimation();
   }
 
-  Future<void> _startDisplaySequence() async {
+  Future<void> _startAnimation() async {
     await Future.delayed(const Duration(milliseconds: 300));
     if (!mounted) return;
-
     await _fadeController.forward();
 
-    // Hold the splash logo for a second before allowing navigation
+    // Hold for a moment then signal completion
     await Future.delayed(const Duration(milliseconds: 1000));
-
     if (!mounted) return;
-    setState(() {
-      _isAnimationComplete = true;
-    });
 
-    _checkAndNavigate();
-  }
-
-  void _checkAndNavigate() async {
-    if (!_isAnimationComplete || !mounted) return;
-
-    final authState = context.read<AuthBloc>().state;
-    // Don't navigate while still initializing
-    if (authState is AuthInitialState || authState is AuthLoadingState) return;
-
-    if (authState is AuthenticatedState) {
-      // If the user opted out of 'remember me', treat this as a session-only
-      // login — sign them out silently so they must log in again next launch.
-      final rememberMe = await RememberMeService().load();
-      if (!mounted) return;
-      if (!rememberMe) {
-        context.read<AuthBloc>().add(const SignOutEvent());
-        context.go('/public');
-        return;
-      }
-      context.go('/home');
-    } else if (authState is UnauthenticatedState ||
-        authState is AuthErrorState) {
-      context.go('/public');
-    }
+    context.read<SplashBloc>().add(const SplashAnimationComplete());
   }
 
   @override
@@ -90,15 +60,24 @@ class _SplashPageState extends State<SplashPage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      extendBodyBehindAppBar: true,
-      body: BlocListener<AuthBloc, AuthState>(
-        listener: (context, state) {
-          if (_isAnimationComplete) {
-            _checkAndNavigate();
+    return BlocListener<SplashBloc, SplashState>(
+      listener: (context, state) async {
+        if (state is SplashNavigating) {
+          switch (state.target) {
+            case SplashNavigationTarget.home:
+              context.go('/home');
+              break;
+            case SplashNavigationTarget.public:
+              context.go('/public');
+              break;
+            case SplashNavigationTarget.none:
+              break;
           }
-        },
-        child: Stack(
+        }
+      },
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        body: Stack(
           fit: StackFit.expand,
           children: [
             const ThemedBackdrop(applyPageStudio: true, opacity: 1.0),

@@ -1,5 +1,7 @@
 part of 'journal_bloc.dart';
 
+enum JournalViewMode { list, grid, calendar }
+
 /// Base class for all journal states.
 sealed class JournalState extends Equatable {
   const JournalState();
@@ -21,15 +23,29 @@ class JournalLoading extends JournalState {
 /// State when journal entries are successfully loaded.
 class JournalLoaded extends JournalState {
   final JournalFilter filter;
-  final List<JournalEntryModel> entries;
+  final List<JournalEntry> entries;
+  final JournalViewMode viewMode;
 
   const JournalLoaded({
     required this.entries,
     this.filter = const JournalFilter(),
+    this.viewMode = JournalViewMode.list,
   });
 
+  JournalLoaded copyWith({
+    List<JournalEntry>? entries,
+    JournalFilter? filter,
+    JournalViewMode? viewMode,
+  }) {
+    return JournalLoaded(
+      entries: entries ?? this.entries,
+      filter: filter ?? this.filter,
+      viewMode: viewMode ?? this.viewMode,
+    );
+  }
+
   @override
-  List<Object?> get props => [entries, filter];
+  List<Object?> get props => [entries, filter, viewMode];
 }
 
 /// State when an error occurs during loading.

@@ -1,8 +1,9 @@
-import 'package:injectable/injectable.dart';
-
+import '../../../../core/errors/failures.dart';
+import '../../domain/entities/category.dart';
 import '../../domain/repositories/category_repository.dart';
 import '../datasources/category_local_datasource.dart';
 import '../models/category_model.dart';
+import 'package:injectable/injectable.dart';
 
 @LazySingleton(as: CategoryRepository)
 class CategoryRepositoryImpl implements CategoryRepository {
@@ -11,13 +12,32 @@ class CategoryRepositoryImpl implements CategoryRepository {
   CategoryRepositoryImpl(this._local);
 
   @override
-  Future<List<CategoryModel>> getCategories() async => _local.getCategories();
+  Future<(Failure?, List<Category>?)> getCategories() async {
+    try {
+      final models = _local.getCategories();
+      return (null, models.map((m) => m.toEntity()).toList());
+    } catch (e) {
+      return (StorageFailure(message: e.toString()), null);
+    }
+  }
 
   @override
-  Future<void> upsertCategory(CategoryModel category) =>
-      _local.upsertCategory(category);
+  Future<(Failure?, void)> upsertCategory(Category category) async {
+    try {
+      await _local.upsertCategory(CategoryModel.fromEntity(category));
+      return (null, null);
+    } catch (e) {
+      return (StorageFailure(message: e.toString()), null);
+    }
+  }
 
   @override
-  Future<void> deleteCategory(String categoryId) =>
-      _local.deleteCategory(categoryId);
+  Future<(Failure?, void)> deleteCategory(String categoryId) async {
+    try {
+      await _local.deleteCategory(categoryId);
+      return (null, null);
+    } catch (e) {
+      return (StorageFailure(message: e.toString()), null);
+    }
+  }
 }

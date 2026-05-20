@@ -2,7 +2,9 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
 
-import '../../data/models/category_model.dart';
+import '../../../../core/errors/failures.dart';
+import '../../../../core/errors/error_handler.dart';
+import '../../domain/entities/category.dart';
 import '../../domain/usecases/add_category.dart';
 import '../../domain/usecases/delete_category.dart';
 import '../../domain/usecases/get_categories.dart';
@@ -28,11 +30,14 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
     Emitter<CategoryState> emit,
   ) async {
     emit(const CategoryLoading());
-    try {
-      final categories = await _getCategories();
-      emit(CategoryLoaded(categories: categories));
-    } catch (e) {
-      emit(CategoryError(message: e.toString()));
+    final (Failure? failure, List<Category>? categories) =
+        await _getCategories();
+
+    if (failure != null) {
+      ErrorHandler.logError(failure, context: 'CategoryBloc._onLoad');
+      emit(CategoryError(message: failure.message));
+    } else {
+      emit(CategoryLoaded(categories: categories ?? []));
     }
   }
 
@@ -40,11 +45,13 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
     UpsertCategoryRequested event,
     Emitter<CategoryState> emit,
   ) async {
-    try {
-      await _addCategory(event.category);
+    final (Failure? failure, _) = await _addCategory(event.category);
+
+    if (failure != null) {
+      ErrorHandler.logError(failure, context: 'CategoryBloc._onUpsert');
+      emit(CategoryError(message: failure.message));
+    } else {
       add(LoadCategories());
-    } catch (e) {
-      emit(CategoryError(message: e.toString()));
     }
   }
 
@@ -52,11 +59,13 @@ class CategoryBloc extends Bloc<CategoryEvent, CategoryState> {
     DeleteCategoryRequested event,
     Emitter<CategoryState> emit,
   ) async {
-    try {
-      await _deleteCategory(event.categoryId);
+    final (Failure? failure, _) = await _deleteCategory(event.categoryId);
+
+    if (failure != null) {
+      ErrorHandler.logError(failure, context: 'CategoryBloc._onDelete');
+      emit(CategoryError(message: failure.message));
+    } else {
       add(LoadCategories());
-    } catch (e) {
-      emit(CategoryError(message: e.toString()));
     }
   }
 }

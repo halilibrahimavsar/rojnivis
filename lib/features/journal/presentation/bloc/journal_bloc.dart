@@ -1,10 +1,10 @@
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:injectable/injectable.dart';
-import 'package:rojnivis/features/journal/domain/models/filter_model.dart';
+import 'package:rojnivis/features/journal/domain/entities/journal_entry.dart';
+import 'package:rojnivis/features/journal/domain/entities/journal_filter.dart';
 
 import '../../../../core/errors/error_handler.dart';
-import '../../data/models/journal_entry_model.dart';
 import '../../domain/usecases/add_entry.dart';
 import '../../domain/usecases/delete_entry.dart';
 import '../../domain/usecases/get_entries.dart';
@@ -35,6 +35,17 @@ class JournalBloc extends Bloc<JournalEvent, JournalState> {
     on<DeleteEntryRequested>(_onDelete);
     on<SearchRequested>(_onSearch);
     on<ClearSearch>(_onClearSearch);
+    on<ChangeViewModeRequested>(_onChangeViewMode);
+  }
+
+  void _onChangeViewMode(
+    ChangeViewModeRequested event,
+    Emitter<JournalState> emit,
+  ) {
+    if (state is JournalLoaded) {
+      final loadedState = state as JournalLoaded;
+      emit(loadedState.copyWith(viewMode: event.viewMode));
+    }
   }
 
   /// Handles loading all journal entries.
@@ -43,16 +54,13 @@ class JournalBloc extends Bloc<JournalEvent, JournalState> {
     Emitter<JournalState> emit,
   ) async {
     emit(const JournalLoading());
-    try {
-      final entries = await _getEntries();
-      emit(JournalLoaded(entries: entries));
-    } catch (error, stackTrace) {
-      ErrorHandler.logError(
-        error,
-        stackTrace: stackTrace,
-        context: 'JournalBloc._onLoad',
-      );
-      emit(JournalError(message: error.toErrorMessage(), error: error));
+    final (failure, entries) = await _getEntries();
+
+    if (failure != null) {
+      ErrorHandler.logError(failure, context: 'JournalBloc._onLoad');
+      emit(JournalError(message: failure.message));
+    } else {
+      emit(JournalLoaded(entries: entries ?? []));
     }
   }
 
@@ -62,16 +70,13 @@ class JournalBloc extends Bloc<JournalEvent, JournalState> {
     Emitter<JournalState> emit,
   ) async {
     emit(const JournalActionInProgress());
-    try {
-      await _addEntry(event.entry);
+    final (failure, _) = await _addEntry(event.entry);
+
+    if (failure != null) {
+      ErrorHandler.logError(failure, context: 'JournalBloc._onUpsert');
+      emit(JournalActionError(message: failure.message));
+    } else {
       add(const LoadJournalEntries());
-    } catch (error, stackTrace) {
-      ErrorHandler.logError(
-        error,
-        stackTrace: stackTrace,
-        context: 'JournalBloc._onUpsert',
-      );
-      emit(JournalActionError(message: error.toErrorMessage(), error: error));
     }
   }
 
@@ -81,16 +86,13 @@ class JournalBloc extends Bloc<JournalEvent, JournalState> {
     Emitter<JournalState> emit,
   ) async {
     emit(const JournalActionInProgress());
-    try {
-      await _deleteEntry(event.entryId);
+    final (failure, _) = await _deleteEntry(event.entryId);
+
+    if (failure != null) {
+      ErrorHandler.logError(failure, context: 'JournalBloc._onDelete');
+      emit(JournalActionError(message: failure.message));
+    } else {
       add(const LoadJournalEntries());
-    } catch (error, stackTrace) {
-      ErrorHandler.logError(
-        error,
-        stackTrace: stackTrace,
-        context: 'JournalBloc._onDelete',
-      );
-      emit(JournalActionError(message: error.toErrorMessage(), error: error));
     }
   }
 
@@ -106,16 +108,13 @@ class JournalBloc extends Bloc<JournalEvent, JournalState> {
     }
 
     emit(const JournalLoading());
-    try {
-      final entries = await _searchEntries(filter);
-      emit(JournalLoaded(entries: entries, filter: filter));
-    } catch (error, stackTrace) {
-      ErrorHandler.logError(
-        error,
-        stackTrace: stackTrace,
-        context: 'JournalBloc._onSearch',
-      );
-      emit(JournalError(message: error.toErrorMessage(), error: error));
+    final (failure, entries) = await _searchEntries(filter);
+
+    if (failure != null) {
+      ErrorHandler.logError(failure, context: 'JournalBloc._onSearch');
+      emit(JournalError(message: failure.message));
+    } else {
+      emit(JournalLoaded(entries: entries ?? [], filter: filter));
     }
   }
 

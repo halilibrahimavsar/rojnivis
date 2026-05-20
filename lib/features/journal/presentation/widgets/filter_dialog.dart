@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../categories/presentation/bloc/category_bloc.dart';
-import '../../domain/models/filter_model.dart';
+import '../../domain/entities/journal_filter.dart';
 
 class FilterDialog extends StatefulWidget {
   const FilterDialog({super.key, required this.initialFilter});

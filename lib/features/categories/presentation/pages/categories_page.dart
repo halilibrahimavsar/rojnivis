@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/widgets/app_card.dart';
-import '../../data/models/category_model.dart';
+import '../../domain/entities/category.dart';
 import '../bloc/category_bloc.dart';
 
 const List<Color> _categoryColorOptions = [
@@ -21,11 +21,8 @@ const List<Color> _categoryColorOptions = [
 class CategoriesPage extends StatelessWidget {
   const CategoriesPage({super.key});
 
-  Future<void> _openEditor(
-    BuildContext context, {
-    CategoryModel? existing,
-  }) async {
-    final result = await showDialog<CategoryModel>(
+  Future<void> _openEditor(BuildContext context, {Category? existing}) async {
+    final result = await showDialog<Category>(
       context: context,
       builder: (context) => _CategoryEditorDialog(existing: existing),
     );
@@ -185,7 +182,7 @@ class CategoriesPage extends StatelessWidget {
 class _CategoryEditorDialog extends StatefulWidget {
   const _CategoryEditorDialog({this.existing});
 
-  final CategoryModel? existing;
+  final Category? existing;
 
   @override
   State<_CategoryEditorDialog> createState() => _CategoryEditorDialogState();
@@ -289,7 +286,7 @@ class _CategoryEditorDialogState extends State<_CategoryEditorDialog> {
             final name = _nameController.text.trim();
             if (name.isEmpty) return;
             Navigator.of(context).pop(
-              CategoryModel(
+              Category(
                 id: widget.existing?.id ?? const Uuid().v4(),
                 name: name,
                 color: _selectedColor,

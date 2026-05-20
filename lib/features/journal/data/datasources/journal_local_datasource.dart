@@ -3,7 +3,7 @@ import 'package:injectable/injectable.dart';
 
 import '../../../../core/constants/app_constants.dart';
 import '../models/journal_entry_model.dart';
-import '../../domain/models/filter_model.dart';
+import '../../domain/entities/journal_filter.dart';
 
 abstract class JournalLocalDataSource {
   List<JournalEntryModel> getEntries();

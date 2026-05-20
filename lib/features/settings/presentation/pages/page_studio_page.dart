@@ -20,12 +20,14 @@ class PageStudioPage extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final visualFamily = PageVisualFamilyX.fromId(state.pageVisualFamily);
+          final visualFamily = PageVisualFamilyX.fromId(
+            state.settings.pageVisualFamily,
+          );
           final variant = VintagePaperVariantX.fromId(
-            state.vintagePaperVariant,
+            state.settings.vintagePaperVariant,
           );
           final intensity = AnimationIntensityX.fromId(
-            state.animationIntensity,
+            state.settings.animationIntensity,
           );
 
           return ListView(

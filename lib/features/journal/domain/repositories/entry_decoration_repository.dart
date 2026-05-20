@@ -1,9 +1,13 @@
-import '../models/entry_sticker.dart';
+import '../../../../core/errors/failures.dart';
+import '../entities/entry_sticker.dart';
 
 abstract class EntryDecorationRepository {
-  Future<List<EntrySticker>> getStickers(String entryId);
+  Future<(Failure?, List<EntrySticker>?)> getStickers(String entryId);
 
-  Future<void> saveStickers(String entryId, List<EntrySticker> stickers);
+  Future<(Failure?, void)> saveStickers(
+    String entryId,
+    List<EntrySticker> stickers,
+  );
 
-  Future<void> clearStickers(String entryId);
+  Future<(Failure?, void)> clearStickers(String entryId);
 }

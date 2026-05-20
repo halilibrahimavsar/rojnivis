@@ -1,8 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 
 import 'package:remote_auth_module/remote_auth_module.dart';
 
+import '../core/services/remote_config_service.dart';
+import '../firebase_options.dart';
 import 'injection.dart';
 
 /// Manually registers Auth module dependencies.
@@ -22,18 +25,29 @@ void registerAuthDependencies() {
     );
   }
 
+  // Register RemoteConfigService if not already registered
+  if (!getIt.isRegistered<RemoteConfigService>()) {
+    getIt.registerLazySingleton<RemoteConfigService>(
+      () => RemoteConfigService(),
+    );
+  }
+
+  // Platform-aware OAuth client IDs:
+  // - Android: needs serverClientId (Web Client ID) for native Google Sign-In
+  // - Web: needs clientId for signInWithPopup flow
+  // - iOS/macOS: reads CLIENT_ID from GoogleService-Info.plist automatically
+  final serverClientId = getIt<RemoteConfigService>().serverClientId;
+  final webClientId =
+      kIsWeb ? DefaultFirebaseOptions.web.apiKey : null; // Not needed on mobile
+
   // Register Repository
   getIt.registerLazySingleton<AuthRepository>(
     () => FirebaseAuthRepository(
       auth: getIt<FirebaseAuth>(),
       firestore: getIt<FirebaseFirestore>(),
       createUserCollection: true,
-      // TODO: Move this to a secure config or remote config
-      // This is the Web Client ID from Google Cloud Console -> APIs & Services -> Credentials
-      // This is the Web Client ID from google-services.json (client_type 3)
-      // It is required for Google Sign-In on Android.
-      serverClientId:
-          '628938091989-k01fs57t6up2qbepdvk8p39nt7n6j0q7.apps.googleusercontent.com',
+      serverClientId: serverClientId,
+      clientId: webClientId,
     ),
   );
 

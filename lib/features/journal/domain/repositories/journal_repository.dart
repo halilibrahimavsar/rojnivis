@@ -1,10 +1,11 @@
-import '../../data/models/journal_entry_model.dart';
-import '../models/filter_model.dart';
+import '../../../../core/errors/failures.dart';
+import '../entities/journal_entry.dart';
+import '../entities/journal_filter.dart';
 
 abstract class JournalRepository {
-  Future<List<JournalEntryModel>> getEntries();
-  Future<JournalEntryModel?> getEntry(String entryId);
-  Future<void> upsertEntry(JournalEntryModel entry);
-  Future<void> deleteEntry(String entryId);
-  Future<List<JournalEntryModel>> searchEntries(JournalFilter filter);
+  Future<(Failure?, List<JournalEntry>?)> getEntries();
+  Future<(Failure?, JournalEntry?)> getEntry(String entryId);
+  Future<(Failure?, void)> upsertEntry(JournalEntry entry);
+  Future<(Failure?, void)> deleteEntry(String entryId);
+  Future<(Failure?, List<JournalEntry>?)> searchEntries(JournalFilter filter);
 }

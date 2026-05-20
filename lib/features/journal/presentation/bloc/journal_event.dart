@@ -15,7 +15,7 @@ class LoadJournalEntries extends JournalEvent {
 
 /// Event to add or update a journal entry.
 class UpsertEntryRequested extends JournalEvent {
-  final JournalEntryModel entry;
+  final JournalEntry entry;
 
   const UpsertEntryRequested({required this.entry});
 
@@ -46,4 +46,14 @@ class SearchRequested extends JournalEvent {
 /// Event to clear the search query.
 class ClearSearch extends JournalEvent {
   const ClearSearch();
+}
+
+/// Event to change the view mode.
+class ChangeViewModeRequested extends JournalEvent {
+  final JournalViewMode viewMode;
+
+  const ChangeViewModeRequested({required this.viewMode});
+
+  @override
+  List<Object?> get props => [viewMode];
 }

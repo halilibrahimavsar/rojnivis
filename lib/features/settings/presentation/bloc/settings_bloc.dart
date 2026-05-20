@@ -2,17 +2,21 @@ import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter/material.dart';
 import 'package:injectable/injectable.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../../../core/constants/app_constants.dart';
-import '../../../../core/theme/page_studio_models.dart';
+import '../../domain/entities/user_settings.dart';
+import '../../domain/usecases/get_settings.dart';
+import '../../domain/usecases/update_settings.dart';
 
 part 'settings_event.dart';
 part 'settings_state.dart';
 
 @injectable
 class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
-  SettingsBloc(this._prefs) : super(const SettingsInitial()) {
+  final GetSettings _getSettings;
+  final UpdateSettings _updateSettings;
+
+  SettingsBloc(this._getSettings, this._updateSettings)
+    : super(const SettingsInitial()) {
     on<LoadSettings>(_onLoad);
     on<UpdateThemeMode>(_onUpdateThemeMode);
     on<UpdateLocale>(_onUpdateLocale);
@@ -26,288 +30,168 @@ class SettingsBloc extends Bloc<SettingsEvent, SettingsState> {
     on<UpdateAnimationIntensity>(_onUpdateAnimationIntensity);
   }
 
-  final SharedPreferences _prefs;
-
-  static const _themeModeKey = StorageKeys.themeMode;
-  static const _localeKey = StorageKeys.locale;
-  static const _fontKey = StorageKeys.fontFamily;
-  static const _themePresetKey = StorageKeys.themePreset;
-  static const _attachmentBackdropKey = StorageKeys.attachmentBackdrop;
-  static const _coverColorKey = StorageKeys.notebookCoverColor;
-  static const _coverTextureKey = StorageKeys.notebookCoverTexture;
-  static const _pageVisualFamilyKey = StorageKeys.pageVisualFamily;
-  static const _vintagePaperVariantKey = StorageKeys.vintagePaperVariant;
-  static const _animationIntensityKey = StorageKeys.animationIntensity;
-
   Future<void> _onLoad(LoadSettings event, Emitter<SettingsState> emit) async {
-    try {
-      final themeModeRaw = _prefs.get(_themeModeKey);
-      final themeMode = _parseThemeModeRaw(themeModeRaw);
-      final themeModeStr = _themeModeToString(themeMode);
+    final (failure, settings) = await _getSettings();
 
-      final themePreset =
-          _readString(_themePresetKey) ?? AppDefaults.defaultThemePreset;
-      final fontFamily = _readString(_fontKey) ?? AppDefaults.defaultFontFamily;
-      final showAttachmentBackdrop =
-          _readBool(_attachmentBackdropKey) ??
-          AppDefaults.defaultAttachmentBackdrop;
-      final notebookCoverColor =
-          _prefs.getInt(_coverColorKey) ??
-          AppDefaults.defaultNotebookCoverColor;
-      final notebookCoverTexture =
-          _readString(_coverTextureKey) ??
-          AppDefaults.defaultNotebookCoverTexture;
-      final pageVisualFamily =
-          _readString(_pageVisualFamilyKey) ??
-          AppDefaults.defaultPageVisualFamily;
-      final vintagePaperVariant =
-          _readString(_vintagePaperVariantKey) ??
-          AppDefaults.defaultVintagePaperVariant;
-      final animationIntensity =
-          _readString(_animationIntensityKey) ??
-          AppDefaults.defaultAnimationIntensity;
-
-      final localeRaw =
-          _readString(_localeKey) ??
-          '${AppDefaults.defaultLocale}-${AppDefaults.defaultCountryCode}';
-      final normalizedLocaleStr = _normalizeLocale(localeRaw);
-      final locale = _parseLocale(normalizedLocaleStr);
-
-      emit(
-        SettingsLoaded(
-          themeMode: themeMode,
-          locale: locale,
-          fontFamily: fontFamily,
-          themePreset: themePreset,
-          showAttachmentBackdrop: showAttachmentBackdrop,
-          notebookCoverColor: notebookCoverColor,
-          notebookCoverTexture: notebookCoverTexture,
-          pageVisualFamily: _sanitizePageVisualFamily(pageVisualFamily),
-          vintagePaperVariant: _sanitizeVintagePaperVariant(
-            vintagePaperVariant,
-          ),
-          animationIntensity: _sanitizeAnimationIntensity(animationIntensity),
-        ),
-      );
-
-      final futures = <Future<void>>[];
-      if (themeModeRaw is! String || themeModeRaw != themeModeStr) {
-        futures.add(_prefs.setString(_themeModeKey, themeModeStr));
-      }
-      if (localeRaw != normalizedLocaleStr) {
-        futures.add(_prefs.setString(_localeKey, normalizedLocaleStr));
-      }
-      await Future.wait(futures);
-    } catch (_) {
-      emit(
-        const SettingsLoaded(
-          themeMode: ThemeMode.system,
-          locale: Locale(
-            AppDefaults.defaultLocale,
-            AppDefaults.defaultCountryCode,
-          ),
-          fontFamily: AppDefaults.defaultFontFamily,
-          themePreset: AppDefaults.defaultThemePreset,
-          showAttachmentBackdrop: AppDefaults.defaultAttachmentBackdrop,
-          notebookCoverColor: AppDefaults.defaultNotebookCoverColor,
-          notebookCoverTexture: AppDefaults.defaultNotebookCoverTexture,
-          pageVisualFamily: AppDefaults.defaultPageVisualFamily,
-          vintagePaperVariant: AppDefaults.defaultVintagePaperVariant,
-          animationIntensity: AppDefaults.defaultAnimationIntensity,
-        ),
-      );
+    if (failure != null || settings == null) {
+      // Handle failure or emit default
+      return;
     }
+
+    emit(SettingsLoaded(settings: settings));
   }
 
   Future<void> _onUpdateThemeMode(
     UpdateThemeMode event,
     Emitter<SettingsState> emit,
   ) async {
-    final current = _requireLoaded();
-    await _prefs.setString(_themeModeKey, _themeModeToString(event.themeMode));
-    emit(current.copyWith(themeMode: event.themeMode));
+    final state = this.state;
+    if (state is SettingsLoaded) {
+      final newSettings = state.settings.copyWith(themeMode: event.themeMode);
+      final (failure, _) = await _updateSettings(newSettings);
+      if (failure == null) {
+        emit(state.copyWith(settings: newSettings));
+      }
+    }
   }
 
   Future<void> _onUpdateLocale(
     UpdateLocale event,
     Emitter<SettingsState> emit,
   ) async {
-    final current = _requireLoaded();
-    final localeStr =
-        '${event.locale.languageCode}-${event.locale.countryCode}';
-    await _prefs.setString(_localeKey, localeStr);
-    emit(current.copyWith(locale: event.locale));
+    final state = this.state;
+    if (state is SettingsLoaded) {
+      final newSettings = state.settings.copyWith(locale: event.locale);
+      final (failure, _) = await _updateSettings(newSettings);
+      if (failure == null) {
+        emit(state.copyWith(settings: newSettings));
+      }
+    }
   }
 
   Future<void> _onUpdateFontFamily(
     UpdateFontFamily event,
     Emitter<SettingsState> emit,
   ) async {
-    final current = _requireLoaded();
-    await _prefs.setString(_fontKey, event.fontFamily);
-    emit(current.copyWith(fontFamily: event.fontFamily));
+    final state = this.state;
+    if (state is SettingsLoaded) {
+      final newSettings = state.settings.copyWith(fontFamily: event.fontFamily);
+      final (failure, _) = await _updateSettings(newSettings);
+      if (failure == null) {
+        emit(state.copyWith(settings: newSettings));
+      }
+    }
   }
 
   Future<void> _onUpdateThemePreset(
     UpdateThemePreset event,
     Emitter<SettingsState> emit,
   ) async {
-    final current = _requireLoaded();
-    await _prefs.setString(_themePresetKey, event.themePreset);
-    emit(current.copyWith(themePreset: event.themePreset));
+    final state = this.state;
+    if (state is SettingsLoaded) {
+      final newSettings = state.settings.copyWith(
+        themePreset: event.themePreset,
+      );
+      final (failure, _) = await _updateSettings(newSettings);
+      if (failure == null) {
+        emit(state.copyWith(settings: newSettings));
+      }
+    }
   }
 
   Future<void> _onUpdateAttachmentBackdrop(
     UpdateAttachmentBackdrop event,
     Emitter<SettingsState> emit,
   ) async {
-    final current = _requireLoaded();
-    await _prefs.setBool(_attachmentBackdropKey, event.enabled);
-    emit(current.copyWith(showAttachmentBackdrop: event.enabled));
+    final state = this.state;
+    if (state is SettingsLoaded) {
+      final newSettings = state.settings.copyWith(
+        showAttachmentBackdrop: event.enabled,
+      );
+      final (failure, _) = await _updateSettings(newSettings);
+      if (failure == null) {
+        emit(state.copyWith(settings: newSettings));
+      }
+    }
   }
 
   Future<void> _onUpdateNotebookCoverColor(
     UpdateNotebookCoverColor event,
     Emitter<SettingsState> emit,
   ) async {
-    final current = _requireLoaded();
-    await _prefs.setInt(_coverColorKey, event.color);
-    emit(current.copyWith(notebookCoverColor: event.color));
+    final state = this.state;
+    if (state is SettingsLoaded) {
+      final newSettings = state.settings.copyWith(
+        notebookCoverColor: event.color,
+      );
+      final (failure, _) = await _updateSettings(newSettings);
+      if (failure == null) {
+        emit(state.copyWith(settings: newSettings));
+      }
+    }
   }
 
   Future<void> _onUpdateNotebookCoverTexture(
     UpdateNotebookCoverTexture event,
     Emitter<SettingsState> emit,
   ) async {
-    final current = _requireLoaded();
-    await _prefs.setString(_coverTextureKey, event.texture);
-    emit(current.copyWith(notebookCoverTexture: event.texture));
+    final state = this.state;
+    if (state is SettingsLoaded) {
+      final newSettings = state.settings.copyWith(
+        notebookCoverTexture: event.texture,
+      );
+      final (failure, _) = await _updateSettings(newSettings);
+      if (failure == null) {
+        emit(state.copyWith(settings: newSettings));
+      }
+    }
   }
 
   Future<void> _onUpdatePageVisualFamily(
     UpdatePageVisualFamily event,
     Emitter<SettingsState> emit,
   ) async {
-    final current = _requireLoaded();
-    final normalized = _sanitizePageVisualFamily(event.pageVisualFamily);
-    await _prefs.setString(_pageVisualFamilyKey, normalized);
-    emit(current.copyWith(pageVisualFamily: normalized));
+    final state = this.state;
+    if (state is SettingsLoaded) {
+      final newSettings = state.settings.copyWith(
+        pageVisualFamily: event.pageVisualFamily,
+      );
+      final (failure, _) = await _updateSettings(newSettings);
+      if (failure == null) {
+        emit(state.copyWith(settings: newSettings));
+      }
+    }
   }
 
   Future<void> _onUpdateVintagePaperVariant(
     UpdateVintagePaperVariant event,
     Emitter<SettingsState> emit,
   ) async {
-    final current = _requireLoaded();
-    final normalized = _sanitizeVintagePaperVariant(event.vintagePaperVariant);
-    await _prefs.setString(_vintagePaperVariantKey, normalized);
-    emit(current.copyWith(vintagePaperVariant: normalized));
+    final state = this.state;
+    if (state is SettingsLoaded) {
+      final newSettings = state.settings.copyWith(
+        vintagePaperVariant: event.vintagePaperVariant,
+      );
+      final (failure, _) = await _updateSettings(newSettings);
+      if (failure == null) {
+        emit(state.copyWith(settings: newSettings));
+      }
+    }
   }
 
   Future<void> _onUpdateAnimationIntensity(
     UpdateAnimationIntensity event,
     Emitter<SettingsState> emit,
   ) async {
-    final current = _requireLoaded();
-    final normalized = _sanitizeAnimationIntensity(event.animationIntensity);
-    await _prefs.setString(_animationIntensityKey, normalized);
-    emit(current.copyWith(animationIntensity: normalized));
-  }
-
-  SettingsLoaded _requireLoaded() {
     final state = this.state;
-    if (state is SettingsLoaded) return state;
-    return const SettingsLoaded(
-      themeMode: ThemeMode.system,
-      locale: Locale(AppDefaults.defaultLocale, AppDefaults.defaultCountryCode),
-      fontFamily: AppDefaults.defaultFontFamily,
-      themePreset: AppDefaults.defaultThemePreset,
-      showAttachmentBackdrop: AppDefaults.defaultAttachmentBackdrop,
-      notebookCoverColor: AppDefaults.defaultNotebookCoverColor,
-      notebookCoverTexture: AppDefaults.defaultNotebookCoverTexture,
-      pageVisualFamily: AppDefaults.defaultPageVisualFamily,
-      vintagePaperVariant: AppDefaults.defaultVintagePaperVariant,
-      animationIntensity: AppDefaults.defaultAnimationIntensity,
-    );
-  }
-
-  ThemeMode _parseThemeMode(String value) {
-    switch (value) {
-      case 'light':
-        return ThemeMode.light;
-      case 'dark':
-        return ThemeMode.dark;
-      case 'system':
-      default:
-        return ThemeMode.system;
-    }
-  }
-
-  ThemeMode _parseThemeModeRaw(Object? raw) {
-    if (raw is int) {
-      switch (raw) {
-        case 1:
-          return ThemeMode.light;
-        case 2:
-          return ThemeMode.dark;
-        case 0:
-        default:
-          return ThemeMode.system;
+    if (state is SettingsLoaded) {
+      final newSettings = state.settings.copyWith(
+        animationIntensity: event.animationIntensity,
+      );
+      final (failure, _) = await _updateSettings(newSettings);
+      if (failure == null) {
+        emit(state.copyWith(settings: newSettings));
       }
     }
-    if (raw is String) return _parseThemeMode(raw);
-    return ThemeMode.system;
-  }
-
-  String _themeModeToString(ThemeMode mode) {
-    switch (mode) {
-      case ThemeMode.light:
-        return 'light';
-      case ThemeMode.dark:
-        return 'dark';
-      case ThemeMode.system:
-        return 'system';
-    }
-  }
-
-  Locale _parseLocale(String value) {
-    final normalized = _normalizeLocale(value);
-    final parts = normalized.split('-');
-    if (parts.length == 2) {
-      return Locale(parts[0], parts[1]);
-    }
-    if (parts.length == 1 && parts[0].isNotEmpty) {
-      return Locale(parts[0]);
-    }
-    return const Locale(
-      AppDefaults.defaultLocale,
-      AppDefaults.defaultCountryCode,
-    );
-  }
-
-  String _normalizeLocale(String value) => value.replaceAll('_', '-');
-
-  String? _readString(String key) {
-    final value = _prefs.get(key);
-    if (value is String) return value;
-    return null;
-  }
-
-  bool? _readBool(String key) {
-    final value = _prefs.get(key);
-    if (value is bool) return value;
-    return null;
-  }
-
-  String _sanitizePageVisualFamily(String value) {
-    return PageVisualFamilyX.fromId(value).id;
-  }
-
-  String _sanitizeVintagePaperVariant(String value) {
-    return VintagePaperVariantX.fromId(value).id;
-  }
-
-  String _sanitizeAnimationIntensity(String value) {
-    return AnimationIntensityX.fromId(value).id;
   }
 }

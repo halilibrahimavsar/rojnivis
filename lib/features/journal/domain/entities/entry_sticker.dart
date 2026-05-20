@@ -36,28 +36,4 @@ class EntrySticker {
       zIndex: zIndex ?? this.zIndex,
     );
   }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'assetPath': assetPath,
-      'x': x,
-      'y': y,
-      'scale': scale,
-      'rotation': rotation,
-      'zIndex': zIndex,
-    };
-  }
-
-  static EntrySticker fromJson(Map<String, dynamic> json) {
-    return EntrySticker(
-      id: json['id'] as String,
-      assetPath: json['assetPath'] as String,
-      x: (json['x'] as num).toDouble(),
-      y: (json['y'] as num).toDouble(),
-      scale: (json['scale'] as num?)?.toDouble() ?? 1.0,
-      rotation: (json['rotation'] as num?)?.toDouble() ?? 0.0,
-      zIndex: (json['zIndex'] as num?)?.toInt() ?? 0,
-    );
-  }
 }

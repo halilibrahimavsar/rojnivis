@@ -1,7 +1,7 @@
-import 'package:injectable/injectable.dart';
-
-import '../../data/models/category_model.dart';
+import '../../../../core/errors/failures.dart';
+import '../entities/category.dart';
 import '../repositories/category_repository.dart';
+import 'package:injectable/injectable.dart';
 
 @lazySingleton
 class AddCategory {
@@ -9,6 +9,6 @@ class AddCategory {
 
   AddCategory(this._repository);
 
-  Future<void> call(CategoryModel category) =>
+  Future<(Failure?, void)> call(Category category) =>
       _repository.upsertCategory(category);
 }

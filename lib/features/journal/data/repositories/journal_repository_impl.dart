@@ -1,9 +1,11 @@
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/errors/failures.dart';
+import '../../domain/entities/journal_entry.dart';
+import '../../domain/entities/journal_filter.dart';
 import '../../domain/repositories/journal_repository.dart';
 import '../datasources/journal_local_datasource.dart';
 import '../models/journal_entry_model.dart';
-import '../../domain/models/filter_model.dart';
 
 @LazySingleton(as: JournalRepository)
 class JournalRepositoryImpl implements JournalRepository {
@@ -12,20 +14,56 @@ class JournalRepositoryImpl implements JournalRepository {
   JournalRepositoryImpl(this._local);
 
   @override
-  Future<List<JournalEntryModel>> getEntries() async => _local.getEntries();
+  Future<(Failure?, List<JournalEntry>?)> getEntries() async {
+    try {
+      final models = _local.getEntries();
+      final entities = models.map((m) => m.toEntity()).toList();
+      return (null, entities);
+    } catch (e) {
+      return (StorageFailure(message: e.toString()), null);
+    }
+  }
 
   @override
-  Future<JournalEntryModel?> getEntry(String entryId) async =>
-      _local.getEntry(entryId);
+  Future<(Failure?, JournalEntry?)> getEntry(String entryId) async {
+    try {
+      final model = _local.getEntry(entryId);
+      return (null, model?.toEntity());
+    } catch (e) {
+      return (StorageFailure(message: e.toString()), null);
+    }
+  }
 
   @override
-  Future<void> upsertEntry(JournalEntryModel entry) =>
-      _local.upsertEntry(entry);
+  Future<(Failure?, void)> upsertEntry(JournalEntry entry) async {
+    try {
+      await _local.upsertEntry(JournalEntryModel.fromEntity(entry));
+      return (null, null);
+    } catch (e) {
+      return (StorageFailure(message: e.toString()), null);
+    }
+  }
 
   @override
-  Future<void> deleteEntry(String entryId) => _local.deleteEntry(entryId);
+  Future<(Failure?, void)> deleteEntry(String entryId) async {
+    try {
+      await _local.deleteEntry(entryId);
+      return (null, null);
+    } catch (e) {
+      return (StorageFailure(message: e.toString()), null);
+    }
+  }
 
   @override
-  Future<List<JournalEntryModel>> searchEntries(JournalFilter filter) async =>
-      _local.searchEntries(filter);
+  Future<(Failure?, List<JournalEntry>?)> searchEntries(
+    JournalFilter filter,
+  ) async {
+    try {
+      final models = _local.searchEntries(filter);
+      final entities = models.map((m) => m.toEntity()).toList();
+      return (null, entities);
+    } catch (e) {
+      return (StorageFailure(message: e.toString()), null);
+    }
+  }
 }

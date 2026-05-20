@@ -1,9 +1,12 @@
+import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:remote_auth_module/remote_auth_module.dart';
+import 'package:rojnivis/core/services/remote_config_service.dart';
 import 'package:rojnivis/core/services/ai_service.dart';
 import 'package:rojnivis/firebase_options.dart';
 import 'di/manual_auth_di.dart';
@@ -18,9 +21,11 @@ import 'core/theme/page_studio_models.dart';
 import 'di/injection.dart';
 import 'features/categories/data/models/category_model.dart';
 import 'features/categories/presentation/bloc/category_bloc.dart';
+import 'features/insights/presentation/bloc/insights_bloc.dart';
 import 'features/journal/data/models/journal_entry_model.dart';
 import 'features/journal/presentation/bloc/journal_bloc.dart';
 import 'features/settings/presentation/bloc/settings_bloc.dart';
+import 'features/splash/presentation/bloc/splash_bloc.dart';
 
 /// Application entry point.
 ///
@@ -52,6 +57,14 @@ Future<void> _initializeApp() async {
   // Initialize Firebase
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
+  // Explicitly initialize Analytics (needed for Remote Config ABT)
+  try {
+    await FirebaseAnalytics.instance.logAppOpen();
+    debugPrint('Firebase Analytics initialized');
+  } catch (e) {
+    debugPrint('Firebase Analytics initialization failed: $e');
+  }
+
   // Initialize Hive
   await Hive.initFlutter();
   _registerHiveAdapters();
@@ -60,16 +73,37 @@ Future<void> _initializeApp() async {
   // Seed default data
   await _seedDefaultCategoriesIfEmpty();
 
-  // Configure dependency injection
-  await configureDependencies();
+  // Pre-initialize basic dependencies for Auth and other modules
+  // Use a timeout to prevent Android startup hangs
+  await Future.any([
+    _initializeCriticalServices(),
+    Future.delayed(const Duration(seconds: 10)).then((_) {
+      debugPrint(
+        'WARNING: Critical initialization timed out after 10s. Proceeding...',
+      );
+    }),
+  ]);
+}
+
+Future<void> _initializeCriticalServices() async {
+  final remoteConfig = RemoteConfigService();
+  if (!getIt.isRegistered<RemoteConfigService>()) {
+    getIt.registerLazySingleton<RemoteConfigService>(() => remoteConfig);
+  }
+
+  // Await Remote Config as it provides the serverClientId for Auth
+  await remoteConfig.init();
   registerAuthDependencies();
 
-  // Initialize AI Service (Remote Config)
-  try {
-    await getIt<AiService>().init();
-  } catch (e) {
-    debugPrint('AI Service init failed: $e');
-  }
+  // Configure generated dependency injection
+  await configureDependencies();
+
+  // Initialize AI Service (Remote Config) in background - don't let it block startup if slow
+  unawaited(
+    getIt<AiService>().init().catchError((e) {
+      debugPrint('AI Service background init failed: $e');
+    }),
+  );
 }
 
 /// Registers all Hive type adapters.
@@ -146,10 +180,16 @@ class _AppProviders extends StatelessWidget {
           create: (_) => getIt<SettingsBloc>()..add(const LoadSettings()),
         ),
         BlocProvider(
+          create: (_) => getIt<InsightsBloc>()..add(const LoadInsights()),
+        ),
+        BlocProvider(
           create: (_) => getIt<JournalBloc>()..add(const LoadJournalEntries()),
         ),
         BlocProvider(
           create: (_) => getIt<CategoryBloc>()..add(const LoadCategories()),
+        ),
+        BlocProvider(
+          create: (_) => getIt<SplashBloc>()..add(const InitializeSplash()),
         ),
       ],
       child: child,
@@ -222,13 +262,13 @@ class _AppConfiguration extends StatelessWidget {
   _SettingsData _extractSettings(SettingsState state) {
     if (state is SettingsLoaded) {
       return _SettingsData(
-        themeMode: state.themeMode,
-        locale: state.locale,
-        fontFamily: state.fontFamily,
-        themePreset: state.themePreset,
-        pageVisualFamily: state.pageVisualFamily,
-        vintagePaperVariant: state.vintagePaperVariant,
-        animationIntensity: state.animationIntensity,
+        themeMode: state.settings.themeMode,
+        locale: state.settings.locale,
+        fontFamily: state.settings.fontFamily,
+        themePreset: state.settings.themePreset,
+        pageVisualFamily: state.settings.pageVisualFamily,
+        vintagePaperVariant: state.settings.vintagePaperVariant,
+        animationIntensity: state.settings.animationIntensity,
       );
     }
 

@@ -10,9 +10,10 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/widgets/attachment_backdrop.dart';
 import '../../../../core/widgets/attachment_preview.dart';
 import '../../../../core/widgets/themed_paper.dart';
-import '../../data/models/journal_entry_model.dart';
-import '../../data/repositories/entry_decoration_repository_singleton.dart';
-import '../../domain/models/entry_sticker.dart';
+import '../../domain/entities/journal_entry.dart';
+import '../../domain/entities/entry_sticker.dart';
+import '../../domain/usecases/get_stickers.dart';
+import '../../domain/usecases/save_stickers.dart';
 import '../bloc/journal_bloc.dart';
 import '../../../settings/presentation/bloc/settings_bloc.dart';
 import '../widgets/ai_summary_card.dart';
@@ -55,11 +56,11 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
   }
 
   Future<void> _loadStickers() async {
-    final stickers = await entryDecorationRepository.getStickers(
-      widget.entryId,
-    );
+    final (failure, stickers) = await getIt<GetStickers>()(widget.entryId);
     if (!mounted) return;
-    _stickerController.setStickers(stickers);
+    if (failure == null && stickers != null) {
+      _stickerController.setStickers(stickers);
+    }
   }
 
   Future<void> _openStickerPicker() async {
@@ -71,11 +72,11 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
   void _onStickersChanged(List<EntrySticker> stickers) {
     _stickerSaveDebounce?.cancel();
     _stickerSaveDebounce = Timer(const Duration(milliseconds: 300), () async {
-      await entryDecorationRepository.saveStickers(widget.entryId, stickers);
+      await getIt<SaveStickers>()(widget.entryId, stickers);
     });
   }
 
-  Future<void> _summarizeEntry(JournalEntryModel entry) async {
+  Future<void> _summarizeEntry(JournalEntry entry) async {
     final aiService = getIt<AiService>();
     if (!aiService.isConfigured) {
       ScaffoldMessenger.of(
@@ -103,7 +104,7 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
     }
   }
 
-  Future<void> _confirmDelete(JournalEntryModel entry) async {
+  Future<void> _confirmDelete(JournalEntry entry) async {
     final shouldDelete =
         await showDialog<bool>(
           context: context,
@@ -141,13 +142,13 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
   Widget build(BuildContext context) {
     final showAttachmentBackdrop = context.select<SettingsBloc, bool>((bloc) {
       final state = bloc.state;
-      if (state is SettingsLoaded) return state.showAttachmentBackdrop;
+      if (state is SettingsLoaded) return state.settings.showAttachmentBackdrop;
       return AppDefaults.defaultAttachmentBackdrop;
     });
 
     return BlocBuilder<JournalBloc, JournalState>(
       builder: (context, state) {
-        JournalEntryModel? entry;
+        JournalEntry? entry;
         if (state is JournalLoaded) {
           for (final e in state.entries) {
             if (e.id == widget.entryId) {
@@ -372,22 +373,20 @@ class _EntryDetailPageState extends State<EntryDetailPage> {
 class _Header extends StatelessWidget {
   const _Header({required this.entry});
 
-  final JournalEntryModel entry;
+  final JournalEntry entry;
 
-  String _moodKey(int index) {
-    switch (index) {
-      case 0:
+  String _moodKey(Mood mood) {
+    switch (mood) {
+      case Mood.happy:
         return 'happy';
-      case 1:
+      case Mood.sad:
         return 'sad';
-      case 2:
+      case Mood.neutral:
         return 'neutral';
-      case 3:
+      case Mood.excited:
         return 'excited';
-      case 4:
+      case Mood.angry:
         return 'angry';
-      default:
-        return 'neutral';
     }
   }
 
@@ -452,7 +451,7 @@ class _Header extends StatelessWidget {
           runSpacing: 8,
           children: [
             Chip(
-              label: Text('mood_${_moodKey(entry.moodIndex)}'.tr()),
+              label: Text('mood_${_moodKey(entry.mood)}'.tr()),
               avatar: const Icon(Icons.mood_outlined, size: 18),
               visualDensity: _compactDensity,
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -529,7 +528,7 @@ class _NormalView extends StatelessWidget {
     required this.onStickersChanged,
   });
 
-  final JournalEntryModel entry;
+  final JournalEntry entry;
   final StickerLayerController stickerController;
   final bool editable;
   final ValueChanged<List<EntrySticker>> onStickersChanged;
@@ -565,7 +564,7 @@ class _LetterView extends StatelessWidget {
     required this.onStickersChanged,
   });
 
-  final JournalEntryModel entry;
+  final JournalEntry entry;
   final StickerLayerController stickerController;
   final bool editable;
   final ValueChanged<List<EntrySticker>> onStickersChanged;
@@ -628,22 +627,20 @@ class _LetterView extends StatelessWidget {
 class _LibraryView extends StatelessWidget {
   const _LibraryView({super.key, required this.entry});
 
-  final JournalEntryModel entry;
+  final JournalEntry entry;
 
-  String _moodKey(int index) {
-    switch (index) {
-      case 0:
+  String _moodKey(Mood mood) {
+    switch (mood) {
+      case Mood.happy:
         return 'happy';
-      case 1:
+      case Mood.sad:
         return 'sad';
-      case 2:
+      case Mood.neutral:
         return 'neutral';
-      case 3:
+      case Mood.excited:
         return 'excited';
-      case 4:
+      case Mood.angry:
         return 'angry';
-      default:
-        return 'neutral';
     }
   }
 
@@ -662,7 +659,7 @@ class _LibraryView extends StatelessWidget {
       ),
       _LibraryTileData(
         title: 'mood'.tr(),
-        subtitle: 'mood_${_moodKey(entry.moodIndex)}'.tr(),
+        subtitle: 'mood_${_moodKey(entry.mood)}'.tr(),
         icon: Icons.mood_outlined,
       ),
       _LibraryTileData(

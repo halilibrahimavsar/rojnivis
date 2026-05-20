@@ -1,9 +1,9 @@
 import 'dart:convert';
-
 import 'package:hive/hive.dart';
-
+import 'package:injectable/injectable.dart';
 import '../../../../core/constants/app_constants.dart';
-import '../../domain/models/entry_sticker.dart';
+import '../models/entry_sticker_model.dart';
+import '../../domain/entities/entry_sticker.dart';
 
 abstract class EntryDecorationLocalDataSource {
   Future<List<EntrySticker>> getStickers(String entryId);
@@ -13,6 +13,7 @@ abstract class EntryDecorationLocalDataSource {
   Future<void> clearStickers(String entryId);
 }
 
+@LazySingleton(as: EntryDecorationLocalDataSource)
 class EntryDecorationLocalDataSourceImpl
     implements EntryDecorationLocalDataSource {
   Box<String> get _box => Hive.box<String>(StorageKeys.entryDecorationsBox);
@@ -28,9 +29,13 @@ class EntryDecorationLocalDataSourceImpl
       final stickers = <EntrySticker>[];
       for (final item in decoded) {
         if (item is Map<String, dynamic>) {
-          stickers.add(EntrySticker.fromJson(item));
+          stickers.add(EntryStickerModel.fromJson(item).toEntity());
         } else if (item is Map) {
-          stickers.add(EntrySticker.fromJson(Map<String, dynamic>.from(item)));
+          stickers.add(
+            EntryStickerModel.fromJson(
+              Map<String, dynamic>.from(item),
+            ).toEntity(),
+          );
         }
       }
       stickers.sort((a, b) => a.zIndex.compareTo(b.zIndex));
@@ -43,7 +48,9 @@ class EntryDecorationLocalDataSourceImpl
   @override
   Future<void> saveStickers(String entryId, List<EntrySticker> stickers) async {
     final payload = jsonEncode(
-      stickers.map((s) => s.toJson()).toList(growable: false),
+      stickers
+          .map((s) => EntryStickerModel.fromEntity(s).toJson())
+          .toList(growable: false),
     );
     await _box.put(entryId, payload);
   }

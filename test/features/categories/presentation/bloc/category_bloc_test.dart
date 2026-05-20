@@ -1,8 +1,8 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
-
-import 'package:rojnivis/features/categories/data/models/category_model.dart';
+import 'package:rojnivis/core/errors/failures.dart';
+import 'package:rojnivis/features/categories/domain/entities/category.dart';
 import 'package:rojnivis/features/categories/domain/usecases/add_category.dart';
 import 'package:rojnivis/features/categories/domain/usecases/delete_category.dart';
 import 'package:rojnivis/features/categories/domain/usecases/get_categories.dart';
@@ -19,7 +19,7 @@ void main() {
   late MockAddCategory mockAddCategory;
   late MockDeleteCategory mockDeleteCategory;
 
-  const testCategory = CategoryModel(
+  const testCategory = Category(
     id: 'test-1',
     name: 'Test Category',
     color: 0xFFFF0000,
@@ -52,7 +52,7 @@ void main() {
         setUp: () {
           when(
             () => mockGetCategories(),
-          ).thenAnswer((_) async => testCategories);
+          ).thenAnswer((_) async => (null, testCategories));
         },
         build: buildBloc,
         act: (bloc) => bloc.add(const LoadCategories()),
@@ -66,7 +66,9 @@ void main() {
       blocTest<CategoryBloc, CategoryState>(
         'emits [CategoryLoading, CategoryError] when loading fails',
         setUp: () {
-          when(() => mockGetCategories()).thenThrow(Exception('Load failed'));
+          when(() => mockGetCategories()).thenAnswer(
+            (_) async => (const StorageFailure(message: 'fail'), null),
+          );
         },
         build: buildBloc,
         act: (bloc) => bloc.add(const LoadCategories()),
@@ -78,10 +80,12 @@ void main() {
       blocTest<CategoryBloc, CategoryState>(
         'calls addCategory and reloads categories on success',
         setUp: () {
-          when(() => mockAddCategory(any())).thenAnswer((_) async {});
+          when(
+            () => mockAddCategory(any()),
+          ).thenAnswer((_) async => (null, null));
           when(
             () => mockGetCategories(),
-          ).thenAnswer((_) async => testCategories);
+          ).thenAnswer((_) async => (null, testCategories));
         },
         build: buildBloc,
         act:
@@ -95,9 +99,9 @@ void main() {
       blocTest<CategoryBloc, CategoryState>(
         'emits CategoryError when upsert fails',
         setUp: () {
-          when(
-            () => mockAddCategory(any()),
-          ).thenThrow(Exception('Upsert failed'));
+          when(() => mockAddCategory(any())).thenAnswer(
+            (_) async => (const StorageFailure(message: 'fail'), null),
+          );
         },
         build: buildBloc,
         act:
@@ -111,10 +115,12 @@ void main() {
       blocTest<CategoryBloc, CategoryState>(
         'calls deleteCategory and reloads categories on success',
         setUp: () {
-          when(() => mockDeleteCategory(any())).thenAnswer((_) async {});
+          when(
+            () => mockDeleteCategory(any()),
+          ).thenAnswer((_) async => (null, null));
           when(
             () => mockGetCategories(),
-          ).thenAnswer((_) async => testCategories);
+          ).thenAnswer((_) async => (null, testCategories));
         },
         build: buildBloc,
         act:
@@ -128,9 +134,9 @@ void main() {
       blocTest<CategoryBloc, CategoryState>(
         'emits CategoryError when delete fails',
         setUp: () {
-          when(
-            () => mockDeleteCategory(any()),
-          ).thenThrow(Exception('Delete failed'));
+          when(() => mockDeleteCategory(any())).thenAnswer(
+            (_) async => (const StorageFailure(message: 'fail'), null),
+          );
         },
         build: buildBloc,
         act:

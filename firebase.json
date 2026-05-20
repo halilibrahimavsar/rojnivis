@@ -40,7 +40,11 @@
   ],
   "auth": {
     "providers": {
-      "emailPassword": true
+      "emailPassword": true,
+      "googleSignIn": {
+        "oAuthBrandDisplayName": "Rojnivis",
+        "supportEmail": "halirlnj@gmail.com"
+      }
     }
   },
   "firestore": {

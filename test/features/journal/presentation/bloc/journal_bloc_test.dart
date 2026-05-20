@@ -2,8 +2,9 @@ import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
-import 'package:rojnivis/features/journal/data/models/journal_entry_model.dart';
-import 'package:rojnivis/features/journal/domain/models/filter_model.dart';
+import 'package:rojnivis/core/errors/failures.dart';
+import 'package:rojnivis/features/journal/domain/entities/journal_entry.dart';
+import 'package:rojnivis/features/journal/domain/entities/journal_filter.dart';
 import 'package:rojnivis/features/journal/domain/usecases/add_entry.dart';
 import 'package:rojnivis/features/journal/domain/usecases/delete_entry.dart';
 import 'package:rojnivis/features/journal/domain/usecases/get_entries.dart';
@@ -24,13 +25,15 @@ void main() {
   late MockSearchEntries mockSearchEntries;
   late MockDeleteEntry mockDeleteEntry;
 
-  final testEntry = JournalEntryModel(
+  final testEntry = JournalEntry(
     id: 'entry-1',
     title: 'Test Entry',
     content: 'Test content',
     date: DateTime(2026, 1, 1),
-    moodIndex: 0,
+    mood: Mood.happy,
+    tags: const [],
     categoryId: 'general',
+    attachmentPaths: const [],
   );
 
   final testEntries = [testEntry];
@@ -64,7 +67,9 @@ void main() {
       blocTest<JournalBloc, JournalState>(
         'emits [JournalLoading, JournalLoaded] when loading succeeds',
         setUp: () {
-          when(() => mockGetEntries()).thenAnswer((_) async => testEntries);
+          when(
+            () => mockGetEntries(),
+          ).thenAnswer((_) async => (null, testEntries));
         },
         build: buildBloc,
         act: (bloc) => bloc.add(const LoadJournalEntries()),
@@ -75,7 +80,9 @@ void main() {
       blocTest<JournalBloc, JournalState>(
         'emits [JournalLoading, JournalError] when loading fails',
         setUp: () {
-          when(() => mockGetEntries()).thenThrow(Exception('Load failed'));
+          when(() => mockGetEntries()).thenAnswer(
+            (_) async => (const StorageFailure(message: 'Load failed'), null),
+          );
         },
         build: buildBloc,
         act: (bloc) => bloc.add(const LoadJournalEntries()),
@@ -87,8 +94,10 @@ void main() {
       blocTest<JournalBloc, JournalState>(
         'calls addEntry and reloads entries on success',
         setUp: () {
-          when(() => mockAddEntry(any())).thenAnswer((_) async {});
-          when(() => mockGetEntries()).thenAnswer((_) async => testEntries);
+          when(() => mockAddEntry(any())).thenAnswer((_) async => (null, null));
+          when(
+            () => mockGetEntries(),
+          ).thenAnswer((_) async => (null, testEntries));
         },
         build: buildBloc,
         act: (bloc) => bloc.add(UpsertEntryRequested(entry: testEntry)),
@@ -100,7 +109,9 @@ void main() {
       blocTest<JournalBloc, JournalState>(
         'emits JournalActionError when upsert fails',
         setUp: () {
-          when(() => mockAddEntry(any())).thenThrow(Exception('Upsert failed'));
+          when(() => mockAddEntry(any())).thenAnswer(
+            (_) async => (const StorageFailure(message: 'Upsert failed'), null),
+          );
         },
         build: buildBloc,
         act: (bloc) => bloc.add(UpsertEntryRequested(entry: testEntry)),
@@ -113,8 +124,12 @@ void main() {
       blocTest<JournalBloc, JournalState>(
         'calls deleteEntry and reloads entries on success',
         setUp: () {
-          when(() => mockDeleteEntry(any())).thenAnswer((_) async {});
-          when(() => mockGetEntries()).thenAnswer((_) async => testEntries);
+          when(
+            () => mockDeleteEntry(any()),
+          ).thenAnswer((_) async => (null, null));
+          when(
+            () => mockGetEntries(),
+          ).thenAnswer((_) async => (null, testEntries));
         },
         build: buildBloc,
         act: (bloc) => bloc.add(const DeleteEntryRequested(entryId: 'entry-1')),
@@ -130,7 +145,7 @@ void main() {
         setUp: () {
           when(
             () => mockSearchEntries(any()),
-          ).thenAnswer((_) async => testEntries);
+          ).thenAnswer((_) async => (null, testEntries));
         },
         build: buildBloc,
         act: (bloc) => bloc.add(const SearchRequested(filter: testFilter)),
@@ -144,7 +159,9 @@ void main() {
       blocTest<JournalBloc, JournalState>(
         'reloads all entries when query is empty',
         setUp: () {
-          when(() => mockGetEntries()).thenAnswer((_) async => testEntries);
+          when(
+            () => mockGetEntries(),
+          ).thenAnswer((_) async => (null, testEntries));
         },
         build: buildBloc,
         act: (bloc) => bloc.add(const SearchRequested(filter: JournalFilter())),
@@ -157,7 +174,9 @@ void main() {
       blocTest<JournalBloc, JournalState>(
         'reloads all entries when search is cleared',
         setUp: () {
-          when(() => mockGetEntries()).thenAnswer((_) async => testEntries);
+          when(
+            () => mockGetEntries(),
+          ).thenAnswer((_) async => (null, testEntries));
         },
         build: buildBloc,
         act: (bloc) => bloc.add(const ClearSearch()),

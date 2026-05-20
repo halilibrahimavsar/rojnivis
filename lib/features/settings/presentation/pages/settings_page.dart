@@ -114,7 +114,7 @@ class SettingsPage extends StatelessWidget {
                           icon: const Icon(Icons.dark_mode_outlined),
                         ),
                       ],
-                      selected: {state.themeMode},
+                      selected: {state.settings.themeMode},
                       onSelectionChanged: (selection) {
                         context.read<SettingsBloc>().add(
                           UpdateThemeMode(selection.first),
@@ -134,7 +134,7 @@ class SettingsPage extends StatelessWidget {
                         for (final preset in presets)
                           ChoiceChip(
                             label: Text(preset.labelKey.tr()),
-                            selected: state.themePreset == preset.id,
+                            selected: state.settings.themePreset == preset.id,
                             avatar: Container(
                               width: 14,
                               height: 14,
@@ -154,7 +154,7 @@ class SettingsPage extends StatelessWidget {
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
                       dense: true,
-                      value: state.showAttachmentBackdrop,
+                      value: state.settings.showAttachmentBackdrop,
                       onChanged:
                           (value) => context.read<SettingsBloc>().add(
                             UpdateAttachmentBackdrop(value),
@@ -187,8 +187,8 @@ class SettingsPage extends StatelessWidget {
                         width: 140,
                         height: 180,
                         child: NotebookCover(
-                          color: Color(state.notebookCoverColor),
-                          texture: state.notebookCoverTexture,
+                          color: Color(state.settings.notebookCoverColor),
+                          texture: state.settings.notebookCoverTexture,
                           child: Center(
                             child: Text(
                               'Rojnivis',
@@ -233,7 +233,7 @@ class SettingsPage extends StatelessWidget {
                                 shape: BoxShape.circle,
                                 border: Border.all(
                                   color:
-                                      state.notebookCoverColor == color
+                                      state.settings.notebookCoverColor == color
                                           ? Theme.of(
                                             context,
                                           ).colorScheme.primary
@@ -292,7 +292,7 @@ class SettingsPage extends StatelessWidget {
                           label: Text('texture_fabric'.tr()),
                         ),
                       ],
-                      selected: {state.notebookCoverTexture},
+                      selected: {state.settings.notebookCoverTexture},
                       onSelectionChanged: (selection) {
                         context.read<SettingsBloc>().add(
                           UpdateNotebookCoverTexture(selection.first),
@@ -351,8 +351,8 @@ class SettingsPage extends StatelessWidget {
                 title: 'typography'.tr(),
                 child: DropdownButtonFormField<String>(
                   value:
-                      fonts.contains(state.fontFamily)
-                          ? state.fontFamily
+                      fonts.contains(state.settings.fontFamily)
+                          ? state.settings.fontFamily
                           : fonts.first,
                   items: fonts
                       .map((f) => DropdownMenuItem(value: f, child: Text(f)))

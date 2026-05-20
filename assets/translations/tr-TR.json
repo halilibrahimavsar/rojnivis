@@ -98,6 +98,8 @@
   "create_first_mind_map_hint": "Düşüncelerini organize etmek için yeni bir zihin haritası oluşturarak başla",
   "create": "Oluştur",
   "list_view": "Liste",
+  "grid_view": "Izgara",
+  "calendar_view": "Takvim",
   "canvas_view": "Tuval",
   "add_node": "Düğüm Ekle",
   "edit_node": "Düğümü Düzenle",

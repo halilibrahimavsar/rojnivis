@@ -1,6 +1,7 @@
 import 'package:injectable/injectable.dart';
 
-import '../../data/models/journal_entry_model.dart';
+import '../../../../core/errors/failures.dart';
+import '../entities/journal_entry.dart';
 import '../repositories/journal_repository.dart';
 
 @lazySingleton
@@ -9,5 +10,6 @@ class AddEntry {
 
   AddEntry(this._repository);
 
-  Future<void> call(JournalEntryModel entry) => _repository.upsertEntry(entry);
+  Future<(Failure?, void)> call(JournalEntry entry) =>
+      _repository.upsertEntry(entry);
 }

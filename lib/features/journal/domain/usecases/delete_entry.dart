@@ -1,5 +1,6 @@
 import 'package:injectable/injectable.dart';
 
+import '../../../../core/errors/failures.dart';
 import '../repositories/journal_repository.dart';
 
 @injectable
@@ -8,5 +9,6 @@ class DeleteEntry {
 
   DeleteEntry(this._repository);
 
-  Future<void> call(String entryId) => _repository.deleteEntry(entryId);
+  Future<(Failure?, void)> call(String entryId) =>
+      _repository.deleteEntry(entryId);
 }

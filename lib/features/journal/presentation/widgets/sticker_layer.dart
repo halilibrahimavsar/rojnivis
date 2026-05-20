@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 
-import '../../domain/models/entry_sticker.dart';
+import '../../domain/entities/entry_sticker.dart';
 import 'sticker_transform_handles.dart';
 
 class StickerLayerController extends ChangeNotifier {

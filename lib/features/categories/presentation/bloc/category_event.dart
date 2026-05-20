@@ -12,7 +12,7 @@ class LoadCategories extends CategoryEvent {
 }
 
 class UpsertCategoryRequested extends CategoryEvent {
-  final CategoryModel category;
+  final Category category;
 
   const UpsertCategoryRequested({required this.category});
 

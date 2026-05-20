@@ -7,12 +7,10 @@ import 'package:sliver_tools/sliver_tools.dart';
 
 import '../../../../core/widgets/app_card.dart';
 import '../../../quick_questions/presentation/quick_question_card.dart';
-import '../../data/models/journal_entry_model.dart';
+import '../../domain/entities/journal_entry.dart';
 import '../bloc/journal_bloc.dart';
 import '../../../../core/services/sound_service.dart';
 import '../../../../di/injection.dart';
-
-enum ViewMode { list, grid, calendar }
 
 class JournalPage extends StatefulWidget {
   const JournalPage({super.key});
@@ -22,8 +20,6 @@ class JournalPage extends StatefulWidget {
 }
 
 class _JournalPageState extends State<JournalPage> {
-  ViewMode _viewMode = ViewMode.list;
-
   // Calendar specific state
   late DateTime _selectedDay;
   final ScrollController _calendarScrollController = ScrollController();
@@ -64,38 +60,39 @@ class _JournalPageState extends State<JournalPage> {
     return a.year == b.year && a.month == b.month && a.day == b.day;
   }
 
-  List<JournalEntryModel> _getEventsForDay(
+  List<JournalEntry> _getEventsForDay(
     DateTime day,
-    List<JournalEntryModel> allEntries,
+    List<JournalEntry> allEntries,
   ) {
     return allEntries.where((entry) => _isSameDay(entry.date, day)).toList();
   }
 
-  String _getMoodEmoji(int moodIndex) {
-    switch (moodIndex) {
-      case 0:
-        return '😊';
-      case 1:
-        return '😔';
-      case 2:
-        return '😐';
-      case 3:
-        return '🤩';
-      case 4:
-        return '😠';
-      default:
-        return '😐';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return BlocListener<AuthBloc, AuthState>(
-      listener: (context, state) {
-        if (state is UnauthenticatedState) {
-          context.go('/public');
-        }
-      },
+    return MultiBlocListener(
+      listeners: [
+        BlocListener<AuthBloc, AuthState>(
+          listener: (context, state) {
+            if (state is UnauthenticatedState) {
+              context.go('/public');
+            }
+          },
+        ),
+        BlocListener<JournalBloc, JournalState>(
+          listenWhen: (previous, current) {
+            if (previous is JournalLoaded && current is JournalLoaded) {
+              return previous.viewMode != current.viewMode &&
+                  current.viewMode == JournalViewMode.calendar;
+            }
+            return false;
+          },
+          listener: (context, state) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              _scrollToSelectedDay();
+            });
+          },
+        ),
+      ],
       child: Scaffold(
         extendBody: true,
         backgroundColor: Colors.transparent,
@@ -112,69 +109,6 @@ class _JournalPageState extends State<JournalPage> {
                 ),
                 const SizedBox(width: 4),
               ],
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 8.0,
-                  horizontal: 16.0,
-                ),
-                child: Center(
-                  child: SegmentedButton<ViewMode>(
-                    showSelectedIcon: false,
-                    style: ButtonStyle(
-                      backgroundColor: WidgetStateProperty.resolveWith((
-                        states,
-                      ) {
-                        if (states.contains(WidgetState.selected)) {
-                          return Theme.of(
-                            context,
-                          ).colorScheme.primary.withValues(alpha: 0.2);
-                        }
-                        return Colors.transparent;
-                      }),
-                      foregroundColor: WidgetStateProperty.resolveWith((
-                        states,
-                      ) {
-                        if (states.contains(WidgetState.selected)) {
-                          return Theme.of(context).colorScheme.primary;
-                        }
-                        return Theme.of(context).colorScheme.onSurface;
-                      }),
-                      side: WidgetStateProperty.all(
-                        BorderSide(
-                          color: Theme.of(context).colorScheme.outlineVariant,
-                        ),
-                      ),
-                    ),
-                    segments: const [
-                      ButtonSegment(
-                        value: ViewMode.list,
-                        icon: Icon(Icons.view_list_outlined),
-                      ),
-                      ButtonSegment(
-                        value: ViewMode.grid,
-                        icon: Icon(Icons.grid_view_outlined),
-                      ),
-                      ButtonSegment(
-                        value: ViewMode.calendar,
-                        icon: Icon(Icons.calendar_month_outlined),
-                      ),
-                    ],
-                    selected: {_viewMode},
-                    onSelectionChanged: (selection) {
-                      setState(() {
-                        _viewMode = selection.first;
-                        if (_viewMode == ViewMode.calendar) {
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            _scrollToSelectedDay();
-                          });
-                        }
-                      });
-                    },
-                  ),
-                ),
-              ),
             ),
             SliverToBoxAdapter(
               child: QuickQuestionCard(
@@ -220,6 +154,7 @@ class _JournalPageState extends State<JournalPage> {
                 }
 
                 final entries = state.entries;
+                final viewMode = state.viewMode;
                 if (entries.isEmpty && !state.filter.hasActiveFilters) {
                   return SliverFillRemaining(
                     hasScrollBody: false,
@@ -254,9 +189,9 @@ class _JournalPageState extends State<JournalPage> {
                 }
 
                 Widget viewChild;
-                if (_viewMode == ViewMode.list) {
+                if (viewMode == JournalViewMode.list) {
                   viewChild = _buildListView(context, state.entries);
-                } else if (_viewMode == ViewMode.grid) {
+                } else if (viewMode == JournalViewMode.grid) {
                   viewChild = _buildGridView(context, state.entries);
                 } else {
                   viewChild = _buildCalendarView(context, state.entries);
@@ -274,7 +209,7 @@ class _JournalPageState extends State<JournalPage> {
     );
   }
 
-  Widget _buildListView(BuildContext context, List<JournalEntryModel> entries) {
+  Widget _buildListView(BuildContext context, List<JournalEntry> entries) {
     return SliverPadding(
       key: const ValueKey('list_view'),
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
@@ -377,7 +312,7 @@ class _JournalPageState extends State<JournalPage> {
     );
   }
 
-  Widget _buildGridView(BuildContext context, List<JournalEntryModel> entries) {
+  Widget _buildGridView(BuildContext context, List<JournalEntry> entries) {
     return SliverPadding(
       key: const ValueKey('grid_view'),
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
@@ -404,7 +339,7 @@ class _JournalPageState extends State<JournalPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        _getMoodEmoji(entry.moodIndex),
+                        entry.mood.emoji,
                         style: const TextStyle(fontSize: 24),
                       ),
                     ],
@@ -451,10 +386,7 @@ class _JournalPageState extends State<JournalPage> {
     );
   }
 
-  Widget _buildCalendarView(
-    BuildContext context,
-    List<JournalEntryModel> entries,
-  ) {
+  Widget _buildCalendarView(BuildContext context, List<JournalEntry> entries) {
     final selectedEntries = _getEventsForDay(_selectedDay, entries);
 
     return SliverToBoxAdapter(

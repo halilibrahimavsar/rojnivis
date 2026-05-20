@@ -1,19 +1,43 @@
 import 'package:bloc_test/bloc_test.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
+import 'package:mocktail/mocktail.dart';
+import 'package:rojnivis/features/settings/domain/entities/user_settings.dart';
+import 'package:rojnivis/features/settings/domain/usecases/get_settings.dart';
+import 'package:rojnivis/features/settings/domain/usecases/update_settings.dart';
 import 'package:rojnivis/features/settings/presentation/bloc/settings_bloc.dart';
 
-void main() {
-  late SharedPreferences prefs;
+class MockGetSettings extends Mock implements GetSettings {}
 
-  setUp(() async {
-    SharedPreferences.setMockInitialValues({});
-    prefs = await SharedPreferences.getInstance();
+class MockUpdateSettings extends Mock implements UpdateSettings {}
+
+void main() {
+  late GetSettings mockGetSettings;
+  late UpdateSettings mockUpdateSettings;
+
+  final tSettings = UserSettings(
+    themeMode: ThemeMode.system,
+    locale: const Locale('en', 'US'),
+    fontFamily: 'Poppins',
+    themePreset: 'default',
+    showAttachmentBackdrop: true,
+    notebookCoverColor: 0xFF2C3E50,
+    notebookCoverTexture: 'leather',
+    pageVisualFamily: 'classic',
+    vintagePaperVariant: 'parchment',
+    animationIntensity: 'subtle',
+  );
+
+  setUpAll(() {
+    registerFallbackValue(tSettings);
   });
 
-  SettingsBloc buildBloc() => SettingsBloc(prefs);
+  setUp(() {
+    mockGetSettings = MockGetSettings();
+    mockUpdateSettings = MockUpdateSettings();
+  });
+
+  SettingsBloc buildBloc() => SettingsBloc(mockGetSettings, mockUpdateSettings);
 
   group('SettingsBloc', () {
     test('initial state is SettingsInitial', () {
@@ -22,225 +46,148 @@ void main() {
 
     group('LoadSettings', () {
       blocTest<SettingsBloc, SettingsState>(
-        'emits SettingsLoaded with defaults when no values stored',
-        build: buildBloc,
-        act: (bloc) => bloc.add(const LoadSettings()),
-        expect: () => [isA<SettingsLoaded>()],
-        verify: (bloc) {
-          final state = bloc.state as SettingsLoaded;
-          expect(state.themeMode, ThemeMode.system);
-          expect(state.fontFamily, 'Poppins');
-          expect(state.pageVisualFamily, 'classic');
-          expect(state.vintagePaperVariant, 'parchment');
-          expect(state.animationIntensity, 'subtle');
-        },
-      );
-
-      blocTest<SettingsBloc, SettingsState>(
-        'emits SettingsLoaded with stored values',
-        setUp: () async {
-          await prefs.setString('theme_mode', 'dark');
-          await prefs.setString('font_family', 'Roboto');
-          await prefs.setString('theme_preset', 'ocean');
-          await prefs.setString('page_visual_family', 'vintage');
-          await prefs.setString('vintage_paper_variant', 'pressed_floral');
-          await prefs.setString('animation_intensity', 'cinematic');
+        'emits [SettingsLoaded] when LoadSettings is added',
+        setUp: () {
+          when(
+            () => mockGetSettings(),
+          ).thenAnswer((_) async => (null, tSettings));
         },
         build: buildBloc,
         act: (bloc) => bloc.add(const LoadSettings()),
-        expect: () => [isA<SettingsLoaded>()],
-        verify: (bloc) {
-          final state = bloc.state as SettingsLoaded;
-          expect(state.themeMode, ThemeMode.dark);
-          expect(state.fontFamily, 'Roboto');
-          expect(state.themePreset, 'ocean');
-          expect(state.pageVisualFamily, 'vintage');
-          expect(state.vintagePaperVariant, 'pressed_floral');
-          expect(state.animationIntensity, 'cinematic');
+        expect: () => [SettingsLoaded(settings: tSettings)],
+        verify: (_) {
+          verify(() => mockGetSettings()).called(1);
         },
       );
     });
 
     group('UpdateThemeMode', () {
+      final newSettings = tSettings.copyWith(themeMode: ThemeMode.dark);
+
       blocTest<SettingsBloc, SettingsState>(
-        'updates theme mode and persists to SharedPreferences',
+        'emits [SettingsLoaded] with new theme mode when update is successful',
+        setUp: () {
+          when(
+            () => mockUpdateSettings(any()),
+          ).thenAnswer((_) async => (null, null));
+        },
         build: buildBloc,
-        seed:
-            () => const SettingsLoaded(
-              themeMode: ThemeMode.system,
-              locale: Locale('tr', 'TR'),
-              fontFamily: 'Poppins',
-              themePreset: 'default',
-              showAttachmentBackdrop: true,
-              notebookCoverColor: 0xFF2C3E50,
-              notebookCoverTexture: 'leather',
-              pageVisualFamily: 'classic',
-              vintagePaperVariant: 'parchment',
-              animationIntensity: 'subtle',
-            ),
+        seed: () => SettingsLoaded(settings: tSettings),
         act: (bloc) => bloc.add(const UpdateThemeMode(ThemeMode.dark)),
-        expect: () => [isA<SettingsLoaded>()],
-        verify: (bloc) {
-          final state = bloc.state as SettingsLoaded;
-          expect(state.themeMode, ThemeMode.dark);
-          expect(prefs.getString('theme_mode'), 'dark');
+        expect: () => [SettingsLoaded(settings: newSettings)],
+        verify: (_) {
+          verify(() => mockUpdateSettings(newSettings)).called(1);
         },
       );
     });
 
     group('UpdateFontFamily', () {
+      final newSettings = tSettings.copyWith(fontFamily: 'Inter');
+
       blocTest<SettingsBloc, SettingsState>(
-        'updates font family and persists',
-        build: buildBloc,
-        seed:
-            () => const SettingsLoaded(
-              themeMode: ThemeMode.system,
-              locale: Locale('tr', 'TR'),
-              fontFamily: 'Poppins',
-              themePreset: 'default',
-              showAttachmentBackdrop: true,
-              notebookCoverColor: 0xFF2C3E50,
-              notebookCoverTexture: 'leather',
-              pageVisualFamily: 'classic',
-              vintagePaperVariant: 'parchment',
-              animationIntensity: 'subtle',
-            ),
-        act: (bloc) => bloc.add(const UpdateFontFamily('Inter')),
-        expect: () => [isA<SettingsLoaded>()],
-        verify: (bloc) {
-          final state = bloc.state as SettingsLoaded;
-          expect(state.fontFamily, 'Inter');
-          expect(prefs.getString('font_family'), 'Inter');
+        'emits [SettingsLoaded] with new font family',
+        setUp: () {
+          when(
+            () => mockUpdateSettings(any()),
+          ).thenAnswer((_) async => (null, null));
         },
+        build: buildBloc,
+        seed: () => SettingsLoaded(settings: tSettings),
+        act: (bloc) => bloc.add(const UpdateFontFamily('Inter')),
+        expect: () => [SettingsLoaded(settings: newSettings)],
       );
     });
 
     group('UpdateThemePreset', () {
+      final newSettings = tSettings.copyWith(themePreset: 'sunset');
+
       blocTest<SettingsBloc, SettingsState>(
-        'updates theme preset and persists',
-        build: buildBloc,
-        seed:
-            () => const SettingsLoaded(
-              themeMode: ThemeMode.system,
-              locale: Locale('tr', 'TR'),
-              fontFamily: 'Poppins',
-              themePreset: 'default',
-              showAttachmentBackdrop: true,
-              notebookCoverColor: 0xFF2C3E50,
-              notebookCoverTexture: 'leather',
-              pageVisualFamily: 'classic',
-              vintagePaperVariant: 'parchment',
-              animationIntensity: 'subtle',
-            ),
-        act: (bloc) => bloc.add(const UpdateThemePreset('sunset')),
-        expect: () => [isA<SettingsLoaded>()],
-        verify: (bloc) {
-          final state = bloc.state as SettingsLoaded;
-          expect(state.themePreset, 'sunset');
+        'emits [SettingsLoaded] with new theme preset',
+        setUp: () {
+          when(
+            () => mockUpdateSettings(any()),
+          ).thenAnswer((_) async => (null, null));
         },
+        build: buildBloc,
+        seed: () => SettingsLoaded(settings: tSettings),
+        act: (bloc) => bloc.add(const UpdateThemePreset('sunset')),
+        expect: () => [SettingsLoaded(settings: newSettings)],
       );
     });
 
     group('UpdateLocale', () {
+      final newLocale = const Locale('tr', 'TR');
+      final newSettings = tSettings.copyWith(locale: newLocale);
+
       blocTest<SettingsBloc, SettingsState>(
-        'updates locale and persists',
-        build: buildBloc,
-        seed:
-            () => const SettingsLoaded(
-              themeMode: ThemeMode.system,
-              locale: Locale('tr', 'TR'),
-              fontFamily: 'Poppins',
-              themePreset: 'default',
-              showAttachmentBackdrop: true,
-              notebookCoverColor: 0xFF2C3E50,
-              notebookCoverTexture: 'leather',
-              pageVisualFamily: 'classic',
-              vintagePaperVariant: 'parchment',
-              animationIntensity: 'subtle',
-            ),
-        act: (bloc) => bloc.add(const UpdateLocale(Locale('en', 'US'))),
-        expect: () => [isA<SettingsLoaded>()],
-        verify: (bloc) {
-          final state = bloc.state as SettingsLoaded;
-          expect(state.locale, const Locale('en', 'US'));
+        'emits [SettingsLoaded] with new locale',
+        setUp: () {
+          when(
+            () => mockUpdateSettings(any()),
+          ).thenAnswer((_) async => (null, null));
         },
+        build: buildBloc,
+        seed: () => SettingsLoaded(settings: tSettings),
+        act: (bloc) => bloc.add(UpdateLocale(newLocale)),
+        expect: () => [SettingsLoaded(settings: newSettings)],
       );
     });
 
     group('PageStudioSettings', () {
       blocTest<SettingsBloc, SettingsState>(
-        'updates page visual family and persists',
+        'updates page visual family',
+        setUp: () {
+          when(
+            () => mockUpdateSettings(any()),
+          ).thenAnswer((_) async => (null, null));
+        },
         build: buildBloc,
-        seed:
-            () => const SettingsLoaded(
-              themeMode: ThemeMode.system,
-              locale: Locale('tr', 'TR'),
-              fontFamily: 'Poppins',
-              themePreset: 'default',
-              showAttachmentBackdrop: true,
-              notebookCoverColor: 0xFF2C3E50,
-              notebookCoverTexture: 'leather',
-              pageVisualFamily: 'classic',
-              vintagePaperVariant: 'parchment',
-              animationIntensity: 'subtle',
-            ),
+        seed: () => SettingsLoaded(settings: tSettings),
         act: (bloc) => bloc.add(const UpdatePageVisualFamily('vintage')),
-        expect: () => [isA<SettingsLoaded>()],
-        verify: (bloc) {
-          final state = bloc.state as SettingsLoaded;
-          expect(state.pageVisualFamily, 'vintage');
-          expect(prefs.getString('page_visual_family'), 'vintage');
-        },
+        expect:
+            () => [
+              SettingsLoaded(
+                settings: tSettings.copyWith(pageVisualFamily: 'vintage'),
+              ),
+            ],
       );
 
       blocTest<SettingsBloc, SettingsState>(
-        'updates vintage paper variant and persists',
+        'updates vintage paper variant',
+        setUp: () {
+          when(
+            () => mockUpdateSettings(any()),
+          ).thenAnswer((_) async => (null, null));
+        },
         build: buildBloc,
-        seed:
-            () => const SettingsLoaded(
-              themeMode: ThemeMode.system,
-              locale: Locale('tr', 'TR'),
-              fontFamily: 'Poppins',
-              themePreset: 'default',
-              showAttachmentBackdrop: true,
-              notebookCoverColor: 0xFF2C3E50,
-              notebookCoverTexture: 'leather',
-              pageVisualFamily: 'vintage',
-              vintagePaperVariant: 'parchment',
-              animationIntensity: 'subtle',
-            ),
+        seed: () => SettingsLoaded(settings: tSettings),
         act: (bloc) => bloc.add(const UpdateVintagePaperVariant('sepia_diary')),
-        expect: () => [isA<SettingsLoaded>()],
-        verify: (bloc) {
-          final state = bloc.state as SettingsLoaded;
-          expect(state.vintagePaperVariant, 'sepia_diary');
-          expect(prefs.getString('vintage_paper_variant'), 'sepia_diary');
-        },
+        expect:
+            () => [
+              SettingsLoaded(
+                settings: tSettings.copyWith(
+                  vintagePaperVariant: 'sepia_diary',
+                ),
+              ),
+            ],
       );
 
       blocTest<SettingsBloc, SettingsState>(
-        'updates animation intensity and persists',
-        build: buildBloc,
-        seed:
-            () => const SettingsLoaded(
-              themeMode: ThemeMode.system,
-              locale: Locale('tr', 'TR'),
-              fontFamily: 'Poppins',
-              themePreset: 'default',
-              showAttachmentBackdrop: true,
-              notebookCoverColor: 0xFF2C3E50,
-              notebookCoverTexture: 'leather',
-              pageVisualFamily: 'vintage',
-              vintagePaperVariant: 'parchment',
-              animationIntensity: 'subtle',
-            ),
-        act: (bloc) => bloc.add(const UpdateAnimationIntensity('cinematic')),
-        expect: () => [isA<SettingsLoaded>()],
-        verify: (bloc) {
-          final state = bloc.state as SettingsLoaded;
-          expect(state.animationIntensity, 'cinematic');
-          expect(prefs.getString('animation_intensity'), 'cinematic');
+        'updates animation intensity',
+        setUp: () {
+          when(
+            () => mockUpdateSettings(any()),
+          ).thenAnswer((_) async => (null, null));
         },
+        build: buildBloc,
+        seed: () => SettingsLoaded(settings: tSettings),
+        act: (bloc) => bloc.add(const UpdateAnimationIntensity('cinematic')),
+        expect:
+            () => [
+              SettingsLoaded(
+                settings: tSettings.copyWith(animationIntensity: 'cinematic'),
+              ),
+            ],
       );
     });
   });

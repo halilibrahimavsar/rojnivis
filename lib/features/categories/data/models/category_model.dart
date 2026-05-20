@@ -1,4 +1,5 @@
 import 'package:hive/hive.dart';
+import '../../domain/entities/category.dart';
 
 part 'category_model.g.dart';
 
@@ -24,6 +25,21 @@ class CategoryModel {
     required this.color,
     required this.iconPath,
   });
+
+  /// Creates a model from a domain entity.
+  factory CategoryModel.fromEntity(Category entity) {
+    return CategoryModel(
+      id: entity.id,
+      name: entity.name,
+      color: entity.color,
+      iconPath: entity.iconPath,
+    );
+  }
+
+  /// Converts this model to a domain entity.
+  Category toEntity() {
+    return Category(id: id, name: name, color: color, iconPath: iconPath);
+  }
 
   CategoryModel copyWith({
     String? id,

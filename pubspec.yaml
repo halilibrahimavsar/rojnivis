@@ -65,6 +65,7 @@ dependencies:
     path: /home/garuda/Masaüstü/remote_auth_module/
   firebase_remote_config: ^6.1.4
   sliver_tools: ^0.2.12
+  firebase_analytics: ^12.1.2
   
 
   
@@ -97,7 +98,12 @@ flutter:
 
 flutter_native_splash:
   color: "#151922"
-  image: android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+  image: "assets/images/app_logo.png"
+  
   android_12:
     color: "#151922"
-    image: android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+    image: "assets/images/app_logo.png"
+    
+  android: true
+  ios: true
+  web: false
