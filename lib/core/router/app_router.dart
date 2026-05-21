@@ -172,6 +172,7 @@ class AppRouter {
             (context, state) => PageFlipTransitionPage(
               key: state.pageKey,
               child: LoginPage(
+                showRememberMe: false,
                 onRegisterTap: () => context.push('/register'),
                 onForgotPasswordTap: () => context.push('/forgot_paswd'),
                 onAuthenticated: (user) => context.go('/home'),

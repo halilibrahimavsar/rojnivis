@@ -43,9 +43,9 @@ class SplashBloc extends Bloc<SplashEvent, SplashState> {
       emit(const SplashNavigating(SplashNavigationTarget.public));
     } else {
       // AuthBloc is likely still loading/initializing (e.g., AuthInitialState or AuthLoadingState).
-      // If we've retried too many times (e.g., 10 * 500ms = 5s), fallback to public.
+      // We should wait until AuthBloc finishes.
       final retryCount = event.retryCount;
-      if (retryCount >= 10) {
+      if (retryCount >= 30) {
         emit(const SplashNavigating(SplashNavigationTarget.public));
         return;
       }
