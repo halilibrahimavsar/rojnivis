@@ -97,6 +97,7 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i409.CategoryLocalDataSourceImpl());
     gh.lazySingleton<_i417.JournalLocalDataSource>(
         () => _i417.JournalLocalDataSourceImpl());
+    gh.factory<_i358.SplashBloc>(() => _i358.SplashBloc(gh<_i1041.AuthBloc>()));
     gh.lazySingleton<_i89.SettingsRepository>(
         () => _i1064.SettingsRepositoryImpl(gh<_i460.SharedPreferences>()));
     gh.lazySingleton<_i796.EntryDecorationRepository>(() =>
@@ -114,7 +115,6 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i310.SaveStickers(gh<_i796.EntryDecorationRepository>()));
     gh.lazySingleton<_i880.ClearStickers>(
         () => _i880.ClearStickers(gh<_i796.EntryDecorationRepository>()));
-    gh.factory<_i358.SplashBloc>(() => _i358.SplashBloc(gh<_i1041.AuthBloc>()));
     gh.lazySingleton<_i303.JournalRepository>(
         () => _i531.JournalRepositoryImpl(gh<_i417.JournalLocalDataSource>()));
     gh.lazySingleton<_i463.GetSettings>(

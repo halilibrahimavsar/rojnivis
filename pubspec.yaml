@@ -57,6 +57,8 @@ dependencies:
   local_auth: ^2.3.0
   crypto: ^3.0.6
   google_generative_ai: ^0.4.5
+  http: ^1.2.0
+  flutter_secure_storage: ^9.0.0
 
   unified_flutter_features:
     path: /home/garuda/Masaüstü/unified_flutter_features

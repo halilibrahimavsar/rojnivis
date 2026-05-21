@@ -49,7 +49,7 @@
   },
   "firestore": {
     "database": "(default)",
-    "location": "us-central1",
+    "location": "nam5",
     "rules": "firestore.rules",
     "indexes": "firestore.indexes.json"
   },

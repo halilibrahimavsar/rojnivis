@@ -14,15 +14,16 @@ class RemoteConfigService {
       '628938091989-k01fs57t6up2qbepdvk8p39nt7n6j0q7.apps.googleusercontent.com';
 
   /// Initializes Remote Config with default values and fetches latest values.
+  ///
+  /// Never throws — the app always falls back to [_fallbackServerClientId].
   Future<void> init() async {
     try {
-      // Setup settings with a more reasonable timeout (10s instead of default 1m)
       await _remoteConfig.setConfigSettings(
         RemoteConfigSettings(
-          fetchTimeout: const Duration(seconds: 10),
-          minimumFetchInterval: const Duration(
-            hours: 1,
-          ), // Reduced for fresher config
+          // 5s is enough for a healthy connection; on cold start with slow
+          // connectivity this still completes within the 10s main-thread window.
+          fetchTimeout: const Duration(seconds: 5),
+          minimumFetchInterval: const Duration(hours: 1),
         ),
       );
 
@@ -30,8 +31,7 @@ class RemoteConfigService {
         _serverClientIdKey: _fallbackServerClientId,
       });
 
-      // Attempt to fetch and activate.
-      // This will use the 10s timeout configured above.
+      // fetchAndActivate may return false on a cached response — that is fine.
       final activated = await _remoteConfig.fetchAndActivate();
 
       debugPrint('Remote Config fetched and activated: $activated');
@@ -39,9 +39,9 @@ class RemoteConfigService {
         'Remote Config serverClientId resolved: '
         '${serverClientId.substring(0, 12)}...',
       );
-    } catch (e) {
-      debugPrint('Failed to initialize Remote Config: $e');
-      // We don't rethrow here because the app can still function with defaults
+    } on Exception catch (e) {
+      // Non-fatal: the fallback value is always returned from [serverClientId].
+      debugPrint('RemoteConfigService.init failed (using defaults): $e');
     }
   }
 

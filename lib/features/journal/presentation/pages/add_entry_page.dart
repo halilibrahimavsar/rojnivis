@@ -13,6 +13,7 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../core/widgets/attachment_preview.dart';
 import '../../../../core/widgets/themed_paper.dart';
+import '../../../../core/widgets/glass_overlays.dart';
 import '../../../categories/presentation/bloc/category_bloc.dart';
 import '../../../quick_questions/presentation/quick_question_card.dart';
 import '../../../categories/domain/entities/category.dart';
@@ -42,6 +43,8 @@ class _AddEntryPageState extends State<AddEntryPage> {
   final _titleController = TextEditingController();
   final _contentController = TextEditingController();
   final _tagsController = TextEditingController();
+  final _titleFocusNode = FocusNode();
+  final _contentFocusNode = FocusNode();
 
   DateTime _selectedDate = DateTime.now();
   String? _selectedCategoryId;
@@ -52,7 +55,6 @@ class _AddEntryPageState extends State<AddEntryPage> {
   late final String _workingEntryId;
   final StickerLayerController _stickerController = StickerLayerController();
   Timer? _stickerSaveDebounce;
-  static const _compactDensity = VisualDensity(horizontal: -2, vertical: -2);
 
   @override
   void initState() {
@@ -100,6 +102,8 @@ class _AddEntryPageState extends State<AddEntryPage> {
     _titleController.dispose();
     _contentController.dispose();
     _tagsController.dispose();
+    _titleFocusNode.dispose();
+    _contentFocusNode.dispose();
     super.dispose();
   }
 
@@ -201,14 +205,6 @@ class _AddEntryPageState extends State<AddEntryPage> {
   void _removeAttachment(String path) {
     setState(() {
       _attachmentPaths.remove(path);
-    });
-  }
-
-  void _removeTag(String tag) {
-    final tags = _parseTags(_tagsController.text).toList();
-    tags.remove(tag);
-    setState(() {
-      _tagsController.text = tags.join(', ');
     });
   }
 
@@ -477,7 +473,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
                     leading: const Icon(
                       Icons.sentiment_very_satisfied_outlined,
                     ),
-                    title: Text('happy'.tr()),
+                    title: Text('mood_happy'.tr()),
                     trailing:
                         _selectedMood == Mood.happy
                             ? const Icon(Icons.check)
@@ -486,7 +482,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
                   ),
                   ListTile(
                     leading: const Icon(Icons.sentiment_dissatisfied_outlined),
-                    title: Text('sad'.tr()),
+                    title: Text('mood_sad'.tr()),
                     trailing:
                         _selectedMood == Mood.sad
                             ? const Icon(Icons.check)
@@ -495,7 +491,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
                   ),
                   ListTile(
                     leading: const Icon(Icons.sentiment_neutral_outlined),
-                    title: Text('neutral'.tr()),
+                    title: Text('mood_neutral'.tr()),
                     trailing:
                         _selectedMood == Mood.neutral
                             ? const Icon(Icons.check)
@@ -504,7 +500,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
                   ),
                   ListTile(
                     leading: const Icon(Icons.celebration_outlined),
-                    title: Text('excited'.tr()),
+                    title: Text('mood_excited'.tr()),
                     trailing:
                         _selectedMood == Mood.excited
                             ? const Icon(Icons.check)
@@ -515,7 +511,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
                     leading: const Icon(
                       Icons.sentiment_very_dissatisfied_outlined,
                     ),
-                    title: Text('angry'.tr()),
+                    title: Text('mood_angry'.tr()),
                     trailing:
                         _selectedMood == Mood.angry
                             ? const Icon(Icons.check)
@@ -626,240 +622,28 @@ class _AddEntryPageState extends State<AddEntryPage> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return Scaffold(
-      extendBody: true,
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.close_rounded),
-          onPressed: () => context.pop(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: _save,
-            child: Text(
-              'save'.tr(),
-              style: TextStyle(
-                color: colorScheme.primary,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: Stack(
-        children: [
-          // 1. Fullscreen Paper Background
-          const Positioned.fill(
-            child: ThemedBackdrop(
-              opacity: 1,
-              blurSigma: 0,
-              vignette: true,
-              applyPageStudio: true,
-            ),
-          ),
-
-          // 2. Main Content Area
-          SafeArea(
-            bottom: false,
-            child: Column(
-              children: [
-                _buildHeaderSection(theme),
-                Expanded(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(horizontal: 28),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildMetaSection(theme),
-                        const SizedBox(height: 16),
-                        _buildDailyPage(theme),
-                        const SizedBox(height: 18),
-                        _buildAttachmentsSection(theme),
-                        const SizedBox(height: 140),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // 3. Floating Modern Tool Tray
-          Align(
-            alignment: Alignment.bottomCenter,
-            child: _buildModernToolTray(colorScheme),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHeaderSection(ThemeData theme) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 8),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: _pickDateTime,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: theme.colorScheme.primaryContainer.withValues(
-                  alpha: 0.4,
-                ),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.calendar_today_rounded,
-                    size: 14,
-                    color: theme.colorScheme.primary,
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    DateFormat.yMMMd().format(_selectedDate),
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const Spacer(),
-          IconButton(
-            icon: Icon(
-              _moodIcon(_selectedMood),
-              color: theme.colorScheme.secondary,
-            ),
-            onPressed: _openMoodPicker,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildMetaSection(ThemeData theme) {
-    return BlocBuilder<CategoryBloc, CategoryState>(
-      builder: (context, state) {
-        final categories =
-            state is CategoryLoaded ? state.categories : const <Category>[];
-        Category? selectedCategory;
-        if (_selectedCategoryId != null) {
-          for (final category in categories) {
-            if (category.id == _selectedCategoryId) {
-              selectedCategory = category;
-              break;
-            }
-          }
-        }
-
-        final tags = _parseTags(_tagsController.text);
-        final colors = theme.colorScheme;
-        final categoryColor =
-            selectedCategory == null
-                ? colors.outlineVariant
-                : Color(selectedCategory.color);
-
-        return Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            _metaChip(
-              icon: Icons.category_outlined,
-              label: selectedCategory?.name ?? 'no_category'.tr(),
-              onTap: _openCategoryPicker,
-              accent: categoryColor,
-              theme: theme,
-            ),
-            if (tags.isEmpty)
-              _metaChip(
-                icon: Icons.add_rounded,
-                label: 'tags_label'.tr(),
-                onTap: _openTagsEditor,
-                accent: colors.primary,
-                theme: theme,
-                isEmphasized: true,
-              ),
-            for (final tag in tags)
-              InputChip(
-                label: Text(tag),
-                avatar: const Icon(Icons.tag_outlined, size: 18),
-                onDeleted: () => _removeTag(tag),
-                onPressed: _openTagsEditor,
-                visualDensity: _compactDensity,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                labelPadding: const EdgeInsets.symmetric(horizontal: 6),
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                backgroundColor: colors.surfaceContainerHighest.withValues(
-                  alpha: 0.6,
-                ),
-                side: BorderSide(
-                  color: colors.outlineVariant.withValues(alpha: 0.6),
-                ),
-              ),
-            if (tags.isNotEmpty)
-              _metaChip(
-                icon: Icons.add,
-                label: 'tags_label'.tr(),
-                onTap: _openTagsEditor,
-                accent: colors.primary,
-                theme: theme,
-                isEmphasized: true,
-              ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildDailyPage(ThemeData theme) {
-    final colors = theme.colorScheme;
     final localeCode = context.locale.languageCode;
     final titleHint =
         localeCode == 'tr'
-            ? 'Bugunun sayfasina bir baslik ver...'
+            ? 'Bugünün sayfasına bir başlik ver...'
             : 'Give today\'s page a title...';
     final contentHint =
         localeCode == 'tr'
-            ? 'Sevgili gunluk,\n\nBugun neler hissettigini, neler yasadigini ve aklinda kalan detaylari bu satirlara yaz...'
+            ? 'Sevgili günlük,\n\nBugün neler hissettiğini, neler yaşadığını ve aklında kalan detayları bu satırlara yaz...'
             : 'Dear diary,\n\nWrite what you felt today, what happened, and the small details you want to remember...';
 
-    return ThemedPaper(
-      lined: true,
-      animated: true,
-      applyPageStudio: true,
-      padding: EdgeInsets.zero,
-      borderRadius: const BorderRadius.all(Radius.circular(20)),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minHeight: 560),
+    return Scaffold(
+      extendBody: true,
+      extendBodyBehindAppBar: true,
+      body: ThemedPaper(
+        lined: true,
+        animated: true,
+        applyPageStudio: true,
+        borderRadius: BorderRadius.zero,
+        padding: EdgeInsets.zero,
         child: Stack(
           children: [
-            // Light page header tint for realistic paper variation.
-            Positioned(
-              left: 0,
-              right: 0,
-              top: 0,
-              height: 88,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      colors.surface.withValues(alpha: 0.32),
-                      colors.surface.withValues(alpha: 0.0),
-                    ],
-                  ),
-                ),
-              ),
-            ),
+            // Stickers layer on fullscreen paper
             Positioned.fill(
               child: StickerLayer(
                 controller: _stickerController,
@@ -867,41 +651,312 @@ class _AddEntryPageState extends State<AddEntryPage> {
                 onChanged: _onStickerChanged,
               ),
             ),
+
+            // Text input canvas
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () => _contentFocusNode.requestFocus(),
+                behavior: HitTestBehavior.translucent,
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(28, 120, 28, 280),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          DateFormat.yMMMMd(
+                            context.locale.toString(),
+                          ).format(_selectedDate),
+                          style: theme.textTheme.labelMedium?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant
+                                .withValues(alpha: 0.8),
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildWritingField(
+                        controller: _titleController,
+                        hint: titleHint,
+                        isTitle: true,
+                        focusNode: _titleFocusNode,
+                      ),
+                      const SizedBox(height: 10),
+                      Divider(
+                        height: 1,
+                        color: theme.colorScheme.outlineVariant.withValues(
+                          alpha: 0.45,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      _buildWritingField(
+                        controller: _contentController,
+                        hint: contentHint,
+                        isTitle: false,
+                        focusNode: _contentFocusNode,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // Top Header date & meta details
+            Positioned(
+              left: 0,
+              right: 0,
+              top: 0,
+              child: _buildFloatingTopHeader(theme),
+            ),
+
+            // Floating Attachments Preview slider
+            _buildFloatingAttachmentsRow(theme),
+
+            // Bottom action tray
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: _buildModernToolTray(colorScheme),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFloatingTopHeader(ThemeData theme) {
+    final colors = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
+    return SafeArea(
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: GlassContainer(
+          borderRadius: 24,
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          opacity: isDark ? 0.2 : 0.15,
+          child: Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.close_rounded),
+                onPressed: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/');
+                  }
+                },
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.transparent,
+                ),
+              ),
+              const SizedBox(width: 4),
+              Expanded(
+                child: SizedBox(
+                  height: 38,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
+                    children: [
+                      _buildHeaderGlassPill(
+                        icon: Icons.calendar_today_rounded,
+                        label: DateFormat.yMMMd().format(_selectedDate),
+                        onTap: _pickDateTime,
+                        theme: theme,
+                      ),
+                      BlocBuilder<CategoryBloc, CategoryState>(
+                        builder: (context, state) {
+                          final categories =
+                              state is CategoryLoaded
+                                  ? state.categories
+                                  : const [];
+                          Category? selectedCategory;
+                          if (_selectedCategoryId != null) {
+                            for (final c in categories) {
+                              if (c.id == _selectedCategoryId) {
+                                selectedCategory = c;
+                                break;
+                              }
+                            }
+                          }
+                          final categoryColor =
+                              selectedCategory == null
+                                  ? colors.outline
+                                  : Color(selectedCategory.color);
+                          return _buildHeaderGlassPill(
+                            icon: Icons.category_outlined,
+                            label: selectedCategory?.name ?? 'no_category'.tr(),
+                            onTap: _openCategoryPicker,
+                            theme: theme,
+                            color: categoryColor,
+                          );
+                        },
+                      ),
+                      _buildHeaderGlassPill(
+                        icon: _moodIcon(_selectedMood),
+                        label: _selectedMood.name.tr(),
+                        onTap: _openMoodPicker,
+                        theme: theme,
+                        color: colors.secondary,
+                      ),
+                      _buildHeaderGlassPill(
+                        icon: Icons.tag_outlined,
+                        label:
+                            _parseTags(_tagsController.text).isEmpty
+                                ? 'tags_label'.tr()
+                                : '${_parseTags(_tagsController.text).length} ${'tags_label'.tr()}',
+                        onTap: _openTagsEditor,
+                        theme: theme,
+                        color: colors.primary,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: _save,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: colors.primary.withValues(alpha: 0.85),
+                  foregroundColor: colors.onPrimary,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                ),
+                child: Text(
+                  'save'.tr(),
+                  style: const TextStyle(fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeaderGlassPill({
+    required IconData icon,
+    required String label,
+    required VoidCallback onTap,
+    required ThemeData theme,
+    Color? color,
+  }) {
+    final colors = theme.colorScheme;
+    final pillColor = color ?? colors.onSurfaceVariant;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: pillColor.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color: pillColor.withValues(alpha: 0.25),
+                width: 1,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 14, color: pillColor),
+                const SizedBox(width: 6),
+                Text(
+                  label,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: pillColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFloatingAttachmentsRow(ThemeData theme) {
+    if (_attachmentPaths.isEmpty) return const SizedBox.shrink();
+
+    final isDark = theme.brightness == Brightness.dark;
+
+    return Positioned(
+      left: 20,
+      right: 20,
+      bottom: 116,
+      child: GlassContainer(
+        borderRadius: 24,
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        opacity: isDark ? 0.25 : 0.18,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(18, 18, 18, 22),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+              child: Row(
                 children: [
-                  Align(
-                    alignment: Alignment.centerRight,
+                  Icon(
+                    Icons.attachment_rounded,
+                    size: 14,
+                    color: theme.colorScheme.primary,
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    'attachments'.tr(),
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface,
+                    ),
+                  ),
+                  const Spacer(),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                     child: Text(
-                      DateFormat.yMMMMd(
-                        context.locale.toString(),
-                      ).format(_selectedDate),
-                      style: theme.textTheme.labelMedium?.copyWith(
-                        color: colors.onSurfaceVariant.withValues(alpha: 0.8),
-                        fontStyle: FontStyle.italic,
+                      '${_attachmentPaths.length}',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.primary,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  _buildWritingField(
-                    controller: _titleController,
-                    hint: titleHint,
-                    isTitle: true,
-                  ),
-                  const SizedBox(height: 10),
-                  Divider(
-                    height: 1,
-                    color: colors.outlineVariant.withValues(alpha: 0.45),
-                  ),
-                  const SizedBox(height: 10),
-                  _buildWritingField(
-                    controller: _contentController,
-                    hint: contentHint,
-                    isTitle: false,
-                  ),
                 ],
+              ),
+            ),
+            const SizedBox(height: 8),
+            SizedBox(
+              height: 70,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                itemCount: _attachmentPaths.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  final path = _attachmentPaths[index];
+                  return _buildAttachmentTileSmall(theme, path);
+                },
               ),
             ),
           ],
@@ -910,168 +965,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
     );
   }
 
-  Widget _buildWritingField({
-    required TextEditingController controller,
-    required String hint,
-    required bool isTitle,
-  }) {
-    final theme = Theme.of(context);
-    final colors = theme.colorScheme;
-    final inkColor = colors.onSurface.withValues(alpha: isTitle ? 0.92 : 0.9);
-
-    final textStyle =
-        isTitle
-            ? GoogleFonts.caveat(
-              textStyle: theme.textTheme.displaySmall?.copyWith(
-                color: inkColor,
-                fontSize: 42,
-                height: 1.08,
-                fontWeight: FontWeight.w700,
-                letterSpacing: 0.1,
-                shadows: [
-                  Shadow(
-                    color: Colors.black.withValues(alpha: 0.09),
-                    blurRadius: 0.9,
-                    offset: const Offset(0.3, 0.6),
-                  ),
-                ],
-              ),
-            )
-            : GoogleFonts.patrickHand(
-              textStyle: theme.textTheme.bodyLarge?.copyWith(
-                color: inkColor,
-                // Match ruled-paper step (~28px) so handwriting fits lines.
-                fontSize: 20,
-                height: 1.4,
-                letterSpacing: 0.05,
-                shadows: [
-                  Shadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 0.8,
-                    offset: const Offset(0.3, 0.55),
-                  ),
-                ],
-              ),
-            );
-
-    return TextField(
-      controller: controller,
-      style: textStyle,
-      cursorColor: colors.primary.withValues(alpha: 0.85),
-      decoration: InputDecoration(
-        hintText: hint,
-        border: InputBorder.none,
-        enabledBorder: InputBorder.none,
-        focusedBorder: InputBorder.none,
-        disabledBorder: InputBorder.none,
-        errorBorder: InputBorder.none,
-        focusedErrorBorder: InputBorder.none,
-        isDense: true,
-        filled: false,
-        contentPadding: EdgeInsets.zero,
-        hintStyle: textStyle.copyWith(
-          color: inkColor.withValues(alpha: 0.34),
-          shadows: const [],
-        ),
-      ),
-      minLines: isTitle ? 1 : 18,
-      maxLines: null,
-    );
-  }
-
-  Widget _metaChip({
-    required IconData icon,
-    required String label,
-    required ThemeData theme,
-    required VoidCallback onTap,
-    required Color accent,
-    bool isEmphasized = false,
-  }) {
-    final colors = theme.colorScheme;
-    final background = Color.alphaBlend(
-      accent.withValues(alpha: isEmphasized ? 0.18 : 0.12),
-      colors.surface,
-    );
-
-    return Tooltip(
-      message: label,
-      child: ActionChip(
-        avatar: Icon(icon, size: 18, color: accent),
-        label: Text(label),
-        labelStyle: theme.textTheme.labelMedium?.copyWith(
-          color: accent,
-          fontWeight: FontWeight.w600,
-        ),
-        onPressed: onTap,
-        visualDensity: _compactDensity,
-        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        labelPadding: const EdgeInsets.symmetric(horizontal: 6),
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-        backgroundColor: background,
-        side: BorderSide(color: accent.withValues(alpha: 0.4)),
-      ),
-    );
-  }
-
-  Widget _buildAttachmentsSection(ThemeData theme) {
-    final colors = theme.colorScheme;
-    final attachments = List.of(_attachmentPaths);
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text(
-              'attachments'.tr(),
-              style: theme.textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const Spacer(),
-            if (attachments.isNotEmpty)
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: colors.primary.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${attachments.length}',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: colors.primary,
-                  ),
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        if (attachments.isEmpty)
-          Text(
-            'no_attachments'.tr(),
-            style: theme.textTheme.bodySmall?.copyWith(
-              color: colors.onSurfaceVariant,
-            ),
-          )
-        else
-          SizedBox(
-            height: 110,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: attachments.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
-              itemBuilder: (context, index) {
-                final path = attachments[index];
-                return _buildAttachmentTile(theme, path);
-              },
-            ),
-          ),
-      ],
-    );
-  }
-
-  Widget _buildAttachmentTile(ThemeData theme, String path) {
+  Widget _buildAttachmentTileSmall(ThemeData theme, String path) {
     final colors = theme.colorScheme;
     final isImage = isImagePath(path);
     final previewBackground = colors.surfaceContainerHighest.withValues(
@@ -1081,28 +975,21 @@ class _AddEntryPageState extends State<AddEntryPage> {
       color: Colors.transparent,
       child: InkWell(
         onTap: () => openAttachment(context, path),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(14),
         child: Ink(
-          width: 140,
+          width: 110,
           decoration: BoxDecoration(
-            color: colors.surface,
-            borderRadius: BorderRadius.circular(18),
+            color: colors.surface.withValues(alpha: 0.8),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: colors.outlineVariant.withValues(alpha: 0.6),
+              color: colors.outlineVariant.withValues(alpha: 0.5),
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.06),
-                blurRadius: 16,
-                offset: const Offset(0, 8),
-              ),
-            ],
           ),
           child: Stack(
             children: [
               Positioned.fill(
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(14),
                   child:
                       isImage
                           ? Image.file(File(path), fit: BoxFit.cover)
@@ -1112,49 +999,50 @@ class _AddEntryPageState extends State<AddEntryPage> {
                               child: Icon(
                                 _attachmentIcon(path),
                                 color: colors.primary,
-                                size: 28,
+                                size: 20,
                               ),
                             ),
                           ),
                 ),
               ),
               Positioned(
-                left: 8,
-                right: 8,
-                bottom: 8,
+                left: 6,
+                right: 6,
+                bottom: 6,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 6,
+                    horizontal: 6,
+                    vertical: 3,
                   ),
                   decoration: BoxDecoration(
-                    color: colors.surface.withValues(alpha: 0.9),
-                    borderRadius: BorderRadius.circular(12),
+                    color: colors.surface.withValues(alpha: 0.85),
+                    borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     _fileName(path),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.labelSmall?.copyWith(
+                      fontSize: 9,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                 ),
               ),
               Positioned(
-                top: 6,
-                right: 6,
+                top: 4,
+                right: 4,
                 child: Material(
-                  color: colors.surface.withValues(alpha: 0.9),
+                  color: colors.surface.withValues(alpha: 0.85),
                   shape: const CircleBorder(),
                   child: InkWell(
                     customBorder: const CircleBorder(),
                     onTap: () => _removeAttachment(path),
                     child: Padding(
-                      padding: const EdgeInsets.all(4),
+                      padding: const EdgeInsets.all(3),
                       child: Icon(
                         Icons.close_rounded,
-                        size: 16,
+                        size: 12,
                         color: colors.onSurfaceVariant,
                       ),
                     ),
@@ -1313,6 +1201,48 @@ class _AddEntryPageState extends State<AddEntryPage> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildWritingField({
+    required TextEditingController controller,
+    required String hint,
+    required bool isTitle,
+    required FocusNode focusNode,
+  }) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final textStyle =
+        isTitle
+            ? theme.textTheme.headlineMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: isDark ? Colors.grey.shade200 : const Color(0xFF5D4037),
+            )
+            : TextStyle(
+              fontFamily: GoogleFonts.patrickHand().fontFamily,
+              fontSize: 20,
+              height: 1.5,
+              color: isDark ? Colors.grey.shade300 : const Color(0xFF4E342E),
+            );
+
+    return TextField(
+      controller: controller,
+      focusNode: focusNode,
+      maxLines: isTitle ? 1 : null,
+      keyboardType: isTitle ? TextInputType.text : TextInputType.multiline,
+      style: textStyle,
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: textStyle?.copyWith(
+          color: (isDark ? Colors.grey.shade600 : const Color(0xFF8D6E63))
+              .withValues(alpha: 0.6),
+        ),
+        border: InputBorder.none,
+        enabledBorder: InputBorder.none,
+        focusedBorder: InputBorder.none,
+        contentPadding: EdgeInsets.zero,
       ),
     );
   }

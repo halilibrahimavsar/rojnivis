@@ -91,16 +91,24 @@ Future<void> _initializeCriticalServices() async {
     getIt.registerLazySingleton<RemoteConfigService>(() => remoteConfig);
   }
 
-  // Await Remote Config as it provides the serverClientId for Auth
-  await remoteConfig.init();
+  // Register auth dependencies immediately using the hardcoded fallback
+  // serverClientId — RemoteConfig fetch runs in parallel so it doesn't
+  // block startup. If RC resolves before auth is first used, the value
+  // will be up-to-date. If not, the hardcoded fallback is always valid.
   registerAuthDependencies();
 
-  // Configure generated dependency injection
+  // Configure generated DI (SharedPreferences, LocalAuth, etc.)
   await configureDependencies();
 
-  // Initialize AI Service (Remote Config) in background - don't let it block startup if slow
+  // Fetch Remote Config and AI init in the background — both are non-critical
+  // for the initial render and have their own internal timeouts.
   unawaited(
-    getIt<AiService>().init().catchError((e) {
+    remoteConfig.init().catchError((Object e) {
+      debugPrint('Remote Config background init failed: $e');
+    }),
+  );
+  unawaited(
+    getIt<AiService>().init().catchError((Object e) {
       debugPrint('AI Service background init failed: $e');
     }),
   );

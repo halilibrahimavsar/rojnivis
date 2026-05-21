@@ -3,6 +3,7 @@ import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:injectable/injectable.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 
 import '../constants/app_constants.dart';
 
@@ -81,9 +82,15 @@ abstract class AiService {
 @LazySingleton(as: AiService)
 class GeminiAiService implements AiService {
   final SharedPreferences _prefs;
-  final FirebaseRemoteConfig _remoteConfig = FirebaseRemoteConfig.instance;
+  final FirebaseRemoteConfig _remoteConfig;
+  final http.Client? _httpClient;
 
-  GeminiAiService(this._prefs);
+  GeminiAiService(
+    this._prefs, {
+    FirebaseRemoteConfig? remoteConfig,
+    http.Client? httpClient,
+  })  : _remoteConfig = remoteConfig ?? FirebaseRemoteConfig.instance,
+        _httpClient = httpClient;
 
   static const String _promptBase =
       "You are a helpful writing assistant for a premium journal app called Rojnivis. The user is writing in a private, luxury digital notebook. Keep the tone elegant, introspective, and helpful.";
@@ -206,7 +213,11 @@ class GeminiAiService implements AiService {
     if (apiKey.isEmpty) return null;
 
     final modelId = overrideModel ?? selectedModel;
-    return GenerativeModel(model: modelId, apiKey: apiKey);
+    return GenerativeModel(
+      model: modelId,
+      apiKey: apiKey,
+      httpClient: _httpClient,
+    );
   }
 
   @override

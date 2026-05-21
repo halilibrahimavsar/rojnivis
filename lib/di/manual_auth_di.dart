@@ -45,7 +45,11 @@ void registerAuthDependencies() {
     () => FirebaseAuthRepository(
       auth: getIt<FirebaseAuth>(),
       firestore: getIt<FirebaseFirestore>(),
-      createUserCollection: true,
+      // Firestore user document sync is disabled until a Firestore database
+      // is provisioned in the Firebase console for this project.
+      // See: https://console.cloud.google.com/firestore/databases?project=rojnivis
+      // Re-enable by setting createUserCollection: true once ready.
+      createUserCollection: false,
       serverClientId: serverClientId,
       clientId: webClientId,
     ),

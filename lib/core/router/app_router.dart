@@ -161,7 +161,7 @@ class AppRouter {
               key: state.pageKey,
               child: RegisterPage(
                 onLoginTap: () => context.pop(),
-                onRegistered: (user) => context.go('/home'),
+                onAuthenticated: (user) => context.go('/home'),
               ),
             ),
       ),
