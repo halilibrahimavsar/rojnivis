@@ -56,34 +56,18 @@ void main() async {
 /// - Default data seeding
 /// - Dependency injection
 Future<void> _initializeApp() async {
-  // Initialize localization
-  await EasyLocalization.ensureInitialized();
+  // Start parallel execution of critical services
+  await Future.wait([
+    EasyLocalization.ensureInitialized(),
+    Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform),
+    _initHiveAndSeed(),
+    NotificationService().init(),
+  ]);
 
-  // Initialize Firebase
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  // Non-blocking background tasks
+  unawaited(_initBackgroundServices());
 
-  // Explicitly initialize Analytics (needed for Remote Config ABT)
-  try {
-    await FirebaseAnalytics.instance.logAppOpen();
-    debugPrint('Firebase Analytics initialized');
-  } catch (e) {
-    debugPrint('Firebase Analytics initialization failed: $e');
-  }
-
-  // Initialize Hive
-  await Hive.initFlutter();
-  _registerHiveAdapters();
-  await _openHiveBoxes();
-
-  // Seed default data
-  await _seedDefaultCategoriesIfEmpty();
-
-  // Initialize notifications
-  await NotificationService().init();
-  await NotificationService().requestPermissions();
-
-  // Pre-initialize basic dependencies for Auth and other modules
-  // Use a timeout to prevent Android startup hangs
+  // Wait for critical DI
   await Future.any([
     _initializeCriticalServices(),
     Future.delayed(const Duration(seconds: 10)).then((_) {
@@ -92,6 +76,28 @@ Future<void> _initializeApp() async {
       );
     }),
   ]);
+}
+
+Future<void> _initHiveAndSeed() async {
+  await Hive.initFlutter();
+  _registerHiveAdapters();
+  await _openHiveBoxes();
+  await _seedDefaultCategoriesIfEmpty();
+}
+
+Future<void> _initBackgroundServices() async {
+  try {
+    await FirebaseAnalytics.instance.logAppOpen();
+    debugPrint('Firebase Analytics initialized');
+  } catch (e) {
+    debugPrint('Firebase Analytics initialization failed: $e');
+  }
+
+  try {
+    await NotificationService().requestPermissions();
+  } catch (e) {
+    debugPrint('Notification permissions failed: $e');
+  }
 }
 
 Future<void> _initializeCriticalServices() async {

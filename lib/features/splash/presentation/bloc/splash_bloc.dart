@@ -10,10 +10,23 @@ part 'splash_state.dart';
 @injectable
 class SplashBloc extends Bloc<SplashEvent, SplashState> {
   final AuthBloc _authBloc;
+  StreamSubscription? _authSubscription;
 
   SplashBloc(this._authBloc) : super(const SplashInitial()) {
     on<InitializeSplash>(_onInitialize);
     on<SplashAnimationComplete>(_onAnimationComplete);
+
+    _authSubscription = _authBloc.stream.listen((authState) {
+      if (state is SplashDisplaying) {
+        add(const SplashAnimationComplete());
+      }
+    });
+  }
+
+  @override
+  Future<void> close() {
+    _authSubscription?.cancel();
+    return super.close();
   }
 
   Future<void> _onInitialize(
@@ -42,20 +55,9 @@ class SplashBloc extends Bloc<SplashEvent, SplashState> {
         authState is AuthErrorState) {
       emit(const SplashNavigating(SplashNavigationTarget.public));
     } else {
-      // AuthBloc is likely still loading/initializing (e.g., AuthInitialState or AuthLoadingState).
-      // We should wait until AuthBloc finishes.
-      final retryCount = event.retryCount;
-      if (retryCount >= 30) {
-        emit(const SplashNavigating(SplashNavigationTarget.public));
-        return;
-      }
-
-      await Future.delayed(const Duration(milliseconds: 500));
-
-      // We check if we are still in SplashDisplaying to avoid infinite loops if state changed
-      if (state is SplashDisplaying) {
-        add(SplashAnimationComplete(retryCount: retryCount + 1));
-      }
+      // AuthBloc is still initializing. 
+      // We removed the 500ms polling loop!
+      // The _authSubscription will automatically trigger this event again the exact millisecond AuthBloc is ready.
     }
   }
 }
