@@ -13,6 +13,7 @@ import 'di/manual_auth_di.dart';
 import 'package:unified_flutter_features/features/local_auth/data/local_auth_repository.dart';
 import 'package:unified_flutter_features/features/local_auth/presentation/widgets/local_auth_security_layer.dart';
 import 'package:rojnivis/core/services/notification_service.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 import 'core/constants/app_constants.dart';
 import 'core/errors/error_handler.dart';
@@ -34,7 +35,8 @@ import 'features/splash/presentation/bloc/splash_bloc.dart';
 ///
 /// Initializes all required services and runs the app.
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
 
   try {
     await _initializeApp();

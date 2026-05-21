@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 
 import '../../../../core/widgets/themed_paper.dart';
 import '../bloc/splash_bloc.dart';
@@ -41,14 +42,11 @@ class _SplashPageState extends State<SplashPage>
   }
 
   Future<void> _startAnimation() async {
-    await Future.delayed(const Duration(milliseconds: 300));
     if (!mounted) return;
-    await _fadeController.forward();
-
-    // Hold for a moment then signal completion
-    await Future.delayed(const Duration(milliseconds: 1000));
-    if (!mounted) return;
-
+    _fadeController.forward();
+    
+    // We removed all artificial delays for maximum opening speed.
+    // The native splash screen handles the visual loading state.
     context.read<SplashBloc>().add(const SplashAnimationComplete());
   }
 
@@ -63,6 +61,7 @@ class _SplashPageState extends State<SplashPage>
     return BlocListener<SplashBloc, SplashState>(
       listener: (context, state) async {
         if (state is SplashNavigating) {
+          FlutterNativeSplash.remove();
           switch (state.target) {
             case SplashNavigationTarget.home:
               context.go('/home');
