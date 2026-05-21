@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -235,103 +236,129 @@ class _GlassCategoryTileState extends State<GlassCategoryTile> {
 
     final hasChildren = subcategories.isNotEmpty;
 
-    return Container(
-      margin:
+    return Padding(
+      padding:
           widget.isSubcategory
               ? const EdgeInsets.only(top: 8)
               : EdgeInsets.zero,
-      decoration: BoxDecoration(
-        color:
-            isDark
-                ? Colors.white.withValues(alpha: 0.05)
-                : Colors.black.withValues(alpha: 0.03),
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: catColor.withValues(alpha: 0.3), width: 1),
-      ),
-      child: Theme(
-        data: theme.copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          initiallyExpanded: _isExpanded,
-          onExpansionChanged: (expanded) {
-            setState(() => _isExpanded = expanded);
-          },
-          leading: Container(
-            padding: const EdgeInsets.all(8),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Container(
             decoration: BoxDecoration(
-              color: catColor.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(
-              hasChildren ? Icons.folder_open_rounded : Icons.category_rounded,
-              color: catColor,
-              size: 24,
-            ),
-          ),
-          title: Text(
-            widget.category.name,
-            style: TextStyle(
-              fontFamily: GoogleFonts.patrickHand().fontFamily,
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-              color: isDark ? Colors.white : Colors.black87,
-            ),
-          ),
-          subtitle: Text(
-            _formatCount(categoryEntries.length, context.locale.languageCode),
-            style: TextStyle(
-              fontSize: 12,
-              color: isDark ? Colors.white70 : Colors.black54,
-            ),
-          ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              IconButton(
-                icon: const Icon(Icons.arrow_forward_ios_rounded, size: 16),
-                onPressed: () {
-                  context.push('/home/category/${widget.category.id}');
-                },
-                tooltip: 'open_category'.tr(),
+              color:
+                  isDark
+                      ? Colors.white.withValues(alpha: 0.05)
+                      : Colors.black.withValues(alpha: 0.03),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: catColor.withValues(alpha: 0.3),
+                width: 1,
               ),
-              PopupMenuButton<String>(
-                icon: const Icon(Icons.more_vert, size: 20),
-                onSelected: (value) {
-                  if (value == 'edit') widget.onEdit(widget.category);
-                  if (value == 'delete') widget.onDelete(widget.category);
+            ),
+            child: Theme(
+              data: theme.copyWith(dividerColor: Colors.transparent),
+              child: ExpansionTile(
+                initiallyExpanded: _isExpanded,
+                onExpansionChanged: (expanded) {
+                  setState(() => _isExpanded = expanded);
                 },
-                itemBuilder:
-                    (context) => [
-                      PopupMenuItem(value: 'edit', child: Text('edit'.tr())),
-                      PopupMenuItem(
-                        value: 'delete',
-                        child: Text(
-                          'delete'.tr(),
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                      ),
-                    ],
-              ),
-            ],
-          ),
-          children: [
-            if (hasChildren)
-              Padding(
-                padding: const EdgeInsets.only(left: 48, right: 16, bottom: 12),
-                child: Column(
-                  children:
-                      subcategories.map((subCat) {
-                        return GlassCategoryTile(
-                          category: subCat,
-                          allCategories: widget.allCategories,
-                          journalEntries: widget.journalEntries,
-                          isSubcategory: true,
-                          onEdit: widget.onEdit,
-                          onDelete: widget.onDelete,
-                        );
-                      }).toList(),
+                leading: Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: catColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(
+                    hasChildren
+                        ? Icons.folder_open_rounded
+                        : Icons.category_rounded,
+                    color: catColor,
+                    size: 24,
+                  ),
                 ),
+                title: Text(
+                  widget.category.name,
+                  style: TextStyle(
+                    fontFamily: GoogleFonts.patrickHand().fontFamily,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
+                subtitle: Text(
+                  _formatCount(
+                    categoryEntries.length,
+                    context.locale.languageCode,
+                  ),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? Colors.white70 : Colors.black54,
+                  ),
+                ),
+                trailing: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    IconButton(
+                      icon: const Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 16,
+                      ),
+                      onPressed: () {
+                        context.push('/home/category/${widget.category.id}');
+                      },
+                      tooltip: 'open_category'.tr(),
+                    ),
+                    PopupMenuButton<String>(
+                      icon: const Icon(Icons.more_vert, size: 20),
+                      onSelected: (value) {
+                        if (value == 'edit') widget.onEdit(widget.category);
+                        if (value == 'delete') widget.onDelete(widget.category);
+                      },
+                      itemBuilder:
+                          (context) => [
+                            PopupMenuItem(
+                              value: 'edit',
+                              child: Text('edit'.tr()),
+                            ),
+                            PopupMenuItem(
+                              value: 'delete',
+                              child: Text(
+                                'delete'.tr(),
+                                style: const TextStyle(color: Colors.red),
+                              ),
+                            ),
+                          ],
+                    ),
+                  ],
+                ),
+                children: [
+                  if (hasChildren)
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        left: 48,
+                        right: 16,
+                        bottom: 12,
+                      ),
+                      child: Column(
+                        children:
+                            subcategories.map((subCat) {
+                              return GlassCategoryTile(
+                                category: subCat,
+                                allCategories: widget.allCategories,
+                                journalEntries: widget.journalEntries,
+                                isSubcategory: true,
+                                onEdit: widget.onEdit,
+                                onDelete: widget.onDelete,
+                              );
+                            }).toList(),
+                      ),
+                    ),
+                ],
               ),
-          ],
+            ),
+          ),
         ),
       ),
     );
