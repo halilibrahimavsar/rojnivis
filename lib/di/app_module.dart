@@ -7,7 +7,9 @@ import 'package:unified_flutter_features/features/local_auth/presentation/bloc/l
 import 'package:unified_flutter_features/features/local_auth/presentation/bloc/settings/local_auth_settings_bloc.dart';
 
 import 'package:local_auth/local_auth.dart';
-
+import 'package:firebase_remote_config/firebase_remote_config.dart';
+import 'package:http/http.dart' as http;
+import 'package:remote_auth_module/remote_auth_module.dart';
 import 'injection.config.dart';
 
 final getIt = GetIt.instance;
@@ -45,4 +47,17 @@ abstract class ExternalDependenciesModule {
   LocalAuthSettingsBloc localAuthSettingsBloc(LocalAuthRepository repository) {
     return LocalAuthSettingsBloc(repository: repository);
   }
+
+  // Firebase Remote Config
+  @lazySingleton
+  FirebaseRemoteConfig get firebaseRemoteConfig =>
+      FirebaseRemoteConfig.instance;
+
+  // HTTP Client
+  @lazySingleton
+  http.Client get httpClient => http.Client();
+
+  // Auth Bloc
+  @lazySingleton
+  AuthBloc get authBloc => AuthBloc(repository: getIt<AuthRepository>());
 }

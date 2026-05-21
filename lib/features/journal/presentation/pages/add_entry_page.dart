@@ -796,7 +796,7 @@ class _AddEntryPageState extends State<AddEntryPage> {
                       ),
                       _buildHeaderGlassPill(
                         icon: _moodIcon(_selectedMood),
-                        label: _selectedMood.name.tr(),
+                        label: 'mood_${_selectedMood.name}'.tr(),
                         onTap: _openMoodPicker,
                         theme: theme,
                         color: colors.secondary,

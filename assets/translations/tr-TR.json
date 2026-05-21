@@ -56,6 +56,12 @@
   "delete_category": "Kategoriyi sil?",
   "delete_category_confirm": "Bu kategori silinecek.",
   "empty_categories": "Henüz kategori yok.",
+  "parent_category": "Üst Kategori",
+  "no_parent": "Yok",
+  "sub_categories": "Alt Kategoriler",
+  "entries": "Kayıtlar",
+  "empty_category": "Bu kategori boş.",
+  "category_not_found": "Kategori bulunamadı.",
   "theme": "Tema",
   "theme_mode": "Tema modu",
   "system": "Sistem",
@@ -86,6 +92,8 @@
   "theme_raining": "Yağmurlu",
   "theme_snowing": "Karlı",
   "theme_sunny": "Güneşli",
+  "theme_sunken_yacht": "Batık Yat",
+  "theme_pirate_treasure": "Korsan Hazinesi",
   "attachment_backdrop": "Fotoğraf arka planı",
   "attachment_backdrop_desc": "Eklenen fotoğraflar arka planda görünsün",
   "new_question": "Yeni soru",
@@ -219,5 +227,6 @@
   "sticker_stamp_rose": "Gül Pulu",
   "sticker_stamp_bird": "Kuş Pulu",
   "sticker_floral_lavender": "Lavanta",
-  "sticker_floral_fern": "Eğrelti"
+  "sticker_floral_fern": "Eğrelti",
+  "open_category": "Kategoriyi Aç"
 }

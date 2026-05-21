@@ -5,12 +5,14 @@ import '../../features/journal/presentation/pages/journal_page.dart';
 import '../../features/journal/presentation/pages/add_entry_page.dart';
 import '../../features/journal/presentation/pages/entry_detail_page.dart';
 import '../../features/categories/presentation/pages/categories_page.dart';
+import '../../features/categories/presentation/pages/category_detail_page.dart';
 import '../../features/insights/presentation/pages/insights_page.dart';
 import '../../features/settings/presentation/pages/settings_page.dart';
 import '../../features/settings/presentation/pages/page_studio_page.dart';
 import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../features/settings/presentation/pages/local_auth_settings_page.dart';
 import '../../features/settings/presentation/pages/remote_auth_settings_page.dart';
+import '../../features/calendar/presentation/pages/calendar_page.dart';
 
 import 'package:remote_auth_module/remote_auth_module.dart';
 import '../widgets/app_layout.dart';
@@ -91,11 +93,33 @@ class AppRouter {
                     ),
               ),
               GoRoute(
+                path: 'category/:categoryId',
+                parentNavigatorKey: _rootNavigatorKey,
+                pageBuilder: (context, state) {
+                  final categoryId = state.pathParameters['categoryId']!;
+                  return PageFlipTransitionPage(
+                    key: state.pageKey,
+                    child: CategoryDetailPage(categoryId: categoryId),
+                  );
+                },
+              ),
+              GoRoute(
                 path: 'insights',
                 pageBuilder:
                     (context, state) => CustomTransitionPage(
                       key: state.pageKey,
                       child: const InsightsPage(),
+                      transitionsBuilder:
+                          (context, animation, secondaryAnimation, child) =>
+                              FadeTransition(opacity: animation, child: child),
+                    ),
+              ),
+              GoRoute(
+                path: 'calendar',
+                pageBuilder:
+                    (context, state) => CustomTransitionPage(
+                      key: state.pageKey,
+                      child: const CalendarPage(),
                       transitionsBuilder:
                           (context, animation, secondaryAnimation, child) =>
                               FadeTransition(opacity: animation, child: child),

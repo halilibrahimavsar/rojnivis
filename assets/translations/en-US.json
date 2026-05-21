@@ -56,6 +56,12 @@
   "delete_category": "Delete category?",
   "delete_category_confirm": "This category will be deleted.",
   "empty_categories": "No categories yet.",
+  "parent_category": "Parent Category",
+  "no_parent": "No parent",
+  "sub_categories": "Sub Categories",
+  "entries": "Entries",
+  "empty_category": "This category is empty.",
+  "category_not_found": "Category not found.",
   "theme": "Theme",
   "theme_mode": "Theme mode",
   "system": "System",
@@ -86,6 +92,8 @@
   "theme_raining": "Raining",
   "theme_snowing": "Snowing",
   "theme_sunny": "Sunny",
+  "theme_sunken_yacht": "Sunken Yacht",
+  "theme_pirate_treasure": "Pirate Treasure",
   "attachment_backdrop": "Photo backdrop",
   "attachment_backdrop_desc": "Show attached photos in the background",
   "new_question": "New question",
@@ -217,5 +225,6 @@
   "sticker_stamp_rose": "Rose Stamp",
   "sticker_stamp_bird": "Bird Stamp",
   "sticker_floral_lavender": "Lavender",
-  "sticker_floral_fern": "Fern"
+  "sticker_floral_fern": "Fern",
+  "open_category": "Open Category"
 }

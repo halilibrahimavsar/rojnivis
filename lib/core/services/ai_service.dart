@@ -89,8 +89,8 @@ class GeminiAiService implements AiService {
     this._prefs, {
     FirebaseRemoteConfig? remoteConfig,
     http.Client? httpClient,
-  })  : _remoteConfig = remoteConfig ?? FirebaseRemoteConfig.instance,
-        _httpClient = httpClient;
+  }) : _remoteConfig = remoteConfig ?? FirebaseRemoteConfig.instance,
+       _httpClient = httpClient;
 
   static const String _promptBase =
       "You are a helpful writing assistant for a premium journal app called Rojnivis. The user is writing in a private, luxury digital notebook. Keep the tone elegant, introspective, and helpful.";

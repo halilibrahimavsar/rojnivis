@@ -7,6 +7,7 @@ import 'package:unified_flutter_features/features/local_auth/data/secure_local_a
 import 'package:unified_flutter_features/features/local_auth/presentation/constants/local_auth_constants.dart';
 
 class MockLocalAuthentication extends Mock implements LocalAuthentication {}
+
 class MockFlutterSecureStorage extends Mock implements FlutterSecureStorage {}
 
 void main() {
@@ -18,7 +19,7 @@ void main() {
   setUp(() async {
     mockAuth = MockLocalAuthentication();
     mockSecureStorage = MockFlutterSecureStorage();
-    
+
     SharedPreferences.setMockInitialValues({});
     prefs = await SharedPreferences.getInstance();
 
@@ -33,41 +34,51 @@ void main() {
   });
 
   group('Biometrics', () {
-    test('isBiometricAvailable returns true when supported and can check', () async {
-      when(() => mockAuth.canCheckBiometrics).thenAnswer((_) async => true);
-      when(() => mockAuth.isDeviceSupported()).thenAnswer((_) async => true);
+    test(
+      'isBiometricAvailable returns true when supported and can check',
+      () async {
+        when(() => mockAuth.canCheckBiometrics).thenAnswer((_) async => true);
+        when(() => mockAuth.isDeviceSupported()).thenAnswer((_) async => true);
 
-      final result = await repository.isBiometricAvailable();
-      expect(result, isTrue);
-    });
+        final result = await repository.isBiometricAvailable();
+        expect(result, isTrue);
+      },
+    );
 
-    test('isBiometricAvailable returns false when hardware is missing', () async {
-      when(() => mockAuth.canCheckBiometrics).thenAnswer((_) async => false);
-      when(() => mockAuth.isDeviceSupported()).thenAnswer((_) async => false);
+    test(
+      'isBiometricAvailable returns false when hardware is missing',
+      () async {
+        when(() => mockAuth.canCheckBiometrics).thenAnswer((_) async => false);
+        when(() => mockAuth.isDeviceSupported()).thenAnswer((_) async => false);
 
-      final result = await repository.isBiometricAvailable();
-      expect(result, isFalse);
-    });
+        final result = await repository.isBiometricAvailable();
+        expect(result, isFalse);
+      },
+    );
 
     test('authenticateWithBiometrics returns true on success', () async {
       when(() => mockAuth.canCheckBiometrics).thenAnswer((_) async => true);
       when(() => mockAuth.isDeviceSupported()).thenAnswer((_) async => true);
-      when(() => mockAuth.authenticate(
-        localizedReason: any(named: 'localizedReason'),
-        options: any(named: 'options'),
-      )).thenAnswer((_) async => true);
+      when(
+        () => mockAuth.authenticate(
+          localizedReason: any(named: 'localizedReason'),
+          options: any(named: 'options'),
+        ),
+      ).thenAnswer((_) async => true);
 
       final result = await repository.authenticateWithBiometrics();
       expect(result, isTrue);
-      
-      verify(() => mockAuth.authenticate(
-        localizedReason: LocalAuthConstants.defaultBiometricReason,
-        options: const AuthenticationOptions(
-          biometricOnly: true,
-          stickyAuth: true,
-          useErrorDialogs: true,
+
+      verify(
+        () => mockAuth.authenticate(
+          localizedReason: LocalAuthConstants.defaultBiometricReason,
+          options: const AuthenticationOptions(
+            biometricOnly: true,
+            stickyAuth: true,
+            useErrorDialogs: true,
+          ),
         ),
-      )).called(1);
+      ).called(1);
     });
 
     test('authenticateWithBiometrics returns false if unavailable', () async {
@@ -76,44 +87,56 @@ void main() {
 
       final result = await repository.authenticateWithBiometrics();
       expect(result, isFalse);
-      verifyNever(() => mockAuth.authenticate(
-        localizedReason: any(named: 'localizedReason'),
-        options: any(named: 'options'),
-      ));
+      verifyNever(
+        () => mockAuth.authenticate(
+          localizedReason: any(named: 'localizedReason'),
+          options: any(named: 'options'),
+        ),
+      );
     });
   });
 
   group('PIN Management', () {
     test('isPinSet returns true if hash and salt exist', () async {
-      when(() => mockSecureStorage.read(key: LocalAuthConstants.pinHashKey))
-          .thenAnswer((_) async => 'hash');
-      when(() => mockSecureStorage.read(key: LocalAuthConstants.pinSaltKey))
-          .thenAnswer((_) async => 'salt');
+      when(
+        () => mockSecureStorage.read(key: LocalAuthConstants.pinHashKey),
+      ).thenAnswer((_) async => 'hash');
+      when(
+        () => mockSecureStorage.read(key: LocalAuthConstants.pinSaltKey),
+      ).thenAnswer((_) async => 'salt');
 
       final result = await repository.isPinSet();
       expect(result, isTrue);
     });
 
     test('isPinSet returns false if either is missing', () async {
-      when(() => mockSecureStorage.read(key: LocalAuthConstants.pinHashKey))
-          .thenAnswer((_) async => null);
-      when(() => mockSecureStorage.read(key: LocalAuthConstants.pinSaltKey))
-          .thenAnswer((_) async => 'salt');
+      when(
+        () => mockSecureStorage.read(key: LocalAuthConstants.pinHashKey),
+      ).thenAnswer((_) async => null);
+      when(
+        () => mockSecureStorage.read(key: LocalAuthConstants.pinSaltKey),
+      ).thenAnswer((_) async => 'salt');
 
       final result = await repository.isPinSet();
       expect(result, isFalse);
     });
 
     test('deletePin clears secure storage keys', () async {
-      when(() => mockSecureStorage.delete(key: LocalAuthConstants.pinHashKey))
-          .thenAnswer((_) async => {});
-      when(() => mockSecureStorage.delete(key: LocalAuthConstants.pinSaltKey))
-          .thenAnswer((_) async => {});
+      when(
+        () => mockSecureStorage.delete(key: LocalAuthConstants.pinHashKey),
+      ).thenAnswer((_) async => {});
+      when(
+        () => mockSecureStorage.delete(key: LocalAuthConstants.pinSaltKey),
+      ).thenAnswer((_) async => {});
 
       await repository.deletePin();
-      
-      verify(() => mockSecureStorage.delete(key: LocalAuthConstants.pinHashKey)).called(1);
-      verify(() => mockSecureStorage.delete(key: LocalAuthConstants.pinSaltKey)).called(1);
+
+      verify(
+        () => mockSecureStorage.delete(key: LocalAuthConstants.pinHashKey),
+      ).called(1);
+      verify(
+        () => mockSecureStorage.delete(key: LocalAuthConstants.pinSaltKey),
+      ).called(1);
     });
   });
 

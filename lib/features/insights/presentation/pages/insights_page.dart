@@ -157,7 +157,7 @@ class InsightsPage extends StatelessWidget {
                       children: [
                         Text(mood.emoji, style: const TextStyle(fontSize: 20)),
                         const SizedBox(width: 8),
-                        Text(entry.key.tr()),
+                        Text('mood_${entry.key}'.tr()),
                         const Spacer(),
                         Text('${(percentage * 100).round()}%'),
                       ],

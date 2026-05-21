@@ -7,10 +7,16 @@ import 'package:rojnivis/features/categories/domain/usecases/add_category.dart';
 import 'package:rojnivis/features/categories/domain/usecases/delete_category.dart';
 import 'package:rojnivis/features/categories/domain/usecases/get_categories.dart';
 
+import 'package:rojnivis/features/journal/domain/entities/journal_entry.dart';
+import 'package:rojnivis/features/journal/domain/repositories/journal_repository.dart';
+
 class MockCategoryRepository extends Mock implements CategoryRepository {}
+
+class MockJournalRepository extends Mock implements JournalRepository {}
 
 void main() {
   late MockCategoryRepository mockRepository;
+  late MockJournalRepository mockJournalRepository;
 
   const testCategory = Category(
     id: 'test-1',
@@ -21,6 +27,7 @@ void main() {
 
   setUp(() {
     mockRepository = MockCategoryRepository();
+    mockJournalRepository = MockJournalRepository();
   });
 
   setUpAll(() {
@@ -81,10 +88,16 @@ void main() {
     late DeleteCategory deleteCategory;
 
     setUp(() {
-      deleteCategory = DeleteCategory(mockRepository);
+      deleteCategory = DeleteCategory(mockRepository, mockJournalRepository);
     });
 
     test('delegates to repository.deleteCategory()', () async {
+      when(
+        () => mockRepository.getCategories(),
+      ).thenAnswer((_) async => (null, [testCategory]));
+      when(
+        () => mockJournalRepository.getEntries(),
+      ).thenAnswer((_) async => (null, <JournalEntry>[]));
       when(
         () => mockRepository.deleteCategory(any()),
       ).thenAnswer((_) async => (null, null));
@@ -97,6 +110,12 @@ void main() {
     group('Failure cases', () {
       test('DeleteCategory returns failure when repo fails', () async {
         const failure = StorageFailure(message: 'Delete failed');
+        when(
+          () => mockRepository.getCategories(),
+        ).thenAnswer((_) async => (null, [testCategory]));
+        when(
+          () => mockJournalRepository.getEntries(),
+        ).thenAnswer((_) async => (null, <JournalEntry>[]));
         when(
           () => mockRepository.deleteCategory(any()),
         ).thenAnswer((_) async => (failure, null));

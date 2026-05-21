@@ -50,6 +50,7 @@ class JournalEntry extends Equatable {
     Mood? mood,
     List<String>? tags,
     String? categoryId,
+    bool clearCategoryId = false,
     List<String>? attachmentPaths,
     String? summary,
   }) {
@@ -60,7 +61,7 @@ class JournalEntry extends Equatable {
       date: date ?? this.date,
       mood: mood ?? this.mood,
       tags: tags ?? this.tags,
-      categoryId: categoryId ?? this.categoryId,
+      categoryId: clearCategoryId ? null : (categoryId ?? this.categoryId),
       attachmentPaths: attachmentPaths ?? this.attachmentPaths,
       summary: summary ?? this.summary,
     );

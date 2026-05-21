@@ -7,11 +7,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:rojnivis/core/services/ai_service.dart';
 
 class MockFirebaseRemoteConfig extends Mock implements FirebaseRemoteConfig {}
+
 class MockHttpClient extends Mock implements http.Client {}
 
 // Register fallback values
 class FakeUri extends Fake implements Uri {}
+
 class FakeHttpRequest extends Fake implements http.BaseRequest {}
+
 class FakeRemoteConfigSettings extends Fake implements RemoteConfigSettings {}
 
 void main() {
@@ -29,14 +32,20 @@ void main() {
   setUp(() async {
     mockRemoteConfig = MockFirebaseRemoteConfig();
     mockHttpClient = MockHttpClient();
-    
+
     SharedPreferences.setMockInitialValues({});
     prefs = await SharedPreferences.getInstance();
 
     // Default RC behavior
-    when(() => mockRemoteConfig.getString('gemini_api_key')).thenReturn('dummy_key');
-    when(() => mockRemoteConfig.fetchAndActivate()).thenAnswer((_) async => true);
-    when(() => mockRemoteConfig.setConfigSettings(any())).thenAnswer((_) async => {});
+    when(
+      () => mockRemoteConfig.getString('gemini_api_key'),
+    ).thenReturn('dummy_key');
+    when(
+      () => mockRemoteConfig.fetchAndActivate(),
+    ).thenAnswer((_) async => true);
+    when(
+      () => mockRemoteConfig.setConfigSettings(any()),
+    ).thenAnswer((_) async => {});
     when(() => mockRemoteConfig.setDefaults(any())).thenAnswer((_) async => {});
 
     aiService = GeminiAiService(
@@ -64,12 +73,12 @@ void main() {
           {
             'content': {
               'parts': [
-                {'text': 'Summary text'}
+                {'text': 'Summary text'},
               ],
-              'role': 'model'
-            }
-          }
-        ]
+              'role': 'model',
+            },
+          },
+        ],
       }),
       200,
       headers: {'content-type': 'application/json'},
@@ -81,23 +90,25 @@ void main() {
           {
             'content': {
               'parts': [
-                {'text': 'happy, productive, morning'}
+                {'text': 'happy, productive, morning'},
               ],
-              'role': 'model'
-            }
-          }
-        ]
+              'role': 'model',
+            },
+          },
+        ],
       }),
       200,
       headers: {'content-type': 'application/json'},
     );
 
     test('summarize returns summary on success', () async {
-      when(() => mockHttpClient.post(
-            any(),
-            headers: any(named: 'headers'),
-            body: any(named: 'body'),
-          )).thenAnswer((_) async => successResponse);
+      when(
+        () => mockHttpClient.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async => successResponse);
 
       final result = await aiService.summarize('Some long journal entry');
       expect(result, 'Summary text');
@@ -109,8 +120,8 @@ void main() {
           'error': {
             'message': 'Quota exceeded',
             'status': 'RESOURCE_EXHAUSTED',
-            'code': 429
-          }
+            'code': 429,
+          },
         }),
         429,
         headers: {'content-type': 'application/json'},
@@ -118,11 +129,13 @@ void main() {
 
       // Primary fails with 429, then fallback succeeds
       int callCount = 0;
-      when(() => mockHttpClient.post(
-            any(),
-            headers: any(named: 'headers'),
-            body: any(named: 'body'),
-          )).thenAnswer((_) async {
+      when(
+        () => mockHttpClient.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async {
         callCount++;
         if (callCount == 1) {
           return errorResponse;
@@ -131,18 +144,20 @@ void main() {
       });
 
       final result = await aiService.summarize('Some long journal entry');
-      
+
       // Verify that it ultimately succeeded using the fallback model
       expect(result, 'Summary text');
       expect(callCount, greaterThan(1));
     });
 
     test('generateTags returns tags list', () async {
-      when(() => mockHttpClient.post(
-            any(),
-            headers: any(named: 'headers'),
-            body: any(named: 'body'),
-          )).thenAnswer((_) async => tagsResponse);
+      when(
+        () => mockHttpClient.post(
+          any(),
+          headers: any(named: 'headers'),
+          body: any(named: 'body'),
+        ),
+      ).thenAnswer((_) async => tagsResponse);
 
       final result = await aiService.generateTags('A nice morning');
       expect(result, equals(['happy', 'productive', 'morning']));

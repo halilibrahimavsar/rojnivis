@@ -272,12 +272,12 @@ class AppTheme {
     ),
     ThemePresetOption(
       preset: AppThemePreset.sunkenYacht,
-      labelKey: 'Batık Yat',
+      labelKey: 'theme_sunken_yacht',
       previewColor: _paletteFor(AppThemePreset.sunkenYacht).seed,
     ),
     ThemePresetOption(
       preset: AppThemePreset.pirateTreasure,
-      labelKey: 'Korsan Hazinesi',
+      labelKey: 'theme_pirate_treasure',
       previewColor: _paletteFor(AppThemePreset.pirateTreasure).seed,
     ),
   ]);

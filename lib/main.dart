@@ -12,6 +12,7 @@ import 'package:rojnivis/firebase_options.dart';
 import 'di/manual_auth_di.dart';
 import 'package:unified_flutter_features/features/local_auth/data/local_auth_repository.dart';
 import 'package:unified_flutter_features/features/local_auth/presentation/widgets/local_auth_security_layer.dart';
+import 'package:rojnivis/core/services/notification_service.dart';
 
 import 'core/constants/app_constants.dart';
 import 'core/errors/error_handler.dart';
@@ -24,6 +25,8 @@ import 'features/categories/presentation/bloc/category_bloc.dart';
 import 'features/insights/presentation/bloc/insights_bloc.dart';
 import 'features/journal/data/models/journal_entry_model.dart';
 import 'features/journal/presentation/bloc/journal_bloc.dart';
+import 'features/calendar/presentation/bloc/calendar_bloc.dart';
+import 'features/calendar/presentation/bloc/calendar_event.dart';
 import 'features/settings/presentation/bloc/settings_bloc.dart';
 import 'features/splash/presentation/bloc/splash_bloc.dart';
 
@@ -72,6 +75,10 @@ Future<void> _initializeApp() async {
 
   // Seed default data
   await _seedDefaultCategoriesIfEmpty();
+
+  // Initialize notifications
+  await NotificationService().init();
+  await NotificationService().requestPermissions();
 
   // Pre-initialize basic dependencies for Auth and other modules
   // Use a timeout to prevent Android startup hangs
@@ -195,6 +202,12 @@ class _AppProviders extends StatelessWidget {
         ),
         BlocProvider(
           create: (_) => getIt<CategoryBloc>()..add(const LoadCategories()),
+        ),
+        BlocProvider(
+          create:
+              (_) =>
+                  getIt<CalendarBloc>()
+                    ..add(LoadCalendarData(month: DateTime.now())),
         ),
         BlocProvider(
           create: (_) => getIt<SplashBloc>()..add(const InitializeSplash()),

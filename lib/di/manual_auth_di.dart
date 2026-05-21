@@ -54,10 +54,4 @@ void registerAuthDependencies() {
       clientId: webClientId,
     ),
   );
-
-  // A singleton ensures the single BLoC instance in MultiBlocProvider is the
-  // same one accessed throughout the app — no orphaned stream subscriptions.
-  getIt.registerLazySingleton<AuthBloc>(
-    () => AuthBloc(repository: getIt<AuthRepository>()),
-  );
 }

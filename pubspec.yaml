@@ -68,6 +68,9 @@ dependencies:
   firebase_remote_config: ^6.1.4
   sliver_tools: ^0.2.12
   firebase_analytics: ^12.1.2
+  dartz: ^0.10.1
+  flutter_local_notifications: ^17.2.4
+  timezone: ^0.9.4
   
 
   

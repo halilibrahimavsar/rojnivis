@@ -3,6 +3,11 @@ import 'package:go_router/go_router.dart';
 import 'themed_paper.dart';
 import 'glass_overlays.dart';
 import 'interactive_top_bar.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:rojnivis/features/calendar/domain/entities/reminder.dart';
+import 'package:rojnivis/features/calendar/presentation/bloc/calendar_bloc.dart';
+import 'package:rojnivis/features/calendar/presentation/bloc/calendar_event.dart';
+import 'package:rojnivis/features/calendar/presentation/widgets/add_reminder_dialog.dart';
 
 class AppLayout extends StatefulWidget {
   const AppLayout({super.key, required this.child});
@@ -31,7 +36,7 @@ class _AppLayoutState extends State<AppLayout> {
         context.go('/home/categories');
         break;
       case 2:
-        context.push('/home/add-entry');
+        _showAddMenu(context);
         break;
       case 3:
         context.go('/home/calendar');
@@ -40,6 +45,64 @@ class _AppLayoutState extends State<AppLayout> {
         context.go('/home/settings');
         break;
     }
+  }
+
+  void _showAddMenu(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (BuildContext bottomSheetContext) {
+        return Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFF1E1E2C),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(20),
+              topRight: Radius.circular(20),
+            ),
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.book, color: Colors.blueAccent),
+                  title: const Text(
+                    'Günlük Ekle',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  onTap: () {
+                    Navigator.pop(bottomSheetContext);
+                    context.push('/home/add-entry');
+                  },
+                ),
+                ListTile(
+                  leading: const Icon(Icons.alarm, color: Colors.orangeAccent),
+                  title: const Text(
+                    'Hatırlatıcı Ekle',
+                    style: TextStyle(color: Colors.white),
+                  ),
+                  onTap: () async {
+                    Navigator.pop(bottomSheetContext);
+                    final reminder = await showDialog<Reminder>(
+                      context: context,
+                      barrierColor: Colors.black.withValues(alpha: 0.6),
+                      builder:
+                          (context) =>
+                              AddReminderDialog(selectedDate: DateTime.now()),
+                    );
+                    if (reminder != null && context.mounted) {
+                      context.read<CalendarBloc>().add(
+                        AddReminderEvent(reminder),
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override

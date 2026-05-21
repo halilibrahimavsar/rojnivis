@@ -19,11 +19,15 @@ class CategoryModel {
   @HiveField(3)
   final String iconPath;
 
+  @HiveField(4)
+  final String? parentId;
+
   const CategoryModel({
     required this.id,
     required this.name,
     required this.color,
     required this.iconPath,
+    this.parentId,
   });
 
   /// Creates a model from a domain entity.
@@ -33,12 +37,19 @@ class CategoryModel {
       name: entity.name,
       color: entity.color,
       iconPath: entity.iconPath,
+      parentId: entity.parentId,
     );
   }
 
   /// Converts this model to a domain entity.
   Category toEntity() {
-    return Category(id: id, name: name, color: color, iconPath: iconPath);
+    return Category(
+      id: id,
+      name: name,
+      color: color,
+      iconPath: iconPath,
+      parentId: parentId,
+    );
   }
 
   CategoryModel copyWith({
@@ -46,12 +57,14 @@ class CategoryModel {
     String? name,
     int? color,
     String? iconPath,
+    String? parentId,
   }) {
     return CategoryModel(
       id: id ?? this.id,
       name: name ?? this.name,
       color: color ?? this.color,
       iconPath: iconPath ?? this.iconPath,
+      parentId: parentId ?? this.parentId,
     );
   }
 }
