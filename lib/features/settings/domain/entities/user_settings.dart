@@ -12,6 +12,8 @@ class UserSettings extends Equatable {
   final String pageVisualFamily;
   final String vintagePaperVariant;
   final String animationIntensity;
+  final bool isRandomThemeEnabled;
+  final int randomThemeIntervalSeconds;
 
   const UserSettings({
     required this.themeMode,
@@ -24,6 +26,8 @@ class UserSettings extends Equatable {
     required this.pageVisualFamily,
     required this.vintagePaperVariant,
     required this.animationIntensity,
+    required this.isRandomThemeEnabled,
+    required this.randomThemeIntervalSeconds,
   });
 
   UserSettings copyWith({
@@ -37,6 +41,8 @@ class UserSettings extends Equatable {
     String? pageVisualFamily,
     String? vintagePaperVariant,
     String? animationIntensity,
+    bool? isRandomThemeEnabled,
+    int? randomThemeIntervalSeconds,
   }) {
     return UserSettings(
       themeMode: themeMode ?? this.themeMode,
@@ -50,6 +56,9 @@ class UserSettings extends Equatable {
       pageVisualFamily: pageVisualFamily ?? this.pageVisualFamily,
       vintagePaperVariant: vintagePaperVariant ?? this.vintagePaperVariant,
       animationIntensity: animationIntensity ?? this.animationIntensity,
+      isRandomThemeEnabled: isRandomThemeEnabled ?? this.isRandomThemeEnabled,
+      randomThemeIntervalSeconds:
+          randomThemeIntervalSeconds ?? this.randomThemeIntervalSeconds,
     );
   }
 
@@ -65,5 +74,7 @@ class UserSettings extends Equatable {
     pageVisualFamily,
     vintagePaperVariant,
     animationIntensity,
+    isRandomThemeEnabled,
+    randomThemeIntervalSeconds,
   ];
 }

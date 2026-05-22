@@ -294,7 +294,7 @@ class _AppConfiguration extends StatelessWidget {
         themeMode: state.settings.themeMode,
         locale: state.settings.locale,
         fontFamily: state.settings.fontFamily,
-        themePreset: state.settings.themePreset,
+        themePreset: state.effectiveThemePreset,
         pageVisualFamily: state.settings.pageVisualFamily,
         vintagePaperVariant: state.settings.vintagePaperVariant,
         animationIntensity: state.settings.animationIntensity,

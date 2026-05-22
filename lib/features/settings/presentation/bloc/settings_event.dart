@@ -100,3 +100,25 @@ class UpdateAnimationIntensity extends SettingsEvent {
   @override
   List<Object?> get props => [animationIntensity];
 }
+
+class UpdateRandomThemeEnabled extends SettingsEvent {
+  final bool enabled;
+
+  const UpdateRandomThemeEnabled(this.enabled);
+
+  @override
+  List<Object?> get props => [enabled];
+}
+
+class UpdateRandomThemeInterval extends SettingsEvent {
+  final int seconds;
+
+  const UpdateRandomThemeInterval(this.seconds);
+
+  @override
+  List<Object?> get props => [seconds];
+}
+
+class _RotateRandomTheme extends SettingsEvent {
+  const _RotateRandomTheme();
+}

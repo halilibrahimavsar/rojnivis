@@ -154,6 +154,8 @@ class AppDefaults {
   static const String defaultVintagePaperVariant =
       VintagePaperVariantIds.parchment;
   static const String defaultAnimationIntensity = AnimationIntensityIds.subtle;
+  static const bool defaultRandomThemeEnabled = false;
+  static const int defaultRandomThemeIntervalSeconds = 30;
 
   /// Categories
   static const List<Map<String, dynamic>> defaultCategories = [
@@ -185,6 +187,8 @@ class StorageKeys {
   static const String pageVisualFamily = 'page_visual_family';
   static const String vintagePaperVariant = 'vintage_paper_variant';
   static const String animationIntensity = 'animation_intensity';
+  static const String randomThemeEnabled = 'random_theme_enabled';
+  static const String randomThemeIntervalSeconds = 'random_theme_interval';
   static const String aiModel = 'ai_model';
 }
 
@@ -229,6 +233,12 @@ class ThemePresets {
   static const String sunny = 'sunny';
   static const String sunkenYacht = 'sunken_yacht';
   static const String pirateTreasure = 'pirate_treasure';
+  static const String darkAcademiaClassic = 'dark_academia_classic';
+  static const String darkAcademiaParchment = 'dark_academia_parchment';
+  static const String darkAcademiaMidnight = 'dark_academia_midnight';
+  static const String darkAcademiaMidnightMoon = 'dark_academia_midnight_moon';
+  static const String darkAcademiaMidnightClock =
+      'dark_academia_midnight_clock';
 }
 
 /// Hive type IDs for adapters

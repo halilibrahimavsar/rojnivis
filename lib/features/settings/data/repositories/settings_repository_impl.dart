@@ -23,6 +23,8 @@ class SettingsRepositoryImpl implements SettingsRepository {
   static const _pageVisualFamilyKey = StorageKeys.pageVisualFamily;
   static const _vintagePaperVariantKey = StorageKeys.vintagePaperVariant;
   static const _animationIntensityKey = StorageKeys.animationIntensity;
+  static const _randomThemeEnabledKey = StorageKeys.randomThemeEnabled;
+  static const _randomThemeIntervalKey = StorageKeys.randomThemeIntervalSeconds;
 
   @override
   Future<(Failure?, UserSettings?)> getSettings() async {
@@ -51,6 +53,12 @@ class SettingsRepositoryImpl implements SettingsRepository {
       final animationIntensity =
           _readString(_animationIntensityKey) ??
           AppDefaults.defaultAnimationIntensity;
+      final isRandomThemeEnabled =
+          _readBool(_randomThemeEnabledKey) ??
+          AppDefaults.defaultRandomThemeEnabled;
+      final randomThemeIntervalSeconds =
+          _prefs.getInt(_randomThemeIntervalKey) ??
+          AppDefaults.defaultRandomThemeIntervalSeconds;
 
       final localeRaw =
           _readString(_localeKey) ??
@@ -72,6 +80,8 @@ class SettingsRepositoryImpl implements SettingsRepository {
             vintagePaperVariant,
           ),
           animationIntensity: _sanitizeAnimationIntensity(animationIntensity),
+          isRandomThemeEnabled: isRandomThemeEnabled,
+          randomThemeIntervalSeconds: randomThemeIntervalSeconds,
         ),
       );
     } catch (e) {
@@ -96,6 +106,11 @@ class SettingsRepositoryImpl implements SettingsRepository {
         _prefs.setString(_pageVisualFamilyKey, settings.pageVisualFamily),
         _prefs.setString(_vintagePaperVariantKey, settings.vintagePaperVariant),
         _prefs.setString(_animationIntensityKey, settings.animationIntensity),
+        _prefs.setBool(_randomThemeEnabledKey, settings.isRandomThemeEnabled),
+        _prefs.setInt(
+          _randomThemeIntervalKey,
+          settings.randomThemeIntervalSeconds,
+        ),
       ]);
       return (null, null);
     } catch (e) {

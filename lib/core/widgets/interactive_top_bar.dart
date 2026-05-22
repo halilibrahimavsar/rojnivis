@@ -279,7 +279,7 @@ class _InteractiveTopBarState extends State<InteractiveTopBar> {
                                           builder: (context, state) {
                                             final currentPreset =
                                                 state is SettingsLoaded
-                                                    ? state.settings.themePreset
+                                                    ? state.effectiveThemePreset
                                                     : AppTheme.presets.first.id;
 
                                             return SingleChildScrollView(
@@ -323,6 +323,15 @@ class _InteractiveTopBarState extends State<InteractiveTopBar> {
                                                                 .add(
                                                                   UpdateThemePreset(
                                                                     preset.id,
+                                                                  ),
+                                                                );
+                                                            context
+                                                                .read<
+                                                                  SettingsBloc
+                                                                >()
+                                                                .add(
+                                                                  const UpdateRandomThemeEnabled(
+                                                                    false,
                                                                   ),
                                                                 );
                                                             _closeExpanded();

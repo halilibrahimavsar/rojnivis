@@ -26,6 +26,8 @@ void main() {
     pageVisualFamily: 'classic',
     vintagePaperVariant: 'parchment',
     animationIntensity: 'subtle',
+    isRandomThemeEnabled: false,
+    randomThemeIntervalSeconds: 30,
   );
 
   setUpAll(() {

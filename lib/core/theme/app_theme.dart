@@ -28,6 +28,11 @@ enum AppThemePreset {
   sunny,
   sunkenYacht,
   pirateTreasure,
+  darkAcademiaClassic,
+  darkAcademiaParchment,
+  darkAcademiaMidnight,
+  darkAcademiaMidnightMoon,
+  darkAcademiaMidnightClock,
 }
 
 extension AppThemePresetX on AppThemePreset {
@@ -79,6 +84,16 @@ extension AppThemePresetX on AppThemePreset {
         return ThemePresets.sunkenYacht;
       case AppThemePreset.pirateTreasure:
         return ThemePresets.pirateTreasure;
+      case AppThemePreset.darkAcademiaClassic:
+        return ThemePresets.darkAcademiaClassic;
+      case AppThemePreset.darkAcademiaParchment:
+        return ThemePresets.darkAcademiaParchment;
+      case AppThemePreset.darkAcademiaMidnight:
+        return ThemePresets.darkAcademiaMidnight;
+      case AppThemePreset.darkAcademiaMidnightMoon:
+        return ThemePresets.darkAcademiaMidnightMoon;
+      case AppThemePreset.darkAcademiaMidnightClock:
+        return ThemePresets.darkAcademiaMidnightClock;
     }
   }
 
@@ -128,6 +143,16 @@ extension AppThemePresetX on AppThemePreset {
         return AppThemePreset.sunkenYacht;
       case ThemePresets.pirateTreasure:
         return AppThemePreset.pirateTreasure;
+      case ThemePresets.darkAcademiaClassic:
+        return AppThemePreset.darkAcademiaClassic;
+      case ThemePresets.darkAcademiaParchment:
+        return AppThemePreset.darkAcademiaParchment;
+      case ThemePresets.darkAcademiaMidnight:
+        return AppThemePreset.darkAcademiaMidnight;
+      case ThemePresets.darkAcademiaMidnightMoon:
+        return AppThemePreset.darkAcademiaMidnightMoon;
+      case ThemePresets.darkAcademiaMidnightClock:
+        return AppThemePreset.darkAcademiaMidnightClock;
       case ThemePresets.defaultPreset:
       default:
         return AppThemePreset.defaultPreset;
@@ -279,6 +304,31 @@ class AppTheme {
       preset: AppThemePreset.pirateTreasure,
       labelKey: 'theme_pirate_treasure',
       previewColor: _paletteFor(AppThemePreset.pirateTreasure).seed,
+    ),
+    ThemePresetOption(
+      preset: AppThemePreset.darkAcademiaClassic,
+      labelKey: 'theme_dark_academia_classic',
+      previewColor: _paletteFor(AppThemePreset.darkAcademiaClassic).seed,
+    ),
+    ThemePresetOption(
+      preset: AppThemePreset.darkAcademiaParchment,
+      labelKey: 'theme_dark_academia_parchment',
+      previewColor: _paletteFor(AppThemePreset.darkAcademiaParchment).seed,
+    ),
+    ThemePresetOption(
+      preset: AppThemePreset.darkAcademiaMidnight,
+      labelKey: 'theme_dark_academia_midnight',
+      previewColor: _paletteFor(AppThemePreset.darkAcademiaMidnight).seed,
+    ),
+    ThemePresetOption(
+      preset: AppThemePreset.darkAcademiaMidnightMoon,
+      labelKey: 'theme_dark_academia_midnight_moon',
+      previewColor: _paletteFor(AppThemePreset.darkAcademiaMidnightMoon).seed,
+    ),
+    ThemePresetOption(
+      preset: AppThemePreset.darkAcademiaMidnightClock,
+      labelKey: 'theme_dark_academia_midnight_clock',
+      previewColor: _paletteFor(AppThemePreset.darkAcademiaMidnightClock).seed,
     ),
   ]);
 
@@ -796,6 +846,56 @@ class AppTheme {
           backgroundDark: Color(0xFF1B110F),
           surfaceDark: Color(0xFF221614),
         );
+      case AppThemePreset.darkAcademiaClassic:
+        return const _ThemePalette(
+          seed: Color(0xFF5D4037), // Mahogany
+          secondary: Color(0xFF8D6E63), // Lighter Wood
+          tertiary: Color(0xFFFFB300), // Vintage Gold
+          backgroundLight: Color(0xFFF5EFE6), // Warm paper
+          surfaceLight: Color(0xFFFFFFFF),
+          backgroundDark: Color(0xFF1F1714), // Dark Leather
+          surfaceDark: Color(0xFF2A1F1A),
+        );
+      case AppThemePreset.darkAcademiaParchment:
+        return const _ThemePalette(
+          seed: Color(0xFF8D6E63), // Antique Brown
+          secondary: Color(0xFFD7CCC8), // Parchment
+          tertiary: Color(0xFFFFCC80), // Candlelight
+          backgroundLight: Color(0xFFFDF6E3), // Faded Parchment
+          surfaceLight: Color(0xFFFFFFFF),
+          backgroundDark: Color(0xFF2E241E), // Dark Sepia
+          surfaceDark: Color(0xFF3E3129),
+        );
+      case AppThemePreset.darkAcademiaMidnight:
+        return const _ThemePalette(
+          seed: Color(0xFF1A237E), // Deep Night Blue
+          secondary: Color(0xFF3F51B5), // Starlight Blue
+          tertiary: Color(0xFFB0BEC5), // Silver
+          backgroundLight: Color(0xFFE8EAF6),
+          surfaceLight: Color(0xFFFFFFFF),
+          backgroundDark: Color(0xFF0C101A), // Ink Black
+          surfaceDark: Color(0xFF151C2A), // Library Night
+        );
+      case AppThemePreset.darkAcademiaMidnightMoon:
+        return const _ThemePalette(
+          seed: Color(0xFF283593), // Moonlit Blue
+          secondary: Color(0xFF5C6BC0), // Bright Starlight
+          tertiary: Color(0xFFCFD8DC), // Bright Silver
+          backgroundLight: Color(0xFFE8EAF6),
+          surfaceLight: Color(0xFFFFFFFF),
+          backgroundDark: Color(0xFF0A0F1A), // Dark Sky
+          surfaceDark: Color(0xFF111722), // Telescope Room
+        );
+      case AppThemePreset.darkAcademiaMidnightClock:
+        return const _ThemePalette(
+          seed: Color(0xFF1565C0), // Magic Dust Blue
+          secondary: Color(0xFF42A5F5), // Glowing Dust
+          tertiary: Color(0xFF81D4FA), // Bright Magic
+          backgroundLight: Color(0xFFE3F2FD),
+          surfaceLight: Color(0xFFFFFFFF),
+          backgroundDark: Color(0xFF08121F), // Library Shadows
+          surfaceDark: Color(0xFF0D1B2A), // Grandfather Clock Room
+        );
     }
   }
 
@@ -848,6 +948,16 @@ class AppTheme {
           return const Color(0xFF001512);
         case AppThemePreset.pirateTreasure:
           return const Color(0xFF1B110F);
+        case AppThemePreset.darkAcademiaClassic:
+          return const Color(0xFF1F1714);
+        case AppThemePreset.darkAcademiaParchment:
+          return const Color(0xFF2E241E);
+        case AppThemePreset.darkAcademiaMidnight:
+          return const Color(0xFF0C101A);
+        case AppThemePreset.darkAcademiaMidnightMoon:
+          return const Color(0xFF0A0F1A);
+        case AppThemePreset.darkAcademiaMidnightClock:
+          return const Color(0xFF08121F);
       }
     }
 
@@ -898,6 +1008,16 @@ class AppTheme {
         return const Color(0xFFE0F2F1);
       case AppThemePreset.pirateTreasure:
         return const Color(0xFFD7CCC8);
+      case AppThemePreset.darkAcademiaClassic:
+        return const Color(0xFFD7CCC8);
+      case AppThemePreset.darkAcademiaParchment:
+        return const Color(0xFFD7CCC8);
+      case AppThemePreset.darkAcademiaMidnight:
+        return const Color(0xFFCFD8DC);
+      case AppThemePreset.darkAcademiaMidnightMoon:
+        return const Color(0xFFCFD8DC);
+      case AppThemePreset.darkAcademiaMidnightClock:
+        return const Color(0xFFB3E5FC);
     }
   }
 }

@@ -44,7 +44,7 @@ class _SplashPageState extends State<SplashPage>
   Future<void> _startAnimation() async {
     if (!mounted) return;
     _fadeController.forward();
-    
+
     // We removed all artificial delays for maximum opening speed.
     // The native splash screen handles the visual loading state.
     context.read<SplashBloc>().add(const SplashAnimationComplete());

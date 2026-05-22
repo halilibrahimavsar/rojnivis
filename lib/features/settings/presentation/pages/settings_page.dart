@@ -154,6 +154,47 @@ class SettingsPage extends StatelessWidget {
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
                       dense: true,
+                      value: state.settings.isRandomThemeEnabled,
+                      onChanged:
+                          (value) => context.read<SettingsBloc>().add(
+                            UpdateRandomThemeEnabled(value),
+                          ),
+                      title: const Text('Rastgele Tema Geçişi'),
+                      subtitle: const Text(
+                        'Arka plan belirli aralıklarla otomatik değişir',
+                      ),
+                    ),
+                    if (state.settings.isRandomThemeEnabled) ...[
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          const Text('Geçiş Süresi: '),
+                          Text(
+                            state.settings.randomThemeIntervalSeconds >= 60
+                                ? '${state.settings.randomThemeIntervalSeconds ~/ 60} dk ${state.settings.randomThemeIntervalSeconds % 60 > 0 ? '${state.settings.randomThemeIntervalSeconds % 60} sn' : ''}'
+                                : '${state.settings.randomThemeIntervalSeconds} sn',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      Slider(
+                        value:
+                            state.settings.randomThemeIntervalSeconds
+                                .toDouble(),
+                        min: 5,
+                        max: 300,
+                        divisions: 59,
+                        onChanged: (value) {
+                          context.read<SettingsBloc>().add(
+                            UpdateRandomThemeInterval(value.toInt()),
+                          );
+                        },
+                      ),
+                    ],
+                    const SizedBox(height: 16),
+                    SwitchListTile(
+                      contentPadding: EdgeInsets.zero,
+                      dense: true,
                       value: state.settings.showAttachmentBackdrop,
                       onChanged:
                           (value) => context.read<SettingsBloc>().add(

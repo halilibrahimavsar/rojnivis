@@ -55,7 +55,7 @@ class SplashBloc extends Bloc<SplashEvent, SplashState> {
         authState is AuthErrorState) {
       emit(const SplashNavigating(SplashNavigationTarget.public));
     } else {
-      // AuthBloc is still initializing. 
+      // AuthBloc is still initializing.
       // We removed the 500ms polling loop!
       // The _authSubscription will automatically trigger this event again the exact millisecond AuthBloc is ready.
     }

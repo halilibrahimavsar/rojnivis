@@ -13,13 +13,27 @@ class SettingsInitial extends SettingsState {
 
 class SettingsLoaded extends SettingsState {
   final UserSettings settings;
+  final String? activeRandomThemePreset;
 
-  const SettingsLoaded({required this.settings});
+  const SettingsLoaded({required this.settings, this.activeRandomThemePreset});
+
+  String get effectiveThemePreset =>
+      activeRandomThemePreset ?? settings.themePreset;
 
   @override
-  List<Object?> get props => [settings];
+  List<Object?> get props => [settings, activeRandomThemePreset];
 
-  SettingsLoaded copyWith({UserSettings? settings}) {
-    return SettingsLoaded(settings: settings ?? this.settings);
+  SettingsLoaded copyWith({
+    UserSettings? settings,
+    String? activeRandomThemePreset,
+    bool clearRandomTheme = false,
+  }) {
+    return SettingsLoaded(
+      settings: settings ?? this.settings,
+      activeRandomThemePreset:
+          clearRandomTheme
+              ? null
+              : (activeRandomThemePreset ?? this.activeRandomThemePreset),
+    );
   }
 }

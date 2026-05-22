@@ -826,6 +826,8 @@ enum _PaperMotif {
   snowing,
   sunny,
   oceanic,
+  candlelight,
+  midnightMagic,
 }
 
 // --- Physics State Classes for Fauna ---
@@ -1396,6 +1398,121 @@ _PaperSpec _paperSpecFor(AppThemePreset preset, bool isDark) {
                 : Colors.black.withValues(alpha: 0.05),
         motif: _PaperMotif.oceanic,
       );
+    case AppThemePreset.darkAcademiaClassic:
+      return _PaperSpec(
+        base: isDark ? const Color(0xFF1F1714) : const Color(0xFFF5EFE6),
+        gradient:
+            isDark
+                ? const [
+                  Color(0xFF1F1714),
+                  Color(0xFF2E221E),
+                  Color(0xFF3D2C27),
+                ]
+                : const [
+                  Color(0xFFF5EFE6),
+                  Color(0xFFE8DECF),
+                  Color(0xFFDCCDB7),
+                ],
+        accent: const Color(0xFFFFB300),
+        accent2: const Color(0xFF8D6E63),
+        lineColor:
+            isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.black.withValues(alpha: 0.05),
+        motif: _PaperMotif.candlelight,
+      );
+    case AppThemePreset.darkAcademiaParchment:
+      return _PaperSpec(
+        base: isDark ? const Color(0xFF2E241E) : const Color(0xFFFDF6E3),
+        gradient:
+            isDark
+                ? const [
+                  Color(0xFF2E241E),
+                  Color(0xFF3E3129),
+                  Color(0xFF4F3F34),
+                ]
+                : const [
+                  Color(0xFFFDF6E3),
+                  Color(0xFFF3E7CD),
+                  Color(0xFFEAD8B7),
+                ],
+        accent: const Color(0xFFFFCC80),
+        accent2: const Color(0xFF8D6E63),
+        lineColor:
+            isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.black.withValues(alpha: 0.05),
+        motif: _PaperMotif.candlelight,
+      );
+    case AppThemePreset.darkAcademiaMidnight:
+      return _PaperSpec(
+        base: isDark ? const Color(0xFF0C101A) : const Color(0xFFE8EAF6),
+        gradient:
+            isDark
+                ? const [
+                  Color(0xFF0C101A),
+                  Color(0xFF151C2A),
+                  Color(0xFF1D273B),
+                ]
+                : const [
+                  Color(0xFFE8EAF6),
+                  Color(0xFFC5CAE9),
+                  Color(0xFF9FA8DA),
+                ],
+        accent: const Color(0xFFB0BEC5),
+        accent2: const Color(0xFF3F51B5),
+        lineColor:
+            isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.black.withValues(alpha: 0.05),
+        motif: _PaperMotif.midnightMagic,
+      );
+    case AppThemePreset.darkAcademiaMidnightMoon:
+      return _PaperSpec(
+        base: isDark ? const Color(0xFF0A0F1A) : const Color(0xFFE8EAF6),
+        gradient:
+            isDark
+                ? const [
+                  Color(0xFF0A0F1A),
+                  Color(0xFF111722),
+                  Color(0xFF192233),
+                ]
+                : const [
+                  Color(0xFFE8EAF6),
+                  Color(0xFFB39DDB),
+                  Color(0xFF7E57C2),
+                ],
+        accent: const Color(0xFFCFD8DC),
+        accent2: const Color(0xFF5C6BC0),
+        lineColor:
+            isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.black.withValues(alpha: 0.05),
+        motif: _PaperMotif.midnightMagic,
+      );
+    case AppThemePreset.darkAcademiaMidnightClock:
+      return _PaperSpec(
+        base: isDark ? const Color(0xFF08121F) : const Color(0xFFE3F2FD),
+        gradient:
+            isDark
+                ? const [
+                  Color(0xFF08121F),
+                  Color(0xFF0D1B2A),
+                  Color(0xFF132740),
+                ]
+                : const [
+                  Color(0xFFE3F2FD),
+                  Color(0xFF90CAF9),
+                  Color(0xFF42A5F5),
+                ],
+        accent: const Color(0xFF81D4FA),
+        accent2: const Color(0xFF1565C0),
+        lineColor:
+            isDark
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.black.withValues(alpha: 0.05),
+        motif: _PaperMotif.midnightMagic,
+      );
     case AppThemePreset.defaultPreset:
       return _PaperSpec(
         base: isDark ? const Color(0xFF141326) : const Color(0xFFFCFBFF),
@@ -1462,6 +1579,16 @@ String? _bgImageFor(AppThemePreset preset) {
     AppThemePreset.sunkenYacht => 'assets/images/backgrounds/sunken_yacht.png',
     AppThemePreset.pirateTreasure =>
       'assets/images/backgrounds/pirate_treasure.png',
+    AppThemePreset.darkAcademiaClassic =>
+      'assets/images/backgrounds/dark_academia_classic.png',
+    AppThemePreset.darkAcademiaParchment =>
+      'assets/images/backgrounds/dark_academia_parchment.png',
+    AppThemePreset.darkAcademiaMidnight =>
+      'assets/images/backgrounds/dark_academia_midnight.png',
+    AppThemePreset.darkAcademiaMidnightMoon =>
+      'assets/images/backgrounds/dark_academia_midnight_moon.png',
+    AppThemePreset.darkAcademiaMidnightClock =>
+      'assets/images/backgrounds/dark_academia_midnight_clock.png',
     _ => null,
   };
 }
@@ -1480,6 +1607,15 @@ Widget _buildBackgroundImage(
   final panY = sin(t * pi * 2) * 10.0;
   final skewX = sin(t * pi * 4) * 0.015;
 
+  final isFullOpacityPreset =
+      preset == AppThemePreset.darkAcademiaMidnight ||
+      preset == AppThemePreset.darkAcademiaMidnightMoon ||
+      preset == AppThemePreset.darkAcademiaMidnightClock ||
+      preset == AppThemePreset.darkAcademiaClassic ||
+      preset == AppThemePreset.darkAcademiaParchment ||
+      preset == AppThemePreset.pirateTreasure ||
+      preset == AppThemePreset.sunkenYacht;
+
   return Positioned.fill(
     child: ClipRect(
       child: Transform(
@@ -1492,7 +1628,7 @@ Widget _buildBackgroundImage(
           transform: Matrix4.skewX(skewX),
           alignment: Alignment.bottomCenter,
           child: Opacity(
-            opacity: isBackdrop ? 0.7 : 0.4,
+            opacity: isFullOpacityPreset ? 1.0 : (isBackdrop ? 0.7 : 0.4),
             child: Image.asset(path, fit: BoxFit.cover),
           ),
         ),
@@ -1899,6 +2035,12 @@ class _PaperEffectPainter extends CustomPainter {
       case _PaperMotif.oceanic:
         _drawOceanic(canvas, size);
         break;
+      case _PaperMotif.candlelight:
+        _drawCandlelightAndDust(canvas, size);
+        break;
+      case _PaperMotif.midnightMagic:
+        _drawMidnightMagic(canvas, size);
+        break;
       case _PaperMotif.none:
         break;
     }
@@ -2284,6 +2426,129 @@ class _PaperEffectPainter extends CustomPainter {
           );
         }
       }
+    }
+  }
+
+  // ── Dark Academia: Candlelight and Dust ──
+  void _drawCandlelightAndDust(Canvas canvas, Size size) {
+    // Warm pulsing glow
+    final glowPaint =
+        Paint()
+          ..shader = RadialGradient(
+            colors: [
+              const Color(
+                0xFFFFCC80,
+              ).withValues(alpha: 0.15 + sin(progress * 12) * 0.05),
+              const Color(
+                0xFFFFB300,
+              ).withValues(alpha: 0.05 + sin(progress * 8) * 0.02),
+              Colors.transparent,
+            ],
+            stops: const [0.0, 0.5, 1.0],
+          ).createShader(
+            Rect.fromCircle(
+              center: Offset(size.width / 2, size.height * 0.8),
+              radius: size.height * 0.6,
+            ),
+          )
+          ..blendMode = BlendMode.screen;
+    canvas.drawRect(Offset.zero & size, glowPaint);
+
+    // Drifting magical dust
+    final rng = Random(1024);
+    final dustPaint =
+        Paint()..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.5);
+
+    for (int i = 0; i < 40; i++) {
+      final xSeed = rng.nextDouble();
+      final ySeed = rng.nextDouble();
+      final sizeFactor = rng.nextDouble();
+
+      final t = progress * (0.1 + 0.1 * sizeFactor);
+      final yBase = (ySeed - t) % 1.1 * size.height + size.height * 0.05;
+      final sway = sin(t * pi * 2 + i) * 20 * sizeFactor;
+      final xBase = xSeed * size.width + sway;
+
+      double x = xBase;
+      double y = size.height - yBase;
+
+      if (isPointerDown) {
+        final dx = x - pointerX;
+        final dy = y - pointerY;
+        final dist = sqrt(dx * dx + dy * dy);
+        if (dist < 120) {
+          final force = (120 - dist) / 120;
+          x += (dx / dist) * force * 30;
+          y += (dy / dist) * force * 30;
+        }
+      }
+
+      final alpha =
+          (0.2 + 0.6 * sizeFactor) * (0.8 + sin(progress * 20 + i) * 0.2);
+      canvas.drawCircle(
+        Offset(x, y),
+        1.0 + 2.0 * sizeFactor,
+        dustPaint..color = const Color(0xFFFFCC80).withValues(alpha: alpha),
+      );
+    }
+  }
+
+  // ── Dark Academia: Midnight Magic ──
+  void _drawMidnightMagic(Canvas canvas, Size size) {
+    _drawRealisticStars(canvas, size);
+
+    // Subtle shifting fog at the bottom
+    final fogPaint =
+        Paint()
+          ..shader = LinearGradient(
+            begin: Alignment.bottomCenter,
+            end: Alignment.topCenter,
+            colors: [
+              const Color(
+                0xFF9FA8DA,
+              ).withValues(alpha: 0.15 + sin(progress * 3) * 0.05),
+              Colors.transparent,
+            ],
+          ).createShader(
+            Rect.fromLTRB(0, size.height * 0.6, size.width, size.height),
+          )
+          ..blendMode = BlendMode.screen;
+    canvas.drawRect(Offset.zero & size, fogPaint);
+
+    // Magical blue stardust
+    final rng = Random(2048);
+    final dustPaint =
+        Paint()..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.0);
+
+    for (int i = 0; i < 50; i++) {
+      final xSeed = rng.nextDouble();
+      final ySeed = rng.nextDouble();
+      final sizeFactor = rng.nextDouble();
+
+      final t = progress * (0.05 + 0.08 * sizeFactor);
+      final yBase = (ySeed - t) % 1.1 * size.height + size.height * 0.05;
+      final sway = sin(t * pi * 2 + i) * 30 * sizeFactor;
+      double x = (xSeed * size.width + sway) % size.width;
+      double y = size.height - yBase;
+
+      if (isPointerDown) {
+        final dx = x - pointerX;
+        final dy = y - pointerY;
+        final dist = sqrt(dx * dx + dy * dy);
+        if (dist < 150) {
+          final force = (150 - dist) / 150;
+          x += (dx / dist) * force * 40;
+          y += (dy / dist) * force * 40;
+        }
+      }
+
+      final alpha =
+          (0.3 + 0.7 * sizeFactor) * (0.5 + sin(progress * 15 + i) * 0.5);
+      canvas.drawCircle(
+        Offset(x, y),
+        1.5 + 2.5 * sizeFactor,
+        dustPaint..color = const Color(0xFF81D4FA).withValues(alpha: alpha),
+      );
     }
   }
 
