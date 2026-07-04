@@ -100,8 +100,8 @@ class GlassNavigationBar extends StatelessWidget {
                 ),
               ),
               _NavItem(
-                icon: Icons.calendar_month,
-                label: 'Calendar',
+                icon: Icons.notifications,
+                label: 'Reminders',
                 isActive: currentIndex == 3,
                 onTap: () => onTap(3),
               ),

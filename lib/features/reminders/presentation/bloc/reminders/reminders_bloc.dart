@@ -1,7 +1,8 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:injectable/injectable.dart';
-import 'package:rojnivis/features/calendar/domain/usecases/delete_reminder.dart';
-import 'package:rojnivis/features/calendar/domain/usecases/get_all_reminders.dart';
+import 'package:rojnivis/features/reminders/domain/usecases/add_reminder.dart';
+import 'package:rojnivis/features/reminders/domain/usecases/delete_reminder.dart';
+import 'package:rojnivis/features/reminders/domain/usecases/get_all_reminders.dart';
 import 'reminders_event.dart';
 import 'reminders_state.dart';
 
@@ -10,13 +11,16 @@ class RemindersBloc extends Bloc<RemindersEvent, RemindersState> {
   RemindersBloc({
     required this.getAllReminders,
     required this.deleteReminder,
+    required this.addReminder,
   }) : super(const RemindersInitial()) {
     on<LoadAllReminders>(_onLoadAllReminders);
     on<DeleteReminderFromList>(_onDeleteReminder);
+    on<AddReminderToList>(_onAddReminderToList);
   }
 
   final GetAllReminders getAllReminders;
   final DeleteReminder deleteReminder;
+  final AddReminder addReminder;
 
   Future<void> _onLoadAllReminders(
     LoadAllReminders event,
@@ -55,6 +59,18 @@ class RemindersBloc extends Bloc<RemindersEvent, RemindersState> {
     Emitter<RemindersState> emit,
   ) async {
     final result = await deleteReminder(DeleteReminderParams(id: event.id));
+    
+    result.fold(
+      (failure) => emit(RemindersFailure(failure)),
+      (_) => add(const LoadAllReminders()),
+    );
+  }
+
+  Future<void> _onAddReminderToList(
+    AddReminderToList event,
+    Emitter<RemindersState> emit,
+  ) async {
+    final result = await addReminder(AddReminderParams(reminder: event.reminder));
     
     result.fold(
       (failure) => emit(RemindersFailure(failure)),

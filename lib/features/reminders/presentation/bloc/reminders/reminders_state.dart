@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:rojnivis/core/errors/failures.dart';
-import 'package:rojnivis/features/calendar/domain/entities/reminder.dart';
+import 'package:rojnivis/features/reminders/domain/entities/reminder.dart';
 
 sealed class RemindersState extends Equatable {
   const RemindersState();

@@ -26,9 +26,9 @@ import 'features/categories/presentation/bloc/category_bloc.dart';
 import 'features/insights/presentation/bloc/insights_bloc.dart';
 import 'features/journal/data/models/journal_entry_model.dart';
 import 'features/journal/presentation/bloc/journal_bloc.dart';
-import 'features/calendar/data/models/reminder_dto.dart';
-import 'features/calendar/presentation/bloc/calendar_bloc.dart';
-import 'features/calendar/presentation/bloc/calendar_event.dart';
+import 'features/reminders/data/models/reminder_dto.dart';
+import 'features/reminders/presentation/bloc/reminders/reminders_bloc.dart';
+import 'features/reminders/presentation/bloc/reminders/reminders_event.dart';
 import 'features/settings/presentation/bloc/settings_bloc.dart';
 import 'features/splash/presentation/bloc/splash_bloc.dart';
 
@@ -217,8 +217,8 @@ class _AppProviders extends StatelessWidget {
         BlocProvider(
           create:
               (_) =>
-                  getIt<CalendarBloc>()
-                    ..add(LoadCalendarData(month: DateTime.now())),
+                  getIt<RemindersBloc>()
+                    ..add(const LoadAllReminders()),
         ),
         BlocProvider(
           create: (_) => getIt<SplashBloc>()..add(const InitializeSplash()),

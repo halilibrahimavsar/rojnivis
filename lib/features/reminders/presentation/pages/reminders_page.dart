@@ -1,23 +1,19 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:get_it/get_it.dart';
-import 'package:go_router/go_router.dart';
 import 'package:rojnivis/core/widgets/glass_overlays.dart';
-import 'package:rojnivis/features/calendar/domain/entities/reminder.dart';
-import 'package:rojnivis/features/calendar/presentation/bloc/reminders/reminders_bloc.dart';
-import 'package:rojnivis/features/calendar/presentation/bloc/reminders/reminders_event.dart';
-import 'package:rojnivis/features/calendar/presentation/bloc/reminders/reminders_state.dart';
+import 'package:rojnivis/features/reminders/domain/entities/reminder.dart';
+import 'package:rojnivis/features/reminders/presentation/bloc/reminders/reminders_bloc.dart';
+import 'package:rojnivis/features/reminders/presentation/bloc/reminders/reminders_event.dart';
+import 'package:rojnivis/features/reminders/presentation/bloc/reminders/reminders_state.dart';
 
 class RemindersPage extends StatelessWidget {
   const RemindersPage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => GetIt.I<RemindersBloc>()..add(const LoadAllReminders()),
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
+    return Scaffold(
+      backgroundColor: Colors.transparent,
         body: SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -65,7 +61,6 @@ class RemindersPage extends StatelessWidget {
             ],
           ),
         ),
-      ),
     );
   }
 
@@ -74,11 +69,6 @@ class RemindersPage extends StatelessWidget {
       padding: const EdgeInsets.all(20.0),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
-            onPressed: () => context.pop(),
-          ),
-          const SizedBox(width: 8),
           Text(
             'Reminders',
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(

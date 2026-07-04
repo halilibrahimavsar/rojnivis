@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:rojnivis/features/reminders/domain/entities/reminder.dart';
 
 sealed class RemindersEvent extends Equatable {
   const RemindersEvent();
@@ -18,4 +19,13 @@ final class DeleteReminderFromList extends RemindersEvent {
 
   @override
   List<Object?> get props => [id];
+}
+
+final class AddReminderToList extends RemindersEvent {
+  const AddReminderToList(this.reminder);
+
+  final Reminder reminder;
+
+  @override
+  List<Object?> get props => [reminder];
 }

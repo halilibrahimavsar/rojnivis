@@ -24,19 +24,6 @@ import 'package:unified_flutter_features/features/local_auth/presentation/bloc/s
 
 import '../core/services/ai_service.dart' as _i805;
 import '../core/services/sound_service.dart' as _i173;
-import '../features/calendar/data/datasources/local/calendar_local_data_source.dart'
-    as _i134;
-import '../features/calendar/data/repositories/calendar_repository_impl.dart'
-    as _i292;
-import '../features/calendar/domain/repositories/calendar_repository.dart'
-    as _i944;
-import '../features/calendar/domain/usecases/add_reminder.dart' as _i382;
-import '../features/calendar/domain/usecases/delete_reminder.dart' as _i757;
-import '../features/calendar/domain/usecases/get_all_reminders.dart' as _i478;
-import '../features/calendar/domain/usecases/get_reminders.dart' as _i145;
-import '../features/calendar/presentation/bloc/calendar_bloc.dart' as _i628;
-import '../features/calendar/presentation/bloc/reminders/reminders_bloc.dart'
-    as _i662;
 import '../features/categories/data/datasources/category_local_datasource.dart'
     as _i409;
 import '../features/categories/data/repositories/category_repository_impl.dart'
@@ -73,6 +60,18 @@ import '../features/journal/domain/usecases/get_stickers.dart' as _i331;
 import '../features/journal/domain/usecases/save_stickers.dart' as _i310;
 import '../features/journal/domain/usecases/search_entries.dart' as _i112;
 import '../features/journal/presentation/bloc/journal_bloc.dart' as _i379;
+import '../features/reminders/data/datasources/local/reminders_local_data_source.dart'
+    as _i115;
+import '../features/reminders/data/repositories/reminders_repository_impl.dart'
+    as _i983;
+import '../features/reminders/domain/repositories/reminders_repository.dart'
+    as _i789;
+import '../features/reminders/domain/usecases/add_reminder.dart' as _i410;
+import '../features/reminders/domain/usecases/delete_reminder.dart' as _i263;
+import '../features/reminders/domain/usecases/get_all_reminders.dart' as _i621;
+import '../features/reminders/domain/usecases/get_reminders.dart' as _i242;
+import '../features/reminders/presentation/bloc/reminders/reminders_bloc.dart'
+    as _i593;
 import '../features/settings/data/repositories/settings_repository_impl.dart'
     as _i1064;
 import '../features/settings/domain/repositories/settings_repository.dart'
@@ -109,12 +108,12 @@ extension GetItInjectableX on _i174.GetIt {
         () => externalDependenciesModule.authBloc);
     gh.lazySingleton<_i314.LocalAuthRepository>(() => externalDependenciesModule
         .localAuthRepository(gh<_i460.SharedPreferences>()));
-    gh.lazySingleton<_i134.CalendarLocalDataSource>(
-        () => _i134.CalendarLocalDataSourceImpl());
     gh.lazySingleton<_i1064.EntryDecorationLocalDataSource>(
         () => _i1064.EntryDecorationLocalDataSourceImpl());
     gh.lazySingleton<_i409.CategoryLocalDataSource>(
         () => _i409.CategoryLocalDataSourceImpl());
+    gh.lazySingleton<_i115.RemindersLocalDataSource>(
+        () => _i115.RemindersLocalDataSourceImpl());
     gh.lazySingleton<_i417.JournalLocalDataSource>(
         () => _i417.JournalLocalDataSourceImpl());
     gh.factory<_i358.SplashBloc>(() => _i358.SplashBloc(gh<_i1041.AuthBloc>()));
@@ -135,10 +134,10 @@ extension GetItInjectableX on _i174.GetIt {
         () => _i310.SaveStickers(gh<_i796.EntryDecorationRepository>()));
     gh.lazySingleton<_i880.ClearStickers>(
         () => _i880.ClearStickers(gh<_i796.EntryDecorationRepository>()));
+    gh.lazySingleton<_i789.RemindersRepository>(() =>
+        _i983.RemindersRepositoryImpl(gh<_i115.RemindersLocalDataSource>()));
     gh.lazySingleton<_i303.JournalRepository>(
         () => _i531.JournalRepositoryImpl(gh<_i417.JournalLocalDataSource>()));
-    gh.lazySingleton<_i944.CalendarRepository>(() =>
-        _i292.CalendarRepositoryImpl(gh<_i134.CalendarLocalDataSource>()));
     gh.lazySingleton<_i805.AiService>(() => _i805.GeminiAiService(
           gh<_i460.SharedPreferences>(),
           remoteConfig: gh<_i627.FirebaseRemoteConfig>(),
@@ -156,14 +155,14 @@ extension GetItInjectableX on _i174.GetIt {
           gh<_i463.GetSettings>(),
           gh<_i303.UpdateSettings>(),
         ));
-    gh.factory<_i145.GetReminders>(
-        () => _i145.GetReminders(gh<_i944.CalendarRepository>()));
-    gh.factory<_i382.AddReminder>(
-        () => _i382.AddReminder(gh<_i944.CalendarRepository>()));
-    gh.factory<_i757.DeleteReminder>(
-        () => _i757.DeleteReminder(gh<_i944.CalendarRepository>()));
-    gh.factory<_i478.GetAllReminders>(
-        () => _i478.GetAllReminders(gh<_i944.CalendarRepository>()));
+    gh.factory<_i242.GetReminders>(
+        () => _i242.GetReminders(gh<_i789.RemindersRepository>()));
+    gh.factory<_i410.AddReminder>(
+        () => _i410.AddReminder(gh<_i789.RemindersRepository>()));
+    gh.factory<_i263.DeleteReminder>(
+        () => _i263.DeleteReminder(gh<_i789.RemindersRepository>()));
+    gh.factory<_i621.GetAllReminders>(
+        () => _i621.GetAllReminders(gh<_i789.RemindersRepository>()));
     gh.lazySingleton<_i584.InsightsRepository>(
         () => _i646.InsightsRepositoryImpl(gh<_i303.JournalRepository>()));
     gh.lazySingleton<_i423.GetEntries>(
@@ -178,15 +177,10 @@ extension GetItInjectableX on _i174.GetIt {
           gh<_i745.CategoryRepository>(),
           gh<_i303.JournalRepository>(),
         ));
-    gh.factory<_i628.CalendarBloc>(() => _i628.CalendarBloc(
-          getReminders: gh<_i145.GetReminders>(),
-          getEntries: gh<_i423.GetEntries>(),
-          addReminder: gh<_i382.AddReminder>(),
-          deleteReminder: gh<_i757.DeleteReminder>(),
-        ));
-    gh.factory<_i662.RemindersBloc>(() => _i662.RemindersBloc(
-          getAllReminders: gh<_i478.GetAllReminders>(),
-          deleteReminder: gh<_i757.DeleteReminder>(),
+    gh.factory<_i593.RemindersBloc>(() => _i593.RemindersBloc(
+          getAllReminders: gh<_i621.GetAllReminders>(),
+          deleteReminder: gh<_i263.DeleteReminder>(),
+          addReminder: gh<_i410.AddReminder>(),
         ));
     gh.factory<_i379.JournalBloc>(() => _i379.JournalBloc(
           gh<_i423.GetEntries>(),

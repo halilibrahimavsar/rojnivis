@@ -4,10 +4,10 @@ import 'themed_paper.dart';
 import 'glass_overlays.dart';
 import 'interactive_top_bar.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:rojnivis/features/calendar/domain/entities/reminder.dart';
-import 'package:rojnivis/features/calendar/presentation/bloc/calendar_bloc.dart';
-import 'package:rojnivis/features/calendar/presentation/bloc/calendar_event.dart';
-import 'package:rojnivis/features/calendar/presentation/widgets/add_reminder_dialog.dart';
+import 'package:rojnivis/features/reminders/domain/entities/reminder.dart';
+import 'package:rojnivis/features/reminders/presentation/bloc/reminders/reminders_bloc.dart';
+import 'package:rojnivis/features/reminders/presentation/bloc/reminders/reminders_event.dart';
+import 'package:rojnivis/features/reminders/presentation/widgets/add_reminder_dialog.dart';
 
 class AppLayout extends StatefulWidget {
   const AppLayout({super.key, required this.child});
@@ -21,7 +21,7 @@ class _AppLayoutState extends State<AppLayout> {
   int _calculateSelectedIndex(BuildContext context) {
     final String location = GoRouterState.of(context).uri.toString();
     if (location.startsWith('/home/settings')) return 4;
-    if (location.startsWith('/home/calendar')) return 3;
+    if (location.startsWith('/home/reminders')) return 3;
     if (location.startsWith('/home/categories')) return 1;
     // Default to journal
     return 0;
@@ -39,7 +39,7 @@ class _AppLayoutState extends State<AppLayout> {
         _showAddMenu(context);
         break;
       case 3:
-        context.go('/home/calendar');
+        context.go('/home/reminders');
         break;
       case 4:
         context.go('/home/settings');
@@ -91,8 +91,8 @@ class _AppLayoutState extends State<AppLayout> {
                               AddReminderDialog(selectedDate: DateTime.now()),
                     );
                     if (reminder != null && context.mounted) {
-                      context.read<CalendarBloc>().add(
-                        AddReminderEvent(reminder),
+                      context.read<RemindersBloc>().add(
+                        AddReminderToList(reminder),
                       );
                     }
                   },

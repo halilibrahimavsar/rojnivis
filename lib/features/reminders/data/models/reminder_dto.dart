@@ -1,6 +1,6 @@
 import 'package:hive/hive.dart';
 import 'package:rojnivis/core/constants/app_constants.dart';
-import 'package:rojnivis/features/calendar/domain/entities/reminder.dart';
+import 'package:rojnivis/features/reminders/domain/entities/reminder.dart';
 
 part 'reminder_dto.g.dart';
 

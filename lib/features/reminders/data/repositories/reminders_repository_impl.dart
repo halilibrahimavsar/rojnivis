@@ -1,17 +1,17 @@
 import 'package:dartz/dartz.dart';
 import 'package:injectable/injectable.dart';
 import 'package:rojnivis/core/errors/failures.dart';
-import 'package:rojnivis/features/calendar/data/datasources/local/calendar_local_data_source.dart';
+import 'package:rojnivis/features/reminders/data/datasources/local/reminders_local_data_source.dart';
 import 'package:rojnivis/core/services/notification_service.dart';
-import 'package:rojnivis/features/calendar/data/models/reminder_dto.dart';
-import 'package:rojnivis/features/calendar/domain/entities/reminder.dart';
-import 'package:rojnivis/features/calendar/domain/repositories/calendar_repository.dart';
+import 'package:rojnivis/features/reminders/data/models/reminder_dto.dart';
+import 'package:rojnivis/features/reminders/domain/entities/reminder.dart';
+import 'package:rojnivis/features/reminders/domain/repositories/reminders_repository.dart';
 
-@LazySingleton(as: CalendarRepository)
-class CalendarRepositoryImpl implements CalendarRepository {
-  CalendarRepositoryImpl(this.localDataSource);
+@LazySingleton(as: RemindersRepository)
+class RemindersRepositoryImpl implements RemindersRepository {
+  RemindersRepositoryImpl(this.localDataSource);
 
-  final CalendarLocalDataSource localDataSource;
+  final RemindersLocalDataSource localDataSource;
 
   @override
   Future<Either<Failure, List<Reminder>>> getReminders(

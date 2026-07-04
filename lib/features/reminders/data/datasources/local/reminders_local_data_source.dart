@@ -1,17 +1,17 @@
 import 'package:hive/hive.dart';
 import 'package:injectable/injectable.dart';
 import 'package:rojnivis/core/constants/app_constants.dart';
-import 'package:rojnivis/features/calendar/data/models/reminder_dto.dart';
+import 'package:rojnivis/features/reminders/data/models/reminder_dto.dart';
 
-abstract class CalendarLocalDataSource {
+abstract class RemindersLocalDataSource {
   Future<List<ReminderDto>> getReminders(DateTime startDate, DateTime endDate);
   Future<List<ReminderDto>> getAllReminders();
   Future<void> addReminder(ReminderDto reminder);
   Future<void> deleteReminder(String id);
 }
 
-@LazySingleton(as: CalendarLocalDataSource)
-class CalendarLocalDataSourceImpl implements CalendarLocalDataSource {
+@LazySingleton(as: RemindersLocalDataSource)
+class RemindersLocalDataSourceImpl implements RemindersLocalDataSource {
   Box<ReminderDto> get _box => Hive.box<ReminderDto>(StorageKeys.remindersBox);
 
   @override

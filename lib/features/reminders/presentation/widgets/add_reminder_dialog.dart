@@ -1,6 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:rojnivis/features/calendar/domain/entities/reminder.dart';
+import 'package:rojnivis/features/reminders/domain/entities/reminder.dart';
 
 class AddReminderDialog extends StatefulWidget {
   const AddReminderDialog({super.key, required this.selectedDate});
