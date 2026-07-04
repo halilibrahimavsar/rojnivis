@@ -26,6 +26,7 @@ import 'features/categories/presentation/bloc/category_bloc.dart';
 import 'features/insights/presentation/bloc/insights_bloc.dart';
 import 'features/journal/data/models/journal_entry_model.dart';
 import 'features/journal/presentation/bloc/journal_bloc.dart';
+import 'features/calendar/data/models/reminder_dto.dart';
 import 'features/calendar/presentation/bloc/calendar_bloc.dart';
 import 'features/calendar/presentation/bloc/calendar_event.dart';
 import 'features/settings/presentation/bloc/settings_bloc.dart';
@@ -133,6 +134,7 @@ Future<void> _initializeCriticalServices() async {
 void _registerHiveAdapters() {
   Hive.registerAdapter(CategoryModelAdapter());
   Hive.registerAdapter(JournalEntryModelAdapter());
+  Hive.registerAdapter(ReminderDtoAdapter());
 }
 
 /// Opens all required Hive boxes.
@@ -140,6 +142,7 @@ Future<void> _openHiveBoxes() async {
   await Hive.openBox<CategoryModel>(CategoryModel.boxName);
   await Hive.openBox<JournalEntryModel>(JournalEntryModel.boxName);
   await Hive.openBox<String>(StorageKeys.entryDecorationsBox);
+  await Hive.openBox<ReminderDto>(StorageKeys.remindersBox);
 }
 
 /// Seeds default categories if the categories box is empty.

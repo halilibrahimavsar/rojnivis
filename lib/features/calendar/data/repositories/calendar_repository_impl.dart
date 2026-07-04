@@ -28,6 +28,17 @@ class CalendarRepositoryImpl implements CalendarRepository {
   }
 
   @override
+  Future<Either<Failure, List<Reminder>>> getAllReminders() async {
+    try {
+      final dtos = await localDataSource.getAllReminders();
+      final entities = dtos.map((dto) => dto.toEntity()).toList();
+      return Right(entities);
+    } catch (e) {
+      return Left(UnknownFailure(message: e.toString()));
+    }
+  }
+
+  @override
   Future<Either<Failure, void>> addReminder(Reminder reminder) async {
     try {
       final dto = ReminderDto.fromEntity(reminder);

@@ -13,6 +13,7 @@ import '../../features/splash/presentation/pages/splash_page.dart';
 import '../../features/settings/presentation/pages/local_auth_settings_page.dart';
 import '../../features/settings/presentation/pages/remote_auth_settings_page.dart';
 import '../../features/calendar/presentation/pages/calendar_page.dart';
+import '../../features/calendar/presentation/pages/reminders_page.dart';
 
 import 'package:remote_auth_module/remote_auth_module.dart';
 import '../widgets/app_layout.dart';
@@ -124,6 +125,15 @@ class AppRouter {
                           (context, animation, secondaryAnimation, child) =>
                               FadeTransition(opacity: animation, child: child),
                     ),
+                routes: [
+                  GoRoute(
+                    path: 'reminders',
+                    pageBuilder: (context, state) => PageFlipTransitionPage(
+                      key: state.pageKey,
+                      child: const RemindersPage(),
+                    ),
+                  ),
+                ],
               ),
               GoRoute(
                 path: 'settings',

@@ -175,6 +175,7 @@ class StorageKeys {
   static const String journalEntriesBox = 'journal_entries';
   static const String categoriesBox = 'categories';
   static const String entryDecorationsBox = 'entry_decorations';
+  static const String remindersBox = 'reminders';
 
   /// SharedPreferences keys
   static const String themeMode = 'theme_mode';
@@ -247,4 +248,5 @@ class HiveTypeIds {
 
   static const int journalEntry = 1;
   static const int category = 2;
+  static const int reminder = 3;
 }

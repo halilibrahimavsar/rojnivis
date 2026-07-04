@@ -1,5 +1,10 @@
+import 'package:hive/hive.dart';
+import 'package:rojnivis/core/constants/app_constants.dart';
 import 'package:rojnivis/features/calendar/domain/entities/reminder.dart';
 
+part 'reminder_dto.g.dart';
+
+@HiveType(typeId: HiveTypeIds.reminder)
 class ReminderDto {
   const ReminderDto({
     required this.id,
@@ -9,10 +14,15 @@ class ReminderDto {
     this.description,
   });
 
+  @HiveField(0)
   final String id;
+  @HiveField(1)
   final String title;
+  @HiveField(2)
   final DateTime date;
+  @HiveField(3)
   final String importanceLevel;
+  @HiveField(4)
   final String? description;
 
   factory ReminderDto.fromJson(Map<String, dynamic> json) => ReminderDto(

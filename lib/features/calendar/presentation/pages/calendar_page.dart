@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:rojnivis/features/calendar/presentation/bloc/calendar_bloc.dart';
 import 'package:rojnivis/features/calendar/presentation/bloc/calendar_event.dart';
@@ -23,14 +24,32 @@ class CalendarPage extends StatelessWidget {
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(20.0),
-                    child: Text(
-                      'Calendar',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.headlineMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Calendar',
+                          style: Theme.of(
+                            context,
+                          ).textTheme.headlineMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.format_list_bulleted, color: Colors.white),
+                          onPressed: () async {
+                            await context.push('/home/calendar/reminders');
+                            if (context.mounted) {
+                              final currentState = context.read<CalendarBloc>().state;
+                              if (currentState is CalendarLoaded) {
+                                context.read<CalendarBloc>().add(LoadCalendarData(month: currentState.selectedDate));
+                              }
+                            }
+                          },
+                          tooltip: 'Manage Reminders',
+                        ),
+                      ],
                     ),
                   ),
                   Expanded(

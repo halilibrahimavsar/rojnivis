@@ -7,6 +7,7 @@ abstract class CalendarRepository {
     DateTime startDate,
     DateTime endDate,
   );
+  Future<Either<Failure, List<Reminder>>> getAllReminders();
   Future<Either<Failure, void>> addReminder(Reminder reminder);
   Future<Either<Failure, void>> deleteReminder(String id);
 }
